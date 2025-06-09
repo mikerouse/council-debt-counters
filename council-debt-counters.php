@@ -17,8 +17,12 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-counter-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-shortcode-renderer.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-data-loader.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-license-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-post-type.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-acf-manager.php';
 
-// Initialize plugin components.
 add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Settings_Page::init();
+    \CouncilDebtCounters\Council_Post_Type::init();
+    \CouncilDebtCounters\ACF_Manager::init();
 } );

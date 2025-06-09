@@ -7,16 +7,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Settings_Page {
 
-    /**
-     * Register hooks.
-     */
     public static function init() {
         add_action( 'admin_menu', [ __CLASS__, 'add_menu' ] );
+        add_action( 'admin_init', [ __CLASS__, 'register_settings' ] );
     }
 
-    /**
-     * Add admin menu page.
-     */
     public static function add_menu() {
         add_menu_page(
             __( 'Council Debt Counters', 'council-debt-counters' ),
@@ -28,9 +23,11 @@ class Settings_Page {
         );
     }
 
-    /**
-     * Render settings page content.
-     */
+    public static function register_settings() {
+        register_setting( 'council-debt-counters', License_Manager::OPTION_KEY );
+        register_setting( 'council-debt-counters', License_Manager::OPTION_VALID );
+    }
+
     public static function render_page() {
         include plugin_dir_path( __DIR__ ) . 'admin/views/instructions-page.php';
     }
