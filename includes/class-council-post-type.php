@@ -12,6 +12,8 @@ class Council_Post_Type {
     public static function init() {
         add_action( 'init', [ __CLASS__, 'register' ] );
         add_action( 'load-post-new.php', [ __CLASS__, 'enforce_limit' ] );
+        add_action( 'acf/save_post', [ __CLASS__, 'sync_title_from_acf' ], 20 );
+        add_action( 'acf/save_post', [ __CLASS__, 'calculate_total_debt' ], 20 );
     }
 
     /**
@@ -50,5 +52,40 @@ class Council_Post_Type {
             wp_safe_redirect( admin_url( 'edit.php?post_type=council&cdc_limit=1' ) );
             exit;
         }
+    }
+
+    public static function sync_title_from_acf( $post_id ) {
+        if ( get_post_type( $post_id ) !== 'council' ) {
+            return;
+        }
+        $name = get_field( 'council_name', $post_id );
+        if ( ! $name ) {
+            return;
+        }
+        remove_action( 'acf/save_post', [ __CLASS__, 'sync_title_from_acf' ], 20 );
+        wp_update_post([
+            'ID'         => $post_id,
+            'post_title' => sanitize_text_field( $name ),
+        ]);
+        add_action( 'acf/save_post', [ __CLASS__, 'sync_title_from_acf' ], 20 );
+        Error_Logger::log_info( 'Council saved with title: ' . $name );
+    }
+
+    public static function calculate_total_debt( $post_id ) {
+        if ( get_post_type( $post_id ) !== 'council' ) {
+            return;
+        }
+
+        $external = (float) get_field( 'total_external_borrowing', $post_id );
+        $interest = (float) get_field( 'interest_paid_on_debt', $post_id );
+        $adjust   = 0;
+        $entries  = get_post_meta( $post_id, 'cdc_debt_adjustments', true );
+        if ( is_array( $entries ) ) {
+            foreach ( $entries as $e ) {
+                $adjust += (float) $e['amount'];
+            }
+        }
+        $total = $external + $interest + $adjust;
+        update_field( 'total_debt', $total, $post_id );
     }
 }

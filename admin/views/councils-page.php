@@ -43,15 +43,20 @@ $councils = get_posts([
         <thead>
             <tr>
                 <th><?php esc_html_e( 'Name', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Debt Counter', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
             </tr>
         </thead>
         <tbody>
             <?php if ( empty( $councils ) ) : ?>
-                <tr><td colspan="2"><?php esc_html_e( 'No councils found.', 'council-debt-counters' ); ?></td></tr>
+                <tr><td colspan="3"><?php esc_html_e( 'No councils found.', 'council-debt-counters' ); ?></td></tr>
             <?php else : foreach ( $councils as $council ) : ?>
                 <tr>
                     <td><?php echo esc_html( get_the_title( $council ) ); ?></td>
+                    <td>
+                        <?php echo do_shortcode( '[council_counter id="' . $council->ID . '"]' ); ?>
+                        <code>[council_counter id="<?php echo esc_attr( $council->ID ); ?>"]</code>
+                    </td>
                     <td>
                         <a href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-manage-councils&action=edit&post=' . $council->ID ) ); ?>" class="btn btn-sm btn-secondary"><?php esc_html_e( 'Edit', 'council-debt-counters' ); ?></a>
                         <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=cdc-manage-councils&action=delete&post=' . $council->ID ), 'cdc_delete_council_' . $council->ID ) ); ?>" class="btn btn-sm btn-danger" onclick="return confirm('<?php esc_attr_e( 'Delete this council?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></a>
