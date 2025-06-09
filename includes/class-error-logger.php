@@ -10,6 +10,7 @@ class Error_Logger {
 
     public static function init() {
         set_error_handler( [ __CLASS__, 'handle_error' ] );
+        register_shutdown_function( [ __CLASS__, 'handle_shutdown' ] );
     }
 
     public static function log( string $message ) {
@@ -24,6 +25,13 @@ class Error_Logger {
         }
         self::log( "Error {$errno} at {$errfile}:{$errline} - {$errstr}" );
         return false; // Let default handler run as well
+    }
+
+    public static function handle_shutdown() {
+        $error = error_get_last();
+        if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR ] ) ) {
+            self::log( "Fatal {$error['type']} at {$error['file']}:{$error['line']} - {$error['message']}" );
+        }
     }
 
     public static function get_log() {
