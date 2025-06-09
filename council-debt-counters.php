@@ -26,3 +26,20 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Council_Post_Type::init();
     \CouncilDebtCounters\ACF_Manager::init();
 } );
+
+/**
+ * Git Updater support
+ * @link https://git-updater.com/knowledge-base/
+ */
+add_filter( 'git_updater_plugin_config', function( $config ) {
+    $config['council-debt-counters/council-debt-counters.php'] = [
+        'slug'       => 'council-debt-counters',
+        'repo'       => 'council-debt-counters',
+        'owner'      => 'mikerouse', // Change to your GitHub username or org
+        'branch'     => 'main', // Or 'master' or your default branch
+        'uri'        => 'https://github.com/mikerouse/council-debt-counters',
+        'remote_url' => 'https://github.com/mikerouse/council-debt-counters.git',
+        'type'       => 'github',
+    ];
+    return $config;
+} );
