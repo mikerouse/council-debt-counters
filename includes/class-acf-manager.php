@@ -33,6 +33,12 @@ class ACF_Manager {
             return;
         }
 
+        $year = date( 'Y' );
+        if ( date( 'n' ) < 4 ) {
+            $year--;
+        }
+        $default_date = sprintf( '%04d-04-01', $year );
+
         acf_add_local_field_group([
             'key' => 'group_cdc_council',
             'title' => __( 'Council Details', 'council-debt-counters' ),
@@ -42,6 +48,14 @@ class ACF_Manager {
                     'label' => __( 'Council Name', 'council-debt-counters' ),
                     'name' => 'council_name',
                     'type' => 'text',
+                    'required' => 1,
+                ],
+                [
+                    'key' => 'field_cdc_council_website',
+                    'label' => __( 'Council Website URL', 'council-debt-counters' ),
+                    'name' => 'council_website',
+                    'type' => 'url',
+                    'required' => 1,
                 ],
                 [
                     'key' => 'field_cdc_council_type',
@@ -56,6 +70,7 @@ class ACF_Manager {
                         'london_borough' => __( 'London Borough', 'council-debt-counters' ),
                     ],
                     'ui' => 1,
+                    'required' => 1,
                 ],
                 [
                     'key' => 'field_cdc_population',
@@ -82,10 +97,48 @@ class ACF_Manager {
                     'type' => 'number',
                 ],
                 [
-                    'key' => 'field_cdc_debt_per_household',
-                    'label' => __( 'Debt Per Household', 'council-debt-counters' ),
-                    'name' => 'debt_per_household',
+                    'key' => 'field_cdc_total_external_borrowing',
+                    'label' => __( 'Total External Borrowing (Loans Outstanding)', 'council-debt-counters' ),
+                    'name' => 'total_external_borrowing',
                     'type' => 'number',
+                    'required' => 1,
+                ],
+                [
+                    'key' => 'field_cdc_pwlb_borrowing',
+                    'label' => __( 'Public Works Loan Board (PWLB) Borrowing', 'council-debt-counters' ),
+                    'name' => 'pwlb_borrowing',
+                    'type' => 'number',
+                    'required' => 1,
+                ],
+                [
+                    'key' => 'field_cdc_interest_paid',
+                    'label' => __( 'Interest Paid on Debt', 'council-debt-counters' ),
+                    'name' => 'interest_paid_on_debt',
+                    'type' => 'number',
+                    'required' => 1,
+                ],
+                [
+                    'key' => 'field_cdc_cfr',
+                    'label' => __( 'Capital Financing Requirement (CFR)', 'council-debt-counters' ),
+                    'name' => 'capital_financing_requirement',
+                    'type' => 'number',
+                    'required' => 1,
+                ],
+                [
+                    'key' => 'field_cdc_mrp',
+                    'label' => __( 'Minimum Revenue Provision (Debt Repayment)', 'council-debt-counters' ),
+                    'name' => 'minimum_revenue_provision',
+                    'type' => 'number',
+                    'required' => 1,
+                ],
+                [
+                    'key' => 'field_cdc_counter_start_date',
+                    'label' => __( 'Counter Start Date', 'council-debt-counters' ),
+                    'name' => 'counter_start_date',
+                    'type' => 'date_picker',
+                    'display_format' => 'Y-m-d',
+                    'return_format' => 'Y-m-d',
+                    'default_value' => $default_date,
                 ],
                 [
                     'key' => 'field_cdc_band_a_props',
@@ -97,6 +150,42 @@ class ACF_Manager {
                     'key' => 'field_cdc_band_b_props',
                     'label' => __( 'Properties in Band B', 'council-debt-counters' ),
                     'name' => 'band_b_properties',
+                    'type' => 'number',
+                ],
+                [
+                    'key' => 'field_cdc_band_c_props',
+                    'label' => __( 'Properties in Band C', 'council-debt-counters' ),
+                    'name' => 'band_c_properties',
+                    'type' => 'number',
+                ],
+                [
+                    'key' => 'field_cdc_band_d_props',
+                    'label' => __( 'Properties in Band D', 'council-debt-counters' ),
+                    'name' => 'band_d_properties',
+                    'type' => 'number',
+                ],
+                [
+                    'key' => 'field_cdc_band_e_props',
+                    'label' => __( 'Properties in Band E', 'council-debt-counters' ),
+                    'name' => 'band_e_properties',
+                    'type' => 'number',
+                ],
+                [
+                    'key' => 'field_cdc_band_f_props',
+                    'label' => __( 'Properties in Band F', 'council-debt-counters' ),
+                    'name' => 'band_f_properties',
+                    'type' => 'number',
+                ],
+                [
+                    'key' => 'field_cdc_band_g_props',
+                    'label' => __( 'Properties in Band G', 'council-debt-counters' ),
+                    'name' => 'band_g_properties',
+                    'type' => 'number',
+                ],
+                [
+                    'key' => 'field_cdc_band_h_props',
+                    'label' => __( 'Properties in Band H', 'council-debt-counters' ),
+                    'name' => 'band_h_properties',
                     'type' => 'number',
                 ],
             ],
