@@ -15,3 +15,7 @@ Currently the plugin includes an admin page with instructions for uploading star
 2. Activate **Council Debt Counters** in the WordPress admin.
 3. Ensure the Advanced Custom Fields plugin is installed and active.
 4. Visit **Debt Counters** in the admin menu to enter your license key and start adding councils.
+
+## Legal notice
+
+When displaying council data you must comply with the **Copyright, Designs and Patents Act 1988**, **Section 11A of the Freedom of Information Act 2001**, and the **Re-Use of Public Sector Information Regulations 2005**. Data must not be shown in a misleading context or used for commercial gain, including behind paywalls. Always attribute the data source to the relevant council whenever it is displayed, including when output via shortcodes.
