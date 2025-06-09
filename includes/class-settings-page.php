@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use CouncilDebtCounters\Docs_Manager;
+use CouncilDebtCounters\Council_Admin_Page;
 
 class Settings_Page {
 
@@ -29,7 +30,8 @@ class Settings_Page {
             __( 'Councils', 'council-debt-counters' ),
             __( 'Councils', 'council-debt-counters' ),
             'manage_options',
-            'edit.php?post_type=council'
+            Council_Admin_Page::PAGE_SLUG,
+            [ Council_Admin_Page::class, 'render_page' ]
         );
 
         add_submenu_page(
