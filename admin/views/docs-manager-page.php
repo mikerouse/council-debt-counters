@@ -60,7 +60,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
                             <input type="hidden" name="cdc_doc_name" value="<?php echo esc_attr( $doc ); ?>" />
                             <button type="submit" name="cdc_delete_doc" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
                         </form>
-                        <a href="<?php echo esc_url( plugins_url( 'docs/' . $doc, dirname( __DIR__, 2 ) ) ); ?>" target="_blank" class="button">View</a>
+                        <a href="<?php echo esc_url( plugins_url( 'docs/' . $doc, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer" class="button">View</a>
                     </td>
                 </tr>
             <?php endforeach; endif; ?>
