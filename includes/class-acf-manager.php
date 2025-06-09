@@ -95,6 +95,7 @@ class ACF_Manager {
                     'label' => __( 'Total Debt', 'council-debt-counters' ),
                     'name' => 'total_debt',
                     'type' => 'number',
+                    'readonly' => 1,
                 ],
                 [
                     'key' => 'field_cdc_total_external_borrowing',

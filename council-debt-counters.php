@@ -23,6 +23,8 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-license-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-post-type.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-admin-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-acf-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-openai-helper.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-debt-adjustments-page.php';
 
 add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Error_Logger::init();
@@ -30,6 +32,8 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Council_Post_Type::init();
     \CouncilDebtCounters\Council_Admin_Page::init();
     \CouncilDebtCounters\ACF_Manager::init();
+    \CouncilDebtCounters\Shortcode_Renderer::init();
+    \CouncilDebtCounters\Debt_Adjustments_Page::init();
 } );
 
 /**
