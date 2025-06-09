@@ -25,6 +25,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         </table>
         <?php submit_button(); ?>
     </form>
+    <div class="notice notice-info" style="margin-top:20px;">
+        <p><strong><?php esc_html_e( 'Legal notice', 'council-debt-counters' ); ?></strong></p>
+        <p><?php esc_html_e( 'When publishing council data you must comply with the Copyright, Designs and Patents Act 1988, Section 11A of the Freedom of Information Act 2001, and the Re-Use of Public Sector Information Regulations 2005. Data must not be shown in a misleading context or for commercial gain, including behind paywalls. Always attribute the source council wherever the data is displayed, including when using a shortcode.', 'council-debt-counters' ); ?></p>
+    </div>
 </div>
 <?php
 if ( isset( $_GET['cdc_limit'] ) ) {
