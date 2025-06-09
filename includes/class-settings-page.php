@@ -40,6 +40,15 @@ class Settings_Page {
             'cdc-manage-docs',
             [ __CLASS__, 'render_docs_page' ]
         );
+
+        add_submenu_page(
+            'council-debt-counters',
+            __( 'Troubleshooting', 'council-debt-counters' ),
+            __( 'Troubleshooting', 'council-debt-counters' ),
+            'manage_options',
+            'cdc-troubleshooting',
+            [ __CLASS__, 'render_troubleshooting_page' ]
+        );
     }
 
     public static function register_settings() {
@@ -53,5 +62,9 @@ class Settings_Page {
 
     public static function render_docs_page() {
         include plugin_dir_path( __DIR__ ) . 'admin/views/docs-manager-page.php';
+    }
+
+    public static function render_troubleshooting_page() {
+        include plugin_dir_path( __DIR__ ) . 'admin/views/troubleshooting-page.php';
     }
 }
