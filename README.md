@@ -2,7 +2,7 @@
 
 This WordPress plugin provides animated counters to display UK council debt figures. Counters can be embedded using a shortcode and configured through the WordPress admin interface.
 
-The plugin registers a custom **Council** post type where you can store detailed information about each local authority. The free version allows up to **two councils**; enter a valid license key on the settings page to create more.
+The plugin registers a custom **Council** post type where you can store detailed information about each local authority. The post type is hidden from the regular WordPress menu so users cannot manually add councils from the Posts screen. It remains visible in ACF location rules and can be managed from the plugin's own **Debt Counters → Councils** submenu. The free version allows up to **two councils**; enter a valid license key on the settings page to create more.
 
 This plugin depends on the **Advanced Custom Fields** (ACF) plugin. Please install and activate ACF before using Council Debt Counters.
 

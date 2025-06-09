@@ -2,6 +2,7 @@
     <h1><?php esc_html_e( 'Council Debt Counters', 'council-debt-counters' ); ?></h1>
     <p><?php esc_html_e( 'This plugin requires the Advanced Custom Fields (ACF) plugin. Please ensure it is installed and activated.', 'council-debt-counters' ); ?></p>
     <p><?php esc_html_e( 'To get started, upload baseline debt figures or manually enter data for each council.', 'council-debt-counters' ); ?></p>
+    <p><?php esc_html_e( 'Manage councils from the "Councils" submenu under Debt Counters.', 'council-debt-counters' ); ?></p>
 
     <form method="post" action="options.php">
         <?php
