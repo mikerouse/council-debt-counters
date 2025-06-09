@@ -37,6 +37,13 @@ class Council_Admin_Page {
         if ( function_exists( 'acf_enqueue_uploader' ) ) {
             acf_enqueue_uploader();
         }
+        wp_enqueue_script(
+            'cdc-council-form',
+            plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
+            [],
+            '0.1.0',
+            true
+        );
     }
 
     public static function maybe_acf_head() {
