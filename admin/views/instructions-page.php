@@ -1,3 +1,8 @@
+<?php
+use CouncilDebtCounters\License_Manager;
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+?>
 <div class="wrap">
     <h1><?php esc_html_e( 'Council Debt Counters', 'council-debt-counters' ); ?></h1>
     <p><?php esc_html_e( 'This plugin requires the Advanced Custom Fields (ACF) plugin. Please ensure it is installed and activated.', 'council-debt-counters' ); ?></p>

@@ -36,15 +36,18 @@ class Docs_Manager {
     public static function upload_document( $file ) {
         $ext = strtolower( pathinfo( $file['name'], PATHINFO_EXTENSION ) );
         if ( ! in_array( $ext, self::ALLOWED_EXTENSIONS ) ) {
+            Error_Logger::log( 'Attempted upload of invalid file type: ' . $file['name'] );
             return __( 'Invalid file type. Only XLSX, CSV, and PDF are allowed.', 'council-debt-counters' );
         }
         if ( ! self::can_upload() ) {
+            Error_Logger::log( 'Document upload blocked - free limit reached' );
             return __( 'Free version limit reached. Upgrade to Pro for unlimited documents.', 'council-debt-counters' );
         }
         $target = self::get_docs_path() . basename( $file['name'] );
         if ( move_uploaded_file( $file['tmp_name'], $target ) ) {
             return true;
         }
+        Error_Logger::log( 'Failed to move uploaded document: ' . $file['name'] );
         return __( 'Upload failed.', 'council-debt-counters' );
     }
 
