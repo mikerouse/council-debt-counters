@@ -8,6 +8,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Error_Logger {
     const LOG_FILENAME = 'troubleshooting.log';
 
+    public static function log_info( string $message ) {
+        self::log( 'INFO: ' . $message );
+    }
+
     public static function init() {
         set_error_handler( [ __CLASS__, 'handle_error' ] );
         register_shutdown_function( [ __CLASS__, 'handle_shutdown' ] );

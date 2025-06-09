@@ -22,6 +22,13 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                     <p class="description"><?php esc_html_e( 'Enter a valid license key to unlock unlimited councils.', 'council-debt-counters' ); ?></p>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><label for="cdc_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <input name="cdc_openai_api_key" type="text" id="cdc_openai_api_key" value="<?php echo esc_attr( get_option( 'cdc_openai_api_key', '' ) ); ?>" class="regular-text" />
+                    <p class="description"><?php esc_html_e( 'Optional: provide an OpenAI API key to assist with generating council information.', 'council-debt-counters' ); ?></p>
+                </td>
+            </tr>
         </table>
         <?php submit_button(); ?>
     </form>
