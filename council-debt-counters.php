@@ -21,12 +21,14 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-error-logger.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-docs-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-license-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-post-type.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-admin-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-acf-manager.php';
 
 add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Error_Logger::init();
     \CouncilDebtCounters\Settings_Page::init();
     \CouncilDebtCounters\Council_Post_Type::init();
+    \CouncilDebtCounters\Council_Admin_Page::init();
     \CouncilDebtCounters\ACF_Manager::init();
 } );
 

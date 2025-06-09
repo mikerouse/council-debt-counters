@@ -6,6 +6,8 @@ The plugin registers a custom **Council** post type where you can store detailed
 
 This plugin depends on the **Advanced Custom Fields** (ACF) plugin. Please install and activate ACF before using Council Debt Counters.
 
+Councils can be added, edited, and deleted from the **Debt Counters → Councils** page which uses a clean Bootstrap design. The ACF field groups assigned to the `council` post type are displayed on this screen so you can capture all relevant information before uploading finance documents.
+
 Currently the plugin includes an admin page with instructions for uploading starting debt figures via CSV. Additional functionality such as data uploading and counter rendering will be added in future versions.
 
 ## Installation
