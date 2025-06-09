@@ -12,15 +12,6 @@ class Settings_Page {
     public static function init() {
         add_action( 'admin_menu', [ __CLASS__, 'add_menu' ] );
         add_action( 'admin_init', [ __CLASS__, 'register_settings' ] );
-        // Add submenu for document management
-        add_submenu_page(
-            'council-debt-counters',
-            __( 'Manage Documents', 'council-debt-counters' ),
-            __( 'Manage Documents', 'council-debt-counters' ),
-            'manage_options',
-            'cdc-manage-docs',
-            [ __CLASS__, 'render_docs_page' ]
-        );
     }
 
     public static function add_menu() {
@@ -31,6 +22,23 @@ class Settings_Page {
             'council-debt-counters',
             [ __CLASS__, 'render_page' ],
             'dashicons-chart-line'
+        );
+
+        add_submenu_page(
+            'council-debt-counters',
+            __( 'Councils', 'council-debt-counters' ),
+            __( 'Councils', 'council-debt-counters' ),
+            'manage_options',
+            'edit.php?post_type=council'
+        );
+
+        add_submenu_page(
+            'council-debt-counters',
+            __( 'Manage Documents', 'council-debt-counters' ),
+            __( 'Manage Documents', 'council-debt-counters' ),
+            'manage_options',
+            'cdc-manage-docs',
+            [ __CLASS__, 'render_docs_page' ]
         );
     }
 
