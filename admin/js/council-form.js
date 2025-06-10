@@ -28,7 +28,10 @@
             }
         });
 
-        var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]');
+        var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]'); // legacy
+        var shortField = document.querySelector('input[name="acf[field_cdc_short_term_borrowing]"]');
+        var longField = document.querySelector('input[name="acf[field_cdc_long_term_borrowing]"]');
+        var leaseField = document.querySelector('input[name="acf[field_cdc_finance_lease_pfi_liabilities]"]');
         var manualField = document.querySelector('input[name="acf[field_cdc_manual_debt_entry]"]');
         var adjustmentsField = document.querySelector('input[name="acf[field_cdc_debt_adjustments]"]');
         var interestField = document.querySelector('input[name="acf[field_cdc_interest_paid]"]');
@@ -39,7 +42,9 @@
         var ratesOutput = document.createElement('div');
         ratesOutput.id = 'cdc-debt-rates';
         ratesOutput.className = 'mt-2 alert alert-info';
-        if (extField) {
+        if (shortField) {
+            shortField.parentElement.appendChild(ratesOutput);
+        } else if (extField) {
             extField.parentElement.appendChild(ratesOutput);
         }
 
@@ -67,13 +72,15 @@
         setInterval(tick, 1000);
 
         function updateAll() {
-            var external = parseFloat(extField ? extField.value : 0) || 0;
+            var shortVal = parseFloat(shortField ? shortField.value : 0) || 0;
+            var longVal = parseFloat(longField ? longField.value : 0) || 0;
+            var leaseVal = parseFloat(leaseField ? leaseField.value : 0) || 0;
             var manual = parseFloat(manualField ? manualField.value : 0) || 0;
             var adjustments = parseFloat(adjustmentsField ? adjustmentsField.value : 0) || 0;
             var interest = parseFloat(interestField ? interestField.value : 0) || 0;
             var mrp = parseFloat(mrpField ? mrpField.value : 0) || 0;
-            // Only use external + manual + adjustments for total debt
-            var total = external + manual + adjustments;
+            // Total debt is short term + long term + lease/PFI + manual + adjustments
+            var total = shortVal + longVal + leaseVal + manual + adjustments;
             if (totalField) {
                 totalField.value = total.toFixed(2);
                 totalField.dispatchEvent(new Event('input'));
@@ -89,7 +96,10 @@
             rateDisplay.textContent = 'Growth per second: £' + growthPerSecond.toFixed(6);
         }
 
-        if (extField) extField.addEventListener('input', updateAll);
+        if (shortField) shortField.addEventListener('input', updateAll);
+        if (longField) longField.addEventListener('input', updateAll);
+        if (leaseField) leaseField.addEventListener('input', updateAll);
+        if (extField) extField.addEventListener('input', updateAll); // legacy
         if (interestField) interestField.addEventListener('input', updateAll);
         if (mrpField) mrpField.addEventListener('input', updateAll);
         if (pwlbField) pwlbField.addEventListener('input', updateAll);
@@ -98,7 +108,7 @@
         // Add explainer for calculation
         var explainer = document.createElement('div');
         explainer.className = 'alert alert-warning mt-2';
-        explainer.innerHTML = 'Total debt is calculated as: <strong>Total External Borrowing + Adjustments + Manual Entry (if any)</strong>. PWLB and CFR are shown for reference only. Interest is not added to the debt figure.';
+        explainer.innerHTML = 'Total debt is calculated as: <strong>Short-Term Borrowing + Long-Term Borrowing + Finance Lease/PFI Liabilities + Adjustments + Manual Entry (if any)</strong>. PWLB and CFR are shown for reference only. Interest is not added to the debt figure.';
         sidebar.querySelector('.card-body').appendChild(explainer);
     });
 })();

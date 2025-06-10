@@ -14,6 +14,7 @@ class Council_Post_Type {
         add_action( 'load-post-new.php', [ __CLASS__, 'enforce_limit' ] );
         add_action( 'acf/save_post', [ __CLASS__, 'sync_title_from_acf' ], 20 );
         add_action( 'acf/save_post', [ __CLASS__, 'calculate_total_debt' ], 20 );
+        add_action( 'save_post_council', [ __CLASS__, 'calculate_total_debt' ], 20, 1 );
     }
 
     /**
@@ -76,8 +77,10 @@ class Council_Post_Type {
             return;
         }
         // Get all relevant fields
-        $external = (float) get_field( 'total_external_borrowing', $post_id );
-        $manual   = (float) get_field( 'manual_debt_entry', $post_id ); // If you have a manual field
+        $short_term = (float) get_field( 'short_term_borrowing', $post_id );
+        $long_term  = (float) get_field( 'long_term_borrowing', $post_id );
+        $lease_pfi  = (float) get_field( 'finance_lease_pfi_liabilities', $post_id );
+        $manual     = (float) get_field( 'manual_debt_entry', $post_id ); // If you have a manual field
         $adjust   = 0;
         $entries  = get_post_meta( $post_id, 'cdc_debt_adjustments', true );
         if ( is_array( $entries ) ) {
@@ -85,8 +88,8 @@ class Council_Post_Type {
                 $adjust += (float) $e['amount'];
             }
         }
-        // Total debt is just external borrowing + manual + adjustments
-        $total = $external + $manual + $adjust;
+        // Total debt is short term + long term + lease/PFI + manual + adjustments
+        $total = $short_term + $long_term + $lease_pfi + $manual + $adjust;
         update_field( 'total_debt', $total, $post_id );
     }
 }
