@@ -38,6 +38,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         </table>
         <?php submit_button(); ?>
     </form>
+    <h2><?php esc_html_e( "Import Councils from CSV", 'council-debt-counters' ); ?></h2>
+    <form method="post" enctype="multipart/form-data">
+        <?php wp_nonce_field( "cdc_load_csv", "cdc_load_csv_nonce" ); ?>
+        <input type="file" name="cdc_csv_file" accept=".csv" required />
+        <button type="submit" class="button"><?php esc_html_e( "Import CSV", 'council-debt-counters' ); ?></button>
+    </form>
     <div class="notice notice-info" style="margin-top:20px;">
         <p><strong><?php esc_html_e( 'Legal notice', 'council-debt-counters' ); ?></strong></p>
         <p><?php esc_html_e( 'When publishing council data you must comply with the Copyright, Designs and Patents Act 1988, Section 11A of the Freedom of Information Act 2001, and the Re-Use of Public Sector Information Regulations 2005. Data must not be shown in a misleading context or for commercial gain, including behind paywalls. Always attribute the source council wherever the data is displayed, including when using a shortcode.', 'council-debt-counters' ); ?></p>

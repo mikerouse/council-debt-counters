@@ -34,6 +34,7 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\ACF_Manager::init();
     \CouncilDebtCounters\Shortcode_Renderer::init();
     \CouncilDebtCounters\Debt_Adjustments_Page::init();
+    \CouncilDebtCounters\Data_Loader::init();
     \CouncilDebtCounters\License_Manager::init();
 } );
 
