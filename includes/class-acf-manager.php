@@ -79,18 +79,6 @@ class ACF_Manager {
                     'type' => 'number',
                 ],
                 [
-                    'key' => 'field_cdc_elected_members',
-                    'label' => __( 'Elected Members', 'council-debt-counters' ),
-                    'name' => 'elected_members',
-                    'type' => 'number',
-                ],
-                [
-                    'key' => 'field_cdc_council_tax_revenue',
-                    'label' => __( 'Annual Council Tax Revenue', 'council-debt-counters' ),
-                    'name' => 'council_tax_revenue',
-                    'type' => 'number',
-                ],
-                [
                     'key' => 'field_cdc_total_debt',
                     'label' => __( 'Total Debt', 'council-debt-counters' ),
                     'name' => 'total_debt',
@@ -98,16 +86,10 @@ class ACF_Manager {
                     'readonly' => 1,
                 ],
                 [
-                    'key' => 'field_cdc_total_external_borrowing',
-                    'label' => __( 'Total External Borrowing (Loans Outstanding)', 'council-debt-counters' ),
-                    'name' => 'total_external_borrowing',
-                    'type' => 'number',
-                    'required' => 1,
-                ],
-                [
                     'key' => 'field_cdc_current_liabilities',
                     'label' => __( 'Current Liabilities', 'council-debt-counters' ),
                     'name' => 'current_liabilities',
+                    'type' => 'number',
                 ],
                 [
                     'key' => 'field_cdc_short_term_borrowing',
@@ -134,13 +116,6 @@ class ACF_Manager {
                     'key' => 'field_cdc_interest_paid',
                     'label' => __( 'Interest Paid on Debt', 'council-debt-counters' ),
                     'name' => 'interest_paid_on_debt',
-                    'type' => 'number',
-                    'required' => 1,
-                ],
-                [
-                    'key' => 'field_cdc_cfr',
-                    'label' => __( 'Capital Financing Requirement (CFR)', 'council-debt-counters' ),
-                    'name' => 'capital_financing_requirement',
                     'type' => 'number',
                     'required' => 1,
                 ],

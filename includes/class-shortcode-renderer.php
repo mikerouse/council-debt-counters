@@ -54,8 +54,6 @@ class Shortcode_Renderer {
         wp_enqueue_script( 'cdc-counter' );
 
         $details  = [
-            'external_borrowing' => get_field( 'total_external_borrowing', $id ),
-            'cfr'                => get_field( 'capital_financing_requirement', $id ),
             'interest'           => $interest,
             'mrp'                => $mrp,
             'counter_start_date' => null, // removed
@@ -119,8 +117,6 @@ class Shortcode_Renderer {
             </button>
             <div class="collapse" id="cdc-detail-<?php echo esc_attr( $id ); ?>">
                 <ul class="mt-2 list-unstyled">
-                    <li><?php esc_html_e( 'Total External Borrowing:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['external_borrowing'], 0 ); ?></li>
-                    <li><?php esc_html_e( 'Capital Financing Requirement:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['cfr'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Interest Paid on Debt (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( $growth_per_second, 6 ); ?></li>

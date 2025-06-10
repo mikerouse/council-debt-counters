@@ -22,13 +22,11 @@
             var name = field.getAttribute('name') || '';
             var isBand = /acf\[field_cdc_band_[a-h]_props?\]/i.test(name);
             var isPopulation = name === 'acf[field_cdc_population]';
-            var isMembers = name === 'acf[field_cdc_elected_members]';
-            if (!isBand && !isPopulation && !isMembers) {
+            if (!isBand && !isPopulation) {
                 addHelper(field);
             }
         });
 
-        var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]'); // legacy
         var shortField = document.querySelector('input[name="acf[field_cdc_current_liabilities]"]');
         var longField = document.querySelector('input[name="acf[field_cdc_long_term_liabilities]"]');
         var leaseField = document.querySelector('input[name="acf[field_cdc_finance_lease_pfi_liabilities]"]');
@@ -36,15 +34,12 @@
         var adjustmentsField = document.querySelector('input[name="acf[field_cdc_debt_adjustments]"]');
         var interestField = document.querySelector('input[name="acf[field_cdc_interest_paid]"]');
         var mrpField = document.querySelector('input[name="acf[field_cdc_mrp]"]');
-        var cfrField = document.querySelector('input[name="acf[field_cdc_cfr]"]');
         var totalField = document.querySelector('input[name="acf[field_cdc_total_debt]"]');
         var ratesOutput = document.createElement('div');
         ratesOutput.id = 'cdc-debt-rates';
         ratesOutput.className = 'mt-2 alert alert-info';
         if (shortField) {
             shortField.parentElement.appendChild(ratesOutput);
-        } else if (extField) {
-            extField.parentElement.appendChild(ratesOutput);
         }
 
         var sidebar = document.createElement('div');
@@ -98,10 +93,8 @@
         if (shortField) shortField.addEventListener('input', updateAll);
         if (longField) longField.addEventListener('input', updateAll);
         if (leaseField) leaseField.addEventListener('input', updateAll);
-        if (extField) extField.addEventListener('input', updateAll); // legacy
         if (interestField) interestField.addEventListener('input', updateAll);
         if (mrpField) mrpField.addEventListener('input', updateAll);
-        if (cfrField) cfrField.addEventListener('input', updateAll);
         updateAll();
         // Add explainer for calculation
         var explainer = document.createElement('div');
