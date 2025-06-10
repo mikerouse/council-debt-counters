@@ -36,7 +36,6 @@
         var adjustmentsField = document.querySelector('input[name="acf[field_cdc_debt_adjustments]"]');
         var interestField = document.querySelector('input[name="acf[field_cdc_interest_paid]"]');
         var mrpField = document.querySelector('input[name="acf[field_cdc_mrp]"]');
-        var pwlbField = document.querySelector('input[name="acf[field_cdc_pwlb_borrowing]"]');
         var cfrField = document.querySelector('input[name="acf[field_cdc_cfr]"]');
         var totalField = document.querySelector('input[name="acf[field_cdc_total_debt]"]');
         var ratesOutput = document.createElement('div');
@@ -102,13 +101,12 @@
         if (extField) extField.addEventListener('input', updateAll); // legacy
         if (interestField) interestField.addEventListener('input', updateAll);
         if (mrpField) mrpField.addEventListener('input', updateAll);
-        if (pwlbField) pwlbField.addEventListener('input', updateAll);
         if (cfrField) cfrField.addEventListener('input', updateAll);
         updateAll();
         // Add explainer for calculation
         var explainer = document.createElement('div');
         explainer.className = 'alert alert-warning mt-2';
-        explainer.innerHTML = 'Total debt = <strong>Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments + Manual Entry</strong>. The growth or shrinkage estimate uses interest from the last statement of accounts, but interest itself is not added to the debt figure.';
+        explainer.innerHTML = 'Total debt = <strong>Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments</strong>. The growth or shrinkage estimate uses interest from the last statement of accounts.';
         sidebar.querySelector('.card-body').appendChild(explainer);
     });
 })();

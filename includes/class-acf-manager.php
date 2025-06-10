@@ -105,13 +105,6 @@ class ACF_Manager {
                     'required' => 1,
                 ],
                 [
-                    'key' => 'field_cdc_pwlb_borrowing',
-                    'label' => __( 'Public Works Loan Board (PWLB) Borrowing', 'council-debt-counters' ),
-                    'name' => 'pwlb_borrowing',
-                    'type' => 'number',
-                    'required' => 1,
-                ],
-                [
                     'key' => 'field_cdc_short_term_borrowing',
                     'label' => __( 'Short-term Borrowing', 'council-debt-counters' ),
                     'name' => 'short_term_borrowing',
