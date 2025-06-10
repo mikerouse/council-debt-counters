@@ -25,15 +25,7 @@ class Settings_Page {
             'dashicons-chart-line'
         );
 
-        add_submenu_page(
-            'council-debt-counters',
-            __( 'Councils', 'council-debt-counters' ),
-            __( 'Councils', 'council-debt-counters' ),
-            'manage_options',
-            Council_Admin_Page::PAGE_SLUG,
-            [ Council_Admin_Page::class, 'render_page' ]
-        );
-
+        // Only add unique submenus here (do not duplicate "Councils")
         add_submenu_page(
             'council-debt-counters',
             __( 'Manage Documents', 'council-debt-counters' ),
@@ -42,7 +34,6 @@ class Settings_Page {
             'cdc-manage-docs',
             [ __CLASS__, 'render_docs_page' ]
         );
-
         add_submenu_page(
             'council-debt-counters',
             __( 'Troubleshooting', 'council-debt-counters' ),
@@ -51,7 +42,6 @@ class Settings_Page {
             'cdc-troubleshooting',
             [ __CLASS__, 'render_troubleshooting_page' ]
         );
-
         add_submenu_page(
             'council-debt-counters',
             __( 'Debt Adjustments', 'council-debt-counters' ),
