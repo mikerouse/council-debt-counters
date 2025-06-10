@@ -31,6 +31,8 @@
         var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]');
         var interestField = document.querySelector('input[name="acf[field_cdc_interest_paid]"]');
         var mrpField = document.querySelector('input[name="acf[field_cdc_mrp]"]');
+        var pwlbField = document.querySelector('input[name="acf[field_cdc_pwlb_borrowing]"]');
+        var cfrField = document.querySelector('input[name="acf[field_cdc_cfr]"]');
         var totalField = document.querySelector('input[name="acf[field_cdc_total_debt]"]');
         var ratesOutput = document.createElement('div');
         ratesOutput.id = 'cdc-debt-rates';
@@ -66,12 +68,14 @@
             var external = parseFloat(extField ? extField.value : 0) || 0;
             var interest = parseFloat(interestField ? interestField.value : 0) || 0;
             var mrp = parseFloat(mrpField ? mrpField.value : 0) || 0;
-            var total = external + interest;
+            var pwlb = parseFloat(pwlbField ? pwlbField.value : 0) || 0;
+            var cfr = parseFloat(cfrField ? cfrField.value : 0) || 0;
+            var total = external + interest + pwlb + cfr;
             if (totalField) {
                 totalField.value = total.toFixed(2);
                 totalField.dispatchEvent(new Event('input'));
             }
-            var perDay = external / 365;
+            var perDay = total / 365;
             var perHour = perDay / 24;
             var perSecond = perHour / 3600;
             ratesOutput.textContent = 'Debt per day: £' + perDay.toFixed(2) + ', per hour: £' + perHour.toFixed(2) + ', per second: £' + perSecond.toFixed(2);
@@ -85,6 +89,8 @@
         if (extField) extField.addEventListener('input', updateAll);
         if (interestField) interestField.addEventListener('input', updateAll);
         if (mrpField) mrpField.addEventListener('input', updateAll);
+        if (pwlbField) pwlbField.addEventListener('input', updateAll);
+        if (cfrField) cfrField.addEventListener('input', updateAll);
         updateAll();
     });
 })();
