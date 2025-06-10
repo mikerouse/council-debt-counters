@@ -133,15 +133,6 @@ class ACF_Manager {
                     'required' => 1,
                 ],
                 [
-                    'key' => 'field_cdc_counter_start_date',
-                    'label' => __( 'Counter Start Date', 'council-debt-counters' ),
-                    'name' => 'counter_start_date',
-                    'type' => 'date_picker',
-                    'display_format' => 'Y-m-d',
-                    'return_format' => 'Y-m-d',
-                    'default_value' => $default_date,
-                ],
-                [
                     'key' => 'field_cdc_band_a_props',
                     'label' => __( 'Properties in Band A', 'council-debt-counters' ),
                     'name' => 'band_a_properties',
