@@ -29,8 +29,8 @@
         });
 
         var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]'); // legacy
-        var shortField = document.querySelector('input[name="acf[field_cdc_short_term_borrowing]"]');
-        var longField = document.querySelector('input[name="acf[field_cdc_long_term_borrowing]"]');
+        var shortField = document.querySelector('input[name="acf[field_cdc_current_liabilities]"]');
+        var longField = document.querySelector('input[name="acf[field_cdc_long_term_liabilities]"]');
         var leaseField = document.querySelector('input[name="acf[field_cdc_finance_lease_pfi_liabilities]"]');
         var manualField = document.querySelector('input[name="acf[field_cdc_manual_debt_entry]"]');
         var adjustmentsField = document.querySelector('input[name="acf[field_cdc_debt_adjustments]"]');
@@ -79,7 +79,7 @@
             var adjustments = parseFloat(adjustmentsField ? adjustmentsField.value : 0) || 0;
             var interest = parseFloat(interestField ? interestField.value : 0) || 0;
             var mrp = parseFloat(mrpField ? mrpField.value : 0) || 0;
-            // Total debt is short term + long term + lease/PFI + manual + adjustments
+            // Total debt is current liabilities + long term liabilities + lease/PFI + manual + adjustments
             var total = shortVal + longVal + leaseVal + manual + adjustments;
             if (totalField) {
                 totalField.value = total.toFixed(2);
@@ -108,7 +108,7 @@
         // Add explainer for calculation
         var explainer = document.createElement('div');
         explainer.className = 'alert alert-warning mt-2';
-        explainer.innerHTML = 'Total debt is calculated as: <strong>Short-Term Borrowing + Long-Term Borrowing + Finance Lease/PFI Liabilities + Adjustments + Manual Entry (if any)</strong>. PWLB and CFR are shown for reference only. Interest is not added to the debt figure.';
+        explainer.innerHTML = 'Total debt is calculated as: <strong>Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments + Manual Entry (if any)</strong>. PWLB and CFR are shown for reference only. Interest is not added to the debt figure.';
         sidebar.querySelector('.card-body').appendChild(explainer);
     });
 })();

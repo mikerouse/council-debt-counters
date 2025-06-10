@@ -77,8 +77,8 @@ class Council_Post_Type {
             return;
         }
         // Get all relevant fields
-        $short_term = (float) get_field( 'short_term_borrowing', $post_id );
-        $long_term  = (float) get_field( 'long_term_borrowing', $post_id );
+        $current_liabilities = (float) get_field( 'current_liabilities', $post_id );
+        $long_term  = (float) get_field( 'long_term_liabilities', $post_id );
         $lease_pfi  = (float) get_field( 'finance_lease_pfi_liabilities', $post_id );
         $manual     = (float) get_field( 'manual_debt_entry', $post_id ); // If you have a manual field
         $adjust   = 0;
@@ -88,8 +88,8 @@ class Council_Post_Type {
                 $adjust += (float) $e['amount'];
             }
         }
-        // Total debt is short term + long term + lease/PFI + manual + adjustments
-        $total = $short_term + $long_term + $lease_pfi + $manual + $adjust;
+        // Total debt is current liabilities + long term liabilities + lease/PFI + manual + adjustments
+        $total = $current_liabilities + $long_term + $lease_pfi + $manual + $adjust;
         update_field( 'total_debt', $total, $post_id );
     }
 }
