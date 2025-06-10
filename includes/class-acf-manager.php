@@ -112,6 +112,27 @@ class ACF_Manager {
                     'required' => 1,
                 ],
                 [
+                    'key' => 'field_cdc_short_term_borrowing',
+                    'label' => __( 'Short-term Borrowing', 'council-debt-counters' ),
+                    'name' => 'short_term_borrowing',
+                    'type' => 'number',
+                    'instructions' => __( 'Refer to the council\'s Statement of Accounts.', 'council-debt-counters' ),
+                ],
+                [
+                    'key' => 'field_cdc_long_term_borrowing',
+                    'label' => __( 'Long-term Borrowing', 'council-debt-counters' ),
+                    'name' => 'long_term_borrowing',
+                    'type' => 'number',
+                    'instructions' => __( 'Refer to the council\'s Statement of Accounts.', 'council-debt-counters' ),
+                ],
+                [
+                    'key' => 'field_cdc_pfi_lease_liabilities',
+                    'label' => __( 'PFI or Finance Lease Liabilities', 'council-debt-counters' ),
+                    'name' => 'pfi_or_finance_lease_liabilities',
+                    'type' => 'number',
+                    'instructions' => __( 'Refer to the council\'s Statement of Accounts.', 'council-debt-counters' ),
+                ],
+                [
                     'key' => 'field_cdc_interest_paid',
                     'label' => __( 'Interest Paid on Debt', 'council-debt-counters' ),
                     'name' => 'interest_paid_on_debt',
