@@ -36,7 +36,8 @@ class Shortcode_Renderer {
         $net_growth_per_year = $interest - $mrp;
         $growth_per_second = $net_growth_per_year / (365 * 24 * 60 * 60);
 
-        // UK Financial Year Start Date is 1 April
+        // Council balance sheets cover the year ending 31 March.
+        // Calculations therefore start on 1 April.
         $year = date('Y');
         $now = time();
         $fy_start = strtotime("$year-04-01");
@@ -58,7 +59,7 @@ class Shortcode_Renderer {
             'cfr'                => get_field( 'capital_financing_requirement', $id ),
             'interest'           => $interest,
             'mrp'                => $mrp,
-            'counter_start_date' => null, // removed, always 6 April
+            'counter_start_date' => null, // removed
         ];
 
         // Get band property counts
