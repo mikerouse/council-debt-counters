@@ -147,7 +147,7 @@ class Shortcode_Renderer {
                 </div>
                 <?php endif; ?>
                 <div class="alert alert-warning mt-2">
-                    <?php esc_html_e( 'Total debt is calculated as: Short-Term Borrowing + Long-Term Borrowing + Finance Lease/PFI Liabilities + Adjustments + Manual Entry (if any). PWLB and CFR are shown for reference only. Interest is not added to the debt figure. This counter is an estimate. It assumes the council will pay the same amount of interest on its debt as last year, spread evenly over the year. In reality, the council could pay off debt faster or slower, refinance at a different rate, or borrow more. The actual interest paid will only be known when the next set of financial statements is published. This is just a live estimate, not an official figure.', 'council-debt-counters' ); ?>
+                    <?php esc_html_e( 'Total debt = Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments + Manual Entry. The growth or shrinkage estimate uses interest from the last statement of accounts, but interest itself is not added to the debt figure. This counter is an estimate. It assumes the council will pay the same amount of interest on its debt as last year, spread evenly over the year. In reality, the council could pay off debt faster or slower, refinance at a different rate, or borrow more. The actual interest paid will only be known when the next set of financial statements is published. This is just a live estimate, not an official figure.', 'council-debt-counters' ); ?>
                 </div>
             </div>
         </div>

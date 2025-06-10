@@ -108,7 +108,7 @@
         // Add explainer for calculation
         var explainer = document.createElement('div');
         explainer.className = 'alert alert-warning mt-2';
-        explainer.innerHTML = 'Total debt is calculated as: <strong>Short-Term Borrowing + Long-Term Borrowing + Finance Lease/PFI Liabilities + Adjustments + Manual Entry (if any)</strong>. PWLB and CFR are shown for reference only. Interest is not added to the debt figure.';
+        explainer.innerHTML = 'Total debt = <strong>Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments + Manual Entry</strong>. The growth or shrinkage estimate uses interest from the last statement of accounts, but interest itself is not added to the debt figure.';
         sidebar.querySelector('.card-body').appendChild(explainer);
     });
 })();
