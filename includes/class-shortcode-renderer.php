@@ -54,7 +54,6 @@ class Shortcode_Renderer {
 
         $details  = [
             'external_borrowing' => get_field( 'total_external_borrowing', $id ),
-            'pwlb'               => get_field( 'pwlb_borrowing', $id ),
             'cfr'                => get_field( 'capital_financing_requirement', $id ),
             'interest'           => $interest,
             'mrp'                => $mrp,
@@ -120,7 +119,6 @@ class Shortcode_Renderer {
             <div class="collapse" id="cdc-detail-<?php echo esc_attr( $id ); ?>">
                 <ul class="mt-2 list-unstyled">
                     <li><?php esc_html_e( 'Total External Borrowing:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['external_borrowing'], 0 ); ?></li>
-                    <li><?php esc_html_e( 'PWLB Borrowing:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['pwlb'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Capital Financing Requirement:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['cfr'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Interest Paid on Debt (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 0 ); ?></li>
@@ -147,7 +145,7 @@ class Shortcode_Renderer {
                 </div>
                 <?php endif; ?>
                 <div class="alert alert-warning mt-2">
-                    <?php esc_html_e( 'Total debt is calculated as: Short-Term Borrowing + Long-Term Borrowing + Finance Lease/PFI Liabilities + Adjustments + Manual Entry (if any). PWLB and CFR are shown for reference only. Interest is not added to the debt figure. This counter is an estimate. It assumes the council will pay the same amount of interest on its debt as last year, spread evenly over the year. In reality, the council could pay off debt faster or slower, refinance at a different rate, or borrow more. The actual interest paid will only be known when the next set of financial statements is published. This is just a live estimate, not an official figure.', 'council-debt-counters' ); ?>
+                    <?php esc_html_e( 'Total debt is calculated as: Short-Term Borrowing + Long-Term Borrowing + Finance Lease/PFI Liabilities + Adjustments + Manual Entry (if any). CFR is shown for reference only. Interest is not added to the debt figure. This counter is an estimate. It assumes the council will pay the same amount of interest on its debt as last year, spread evenly over the year. In reality, the council could pay off debt faster or slower, refinance at a different rate, or borrow more. The actual interest paid will only be known when the next set of financial statements is published. This is just a live estimate, not an official figure.', 'council-debt-counters' ); ?>
                 </div>
             </div>
         </div>
