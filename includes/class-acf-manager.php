@@ -105,6 +105,11 @@ class ACF_Manager {
                     'required' => 1,
                 ],
                 [
+                    'key' => 'field_cdc_current_liabilities',
+                    'label' => __( 'Current Liabilities', 'council-debt-counters' ),
+                    'name' => 'current_liabilities',
+                ],
+                [
                     'key' => 'field_cdc_short_term_borrowing',
                     'label' => __( 'Short-term Borrowing', 'council-debt-counters' ),
                     'name' => 'short_term_borrowing',
@@ -112,9 +117,9 @@ class ACF_Manager {
                     'instructions' => __( 'Refer to the council\'s Statement of Accounts.', 'council-debt-counters' ),
                 ],
                 [
-                    'key' => 'field_cdc_long_term_borrowing',
-                    'label' => __( 'Long-term Borrowing', 'council-debt-counters' ),
-                    'name' => 'long_term_borrowing',
+                    'key' => 'field_cdc_long_term_liabilities',
+                    'label' => __( 'Long Term Liabilities', 'council-debt-counters' ),
+                    'name' => 'long_term_liabilities',
                     'type' => 'number',
                     'instructions' => __( 'Refer to the council\'s Statement of Accounts.', 'council-debt-counters' ),
                 ],
