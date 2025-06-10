@@ -29,6 +29,8 @@
         });
 
         var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]');
+        var manualField = document.querySelector('input[name="acf[field_cdc_manual_debt_entry]"]');
+        var adjustmentsField = document.querySelector('input[name="acf[field_cdc_debt_adjustments]"]');
         var interestField = document.querySelector('input[name="acf[field_cdc_interest_paid]"]');
         var mrpField = document.querySelector('input[name="acf[field_cdc_mrp]"]');
         var pwlbField = document.querySelector('input[name="acf[field_cdc_pwlb_borrowing]"]');
@@ -66,8 +68,8 @@
 
         function updateAll() {
             var external = parseFloat(extField ? extField.value : 0) || 0;
-            var manual = 0; // If you have a manual field, add here
-            var adjustments = 0; // If you have adjustments, add here
+            var manual = parseFloat(manualField ? manualField.value : 0) || 0;
+            var adjustments = parseFloat(adjustmentsField ? adjustmentsField.value : 0) || 0;
             var interest = parseFloat(interestField ? interestField.value : 0) || 0;
             var mrp = parseFloat(mrpField ? mrpField.value : 0) || 0;
             // Only use external + manual + adjustments for total debt
