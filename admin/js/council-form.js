@@ -18,15 +18,19 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
-            // Only add helper if not a council tax band field
+            // Only add helper if field represents a monetary value
             var name = field.getAttribute('name') || '';
-            if (!/acf\[field_cdc_band_[a-h]_props?\]/i.test(name)) {
+            var isBand = /acf\[field_cdc_band_[a-h]_props?\]/i.test(name);
+            var isPopulation = name === 'acf[field_cdc_population]';
+            var isMembers = name === 'acf[field_cdc_elected_members]';
+            if (!isBand && !isPopulation && !isMembers) {
                 addHelper(field);
             }
         });
 
         var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]');
         var interestField = document.querySelector('input[name="acf[field_cdc_interest_paid]"]');
+        var mrpField = document.querySelector('input[name="acf[field_cdc_mrp]"]');
         var totalField = document.querySelector('input[name="acf[field_cdc_total_debt]"]');
         var ratesOutput = document.createElement('div');
         ratesOutput.id = 'cdc-debt-rates';
@@ -35,9 +39,33 @@
             extField.parentElement.appendChild(ratesOutput);
         }
 
+        var sidebar = document.createElement('div');
+        sidebar.id = 'cdc-counter-sidebar';
+        sidebar.className = 'card position-fixed end-0 top-0 m-3';
+        sidebar.style.width = '18rem';
+        sidebar.innerHTML = '<div class="card-body">' +
+            '<h5 class="card-title">Live Counter</h5>' +
+            '<div id="cdc-counter-display" class="h3" aria-live="polite">£0</div>' +
+            '<p id="cdc-counter-rate" class="mb-0"></p>' +
+            '</div>';
+        document.body.appendChild(sidebar);
+        var counterDisplay = sidebar.querySelector('#cdc-counter-display');
+        var rateDisplay = sidebar.querySelector('#cdc-counter-rate');
+        var baseTotal = 0;
+        var startTime = Date.now();
+        var growthPerSecond = 0;
+
+        function tick() {
+            var elapsed = (Date.now() - startTime) / 1000;
+            var current = baseTotal + elapsed * growthPerSecond;
+            counterDisplay.textContent = current.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 });
+        }
+        setInterval(tick, 1000);
+
         function updateAll() {
             var external = parseFloat(extField ? extField.value : 0) || 0;
             var interest = parseFloat(interestField ? interestField.value : 0) || 0;
+            var mrp = parseFloat(mrpField ? mrpField.value : 0) || 0;
             var total = external + interest;
             if (totalField) {
                 totalField.value = total.toFixed(2);
@@ -47,10 +75,16 @@
             var perHour = perDay / 24;
             var perSecond = perHour / 3600;
             ratesOutput.textContent = 'Debt per day: £' + perDay.toFixed(2) + ', per hour: £' + perHour.toFixed(2) + ', per second: £' + perSecond.toFixed(2);
+
+            growthPerSecond = (interest - mrp) / (365 * 24 * 60 * 60);
+            baseTotal = total;
+            startTime = Date.now();
+            rateDisplay.textContent = 'Growth per second: £' + growthPerSecond.toFixed(6);
         }
 
         if (extField) extField.addEventListener('input', updateAll);
         if (interestField) interestField.addEventListener('input', updateAll);
+        if (mrpField) mrpField.addEventListener('input', updateAll);
         updateAll();
     });
 })();
