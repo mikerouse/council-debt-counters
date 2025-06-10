@@ -111,7 +111,7 @@ class Shortcode_Renderer {
         ob_start();
         ?>
         <div class="cdc-counter-wrapper mb-3">
-            <div class="cdc-counter display-4 fw-bold" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>">
+            <div class="cdc-counter display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>">
                 £0
             </div>
             <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#cdc-detail-<?php echo esc_attr( $id ); ?>" aria-expanded="false" aria-controls="cdc-detail-<?php echo esc_attr( $id ); ?>">

@@ -54,7 +54,7 @@
         sidebar.style.width = '18rem';
         sidebar.innerHTML = '<div class="card-body">' +
             '<h5 class="card-title">Live Counter</h5>' +
-            '<div id="cdc-counter-display" class="h3" aria-live="polite">£0</div>' +
+            '<div id="cdc-counter-display" class="h3" role="status" aria-live="polite">£0</div>' +
             '<p id="cdc-counter-rate" class="mb-0"></p>' +
             '</div>';
         document.body.appendChild(sidebar);
