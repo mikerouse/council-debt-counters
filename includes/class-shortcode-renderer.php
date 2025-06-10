@@ -10,6 +10,7 @@ class Shortcode_Renderer {
     public static function init() {
         add_shortcode( 'council_counter', [ __CLASS__, 'render_counter' ] );
         add_action( 'wp_enqueue_scripts', [ __CLASS__, 'register_assets' ] );
+        add_action( 'admin_enqueue_scripts', [ __CLASS__, 'register_assets' ] );
     }
 
     public static function register_assets() {
@@ -31,17 +32,18 @@ class Shortcode_Renderer {
             $total = 0;
         }
         $interest = (float) get_field( 'interest_paid_on_debt', $id );
-        $growth_per_year = $interest;
-        $growth_per_second = $growth_per_year / (365 * 24 * 60 * 60);
+        $mrp = (float) get_field( 'minimum_revenue_provision', $id );
+        $net_growth_per_year = $interest - $mrp;
+        $growth_per_second = $net_growth_per_year / (365 * 24 * 60 * 60);
 
         // UK Financial Year Start Date is always 6 April
         $year = date('Y');
+        $now = time();
         $fy_start = strtotime("$year-04-06");
         if ( $now < $fy_start ) {
             // If before 6 April, use previous year
             $fy_start = strtotime(($year - 1) . '-04-06');
         }
-        $now = time();
         $elapsed_seconds = max(0, $now - $fy_start);
         $start_value = $total + ($growth_per_second * $elapsed_seconds * -1);
 
@@ -55,6 +57,7 @@ class Shortcode_Renderer {
             'pwlb'               => get_field( 'pwlb_borrowing', $id ),
             'cfr'                => get_field( 'capital_financing_requirement', $id ),
             'interest'           => $interest,
+            'mrp'                => $mrp,
             'counter_start_date' => null, // removed, always 6 April
         ];
 
@@ -108,7 +111,9 @@ class Shortcode_Renderer {
         ob_start();
         ?>
         <div class="cdc-counter-wrapper mb-3">
-            <div class="cdc-counter display-4 fw-bold" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>">£0</div>
+            <div class="cdc-counter display-4 fw-bold" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>">
+                £0
+            </div>
             <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#cdc-detail-<?php echo esc_attr( $id ); ?>" aria-expanded="false" aria-controls="cdc-detail-<?php echo esc_attr( $id ); ?>">
                 <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
             </button>
@@ -118,6 +123,8 @@ class Shortcode_Renderer {
                     <li><?php esc_html_e( 'PWLB Borrowing:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['pwlb'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Capital Financing Requirement:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['cfr'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Interest Paid on Debt (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 0 ); ?></li>
+                    <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 0 ); ?></li>
+                    <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( $growth_per_second, 6 ); ?></li>
                 </ul>
                 <h5><?php esc_html_e( 'Debt per property by Council Tax Band:', 'council-debt-counters' ); ?></h5>
                 <ul class="mt-2 list-unstyled">

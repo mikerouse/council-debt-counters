@@ -32,8 +32,12 @@ class Council_Admin_Page {
         if ( $hook !== 'debt-counters_page_' . self::PAGE_SLUG ) {
             return;
         }
+        // Enqueue Bootstrap (CSS/JS)
         wp_enqueue_style( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css', [], '5.3.1' );
         wp_enqueue_script( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js', [], '5.3.1', true );
+        // Enqueue counter CSS/JS for real-time counter in admin
+        wp_enqueue_style( 'cdc-counter', plugins_url( 'public/css/counter.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_enqueue_script( 'cdc-counter', plugins_url( 'public/js/counter.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0', true );
         if ( function_exists( 'acf_enqueue_uploader' ) ) {
             acf_enqueue_uploader();
         }
