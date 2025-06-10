@@ -77,9 +77,6 @@ class Council_Post_Type {
         }
         // Get all relevant fields
         $external = (float) get_field( 'total_external_borrowing', $post_id );
-        $interest = (float) get_field( 'interest_paid_on_debt', $post_id );
-        $pwlb     = (float) get_field( 'pwlb_borrowing', $post_id );
-        $cfr      = (float) get_field( 'capital_financing_requirement', $post_id );
         $manual   = (float) get_field( 'manual_debt_entry', $post_id ); // If you have a manual field
         $adjust   = 0;
         $entries  = get_post_meta( $post_id, 'cdc_debt_adjustments', true );
@@ -88,8 +85,8 @@ class Council_Post_Type {
                 $adjust += (float) $e['amount'];
             }
         }
-        // Add up all relevant fields for total debt
-        $total = $external + $interest + $pwlb + $cfr + $manual + $adjust;
+        // Total debt is just external borrowing + manual + adjustments
+        $total = $external + $manual + $adjust;
         update_field( 'total_debt', $total, $post_id );
     }
 }

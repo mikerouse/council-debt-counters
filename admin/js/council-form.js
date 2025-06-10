@@ -66,11 +66,12 @@
 
         function updateAll() {
             var external = parseFloat(extField ? extField.value : 0) || 0;
+            var manual = 0; // If you have a manual field, add here
+            var adjustments = 0; // If you have adjustments, add here
             var interest = parseFloat(interestField ? interestField.value : 0) || 0;
             var mrp = parseFloat(mrpField ? mrpField.value : 0) || 0;
-            var pwlb = parseFloat(pwlbField ? pwlbField.value : 0) || 0;
-            var cfr = parseFloat(cfrField ? cfrField.value : 0) || 0;
-            var total = external + interest + pwlb + cfr;
+            // Only use external + manual + adjustments for total debt
+            var total = external + manual + adjustments;
             if (totalField) {
                 totalField.value = total.toFixed(2);
                 totalField.dispatchEvent(new Event('input'));
@@ -92,5 +93,10 @@
         if (pwlbField) pwlbField.addEventListener('input', updateAll);
         if (cfrField) cfrField.addEventListener('input', updateAll);
         updateAll();
+        // Add explainer for calculation
+        var explainer = document.createElement('div');
+        explainer.className = 'alert alert-warning mt-2';
+        explainer.innerHTML = 'Total debt is calculated as: <strong>Total External Borrowing + Adjustments + Manual Entry (if any)</strong>. PWLB and CFR are shown for reference only. Interest is not added to the debt figure.';
+        sidebar.querySelector('.card-body').appendChild(explainer);
     });
 })();
