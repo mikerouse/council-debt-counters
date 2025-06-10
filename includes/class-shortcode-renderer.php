@@ -36,13 +36,13 @@ class Shortcode_Renderer {
         $net_growth_per_year = $interest - $mrp;
         $growth_per_second = $net_growth_per_year / (365 * 24 * 60 * 60);
 
-        // UK Financial Year Start Date is always 6 April
+        // UK Financial Year Start Date is 1 April
         $year = date('Y');
         $now = time();
-        $fy_start = strtotime("$year-04-06");
+        $fy_start = strtotime("$year-04-01");
         if ( $now < $fy_start ) {
-            // If before 6 April, use previous year
-            $fy_start = strtotime(($year - 1) . '-04-06');
+            // If before 1 April, use previous year
+            $fy_start = strtotime(($year - 1) . '-04-01');
         }
         $elapsed_seconds = max(0, $now - $fy_start);
         $start_value = $total + ($growth_per_second * $elapsed_seconds * -1);
