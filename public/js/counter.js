@@ -12,8 +12,8 @@
             if (current >= target) {
                 current = target;
                 clearInterval(int);
-                // If growth rate is set, start real-time increment
-                if (growth > 0) {
+                // If growth rate is set (positive or negative), start real-time update
+                if (growth !== 0) {
                     setInterval(function() {
                         current += growth;
                         el.textContent = current.toLocaleString('en-GB', {
