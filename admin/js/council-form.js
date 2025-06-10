@@ -18,7 +18,11 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
-            addHelper(field);
+            // Only add helper if not a council tax band field
+            var name = field.getAttribute('name') || '';
+            if (!/acf\[field_cdc_band_[a-h]_props?\]/i.test(name)) {
+                addHelper(field);
+            }
         });
 
         var extField = document.querySelector('input[name="acf[field_cdc_total_external_borrowing]"]');
