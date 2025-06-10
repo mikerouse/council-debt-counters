@@ -19,6 +19,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <th scope="row"><label for="<?php echo esc_attr( License_Manager::OPTION_KEY ); ?>"><?php esc_html_e( 'License Key', 'council-debt-counters' ); ?></label></th>
                 <td>
                     <input name="<?php echo esc_attr( License_Manager::OPTION_KEY ); ?>" type="text" id="<?php echo esc_attr( License_Manager::OPTION_KEY ); ?>" value="<?php echo esc_attr( License_Manager::get_license_key() ); ?>" class="regular-text" />
+                    <button type="button" id="cdc-check-license" class="button" style="margin-left:10px;">
+                        <?php esc_html_e( 'Check License', 'council-debt-counters' ); ?>
+                    </button>
+                    <p id="cdc-license-result" class="description">
+                        <?php echo License_Manager::is_valid() ? esc_html__( 'License is valid.', 'council-debt-counters' ) : ''; ?>
+                    </p>
                     <p class="description"><?php esc_html_e( 'Enter a valid license key to unlock unlimited councils.', 'council-debt-counters' ); ?></p>
                 </td>
             </tr>
