@@ -48,7 +48,9 @@ class License_Manager {
             true
         );
         wp_localize_script( 'cdc-license-check', 'CDC_LICENSE_CHECK', [
-            'nonce' => wp_create_nonce( 'cdc_check_license' ),
+            'nonce'        => wp_create_nonce( 'cdc_check_license' ),
+            'checkingText' => __( 'Checking...', 'council-debt-counters' ),
+            'errorText'    => __( 'Error validating license.', 'council-debt-counters' ),
         ] );
     }
 
