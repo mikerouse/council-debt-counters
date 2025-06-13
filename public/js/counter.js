@@ -19,7 +19,8 @@
                         el.textContent = current.toLocaleString('en-GB', {
                             style: 'currency',
                             currency: 'GBP',
-                            maximumFractionDigits: 0
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
                         });
                     }, 1000);
                 }
@@ -27,7 +28,8 @@
             el.textContent = current.toLocaleString('en-GB', {
                 style: 'currency',
                 currency: 'GBP',
-                maximumFractionDigits: 0
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             });
         }, 50);
     }

@@ -9,7 +9,7 @@ $can_upload = Docs_Manager::can_upload();
 $is_pro = License_Manager::is_valid();
 $upload_error = '';
 
-if ( isset( $_POST['cdc_delete_doc'] ) && isset( $_POST['cdc_doc_name'] ) ) {
+if ( isset( $_POST['cdc_delete_doc'], $_POST['cdc_doc_name'], $_POST['cdc_delete_doc_nonce'] ) && wp_verify_nonce( $_POST['cdc_delete_doc_nonce'], 'cdc_delete_doc' ) ) {
     Docs_Manager::delete_document( sanitize_file_name( $_POST['cdc_doc_name'] ) );
     echo '<div class="notice notice-success"><p>' . esc_html__( 'Document deleted.', 'council-debt-counters' ) . '</p></div>';
     $docs = Docs_Manager::list_documents();
@@ -58,6 +58,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
                     <td>
                         <form method="post" style="display:inline;">
                             <input type="hidden" name="cdc_doc_name" value="<?php echo esc_attr( $doc ); ?>" />
+                            <?php wp_nonce_field( 'cdc_delete_doc', 'cdc_delete_doc_nonce' ); ?>
                             <button type="submit" name="cdc_delete_doc" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
                         </form>
                         <a href="<?php echo esc_url( plugins_url( 'docs/' . $doc, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer" class="button">View</a>

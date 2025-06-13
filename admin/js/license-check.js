@@ -7,7 +7,7 @@
         btn.addEventListener('click', function(e){
             e.preventDefault();
             if(!input) return;
-            result.textContent = 'Checking...';
+            result.textContent = CDC_LICENSE_CHECK.checkingText;
             fetch(ajaxurl, {
                 method: 'POST',
                 headers: {'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'},
@@ -22,10 +22,10 @@
                 if(data.success){
                     result.textContent = data.data.message;
                 } else {
-                    result.textContent = data.data && data.data.message ? data.data.message : 'Error validating license.';
+                    result.textContent = data.data && data.data.message ? data.data.message : CDC_LICENSE_CHECK.errorText;
                 }
             }).catch(function(){
-                result.textContent = 'Error validating license.';
+                result.textContent = CDC_LICENSE_CHECK.errorText;
             });
         });
     });

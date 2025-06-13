@@ -110,7 +110,7 @@ class Shortcode_Renderer {
         ?>
         <div class="cdc-counter-wrapper mb-3">
             <div class="cdc-counter display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>">
-                £0
+                £0.00
             </div>
             <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#cdc-detail-<?php echo esc_attr( $id ); ?>" aria-expanded="false" aria-controls="cdc-detail-<?php echo esc_attr( $id ); ?>">
                 <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
@@ -121,15 +121,17 @@ class Shortcode_Renderer {
                     <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 0 ); ?></li>
                     <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( $growth_per_second, 6 ); ?></li>
                 </ul>
-                <h5><?php esc_html_e( 'Debt per property by Council Tax Band:', 'council-debt-counters' ); ?></h5>
-                <ul class="mt-2 list-unstyled">
-                <?php foreach ( $bands as $band => $count ) :
-                    if ( $count > 0 ) :
-                        $debt_per_property = $total / $count;
-                ?>
-                    <li><?php echo esc_html( sprintf( 'Band %s: £%s per property', $band, number_format_i18n( $debt_per_property, 0 ) ) ); ?></li>
-                <?php endif; endforeach; ?>
-                </ul>
+                <?php if ( array_sum( $bands ) > 0 ) : ?>
+                    <h5><?php esc_html_e( 'Debt per property by Council Tax Band:', 'council-debt-counters' ); ?></h5>
+                    <ul class="mt-2 list-unstyled">
+                    <?php foreach ( $bands as $band => $count ) :
+                        if ( $count > 0 ) :
+                            $debt_per_property = $total / $count;
+                    ?>
+                        <li><?php echo esc_html( sprintf( 'Band %s: £%s per property', $band, number_format_i18n( $debt_per_property, 0 ) ) ); ?></li>
+                    <?php endif; endforeach; ?>
+                    </ul>
+                <?php endif; ?>
                 <?php if ( $population > 0 ) : ?>
                 <h5><?php esc_html_e( 'Debt per person:', 'council-debt-counters' ); ?></h5>
                 <ul class="mt-2 list-unstyled">
