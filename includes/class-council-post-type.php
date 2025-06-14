@@ -1,6 +1,8 @@
 <?php
 namespace CouncilDebtCounters;
 
+use CouncilDebtCounters\Custom_Fields;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -12,8 +14,6 @@ class Council_Post_Type {
     public static function init() {
         add_action( 'init', [ __CLASS__, 'register' ] );
         add_action( 'load-post-new.php', [ __CLASS__, 'enforce_limit' ] );
-        add_action( 'acf/save_post', [ __CLASS__, 'sync_title_from_acf' ], 20 );
-        add_action( 'acf/save_post', [ __CLASS__, 'calculate_total_debt' ], 20 );
         add_action( 'save_post_council', [ __CLASS__, 'calculate_total_debt' ], 20, 1 );
     }
 
@@ -55,32 +55,16 @@ class Council_Post_Type {
         }
     }
 
-    public static function sync_title_from_acf( $post_id ) {
-        if ( get_post_type( $post_id ) !== 'council' ) {
-            return;
-        }
-        $name = get_field( 'council_name', $post_id );
-        if ( ! $name ) {
-            return;
-        }
-        remove_action( 'acf/save_post', [ __CLASS__, 'sync_title_from_acf' ], 20 );
-        wp_update_post([
-            'ID'         => $post_id,
-            'post_title' => sanitize_text_field( $name ),
-        ]);
-        add_action( 'acf/save_post', [ __CLASS__, 'sync_title_from_acf' ], 20 );
-        Error_Logger::log_info( 'Council saved with title: ' . $name );
-    }
 
     public static function calculate_total_debt( $post_id ) {
         if ( get_post_type( $post_id ) !== 'council' ) {
             return;
         }
         // Get all relevant fields
-        $current_liabilities = (float) get_field( 'current_liabilities', $post_id );
-        $long_term  = (float) get_field( 'long_term_liabilities', $post_id );
-        $lease_pfi  = (float) get_field( 'finance_lease_pfi_liabilities', $post_id );
-        $manual     = (float) get_field( 'manual_debt_entry', $post_id ); // If you have a manual field
+        $current_liabilities = (float) Custom_Fields::get_value( $post_id, 'current_liabilities' );
+        $long_term  = (float) Custom_Fields::get_value( $post_id, 'long_term_liabilities' );
+        $lease_pfi  = (float) Custom_Fields::get_value( $post_id, 'finance_lease_pfi_liabilities' );
+        $manual     = (float) Custom_Fields::get_value( $post_id, 'manual_debt_entry' );
         $adjust   = 0;
         $entries  = get_post_meta( $post_id, 'cdc_debt_adjustments', true );
         if ( is_array( $entries ) ) {
@@ -90,6 +74,6 @@ class Council_Post_Type {
         }
         // Total debt is current liabilities + long term liabilities + lease/PFI + manual + adjustments
         $total = $current_liabilities + $long_term + $lease_pfi + $manual + $adjust;
-        update_field( 'total_debt', $total, $post_id );
+        Custom_Fields::update_value( $post_id, 'total_debt', $total );
     }
 }

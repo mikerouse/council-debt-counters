@@ -19,22 +19,22 @@
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
             // Only add helper if field represents a monetary value
-            var name = field.getAttribute('name') || '';
-            var isBand = /acf\[field_cdc_band_[a-h]_props?\]/i.test(name);
-            var isPopulation = name === 'acf[field_cdc_population]';
+            var meta = field.getAttribute('data-cdc-field') || '';
+            var isBand = /^band_[a-h]_properties$/.test(meta);
+            var isPopulation = meta === 'population';
             if (!isBand && !isPopulation) {
                 addHelper(field);
             }
         });
 
-        var shortField = document.querySelector('input[name="acf[field_cdc_current_liabilities]"]');
-        var longField = document.querySelector('input[name="acf[field_cdc_long_term_liabilities]"]');
-        var leaseField = document.querySelector('input[name="acf[field_cdc_finance_lease_pfi_liabilities]"]');
-        var manualField = document.querySelector('input[name="acf[field_cdc_manual_debt_entry]"]');
-        var adjustmentsField = document.querySelector('input[name="acf[field_cdc_debt_adjustments]"]');
-        var interestField = document.querySelector('input[name="acf[field_cdc_interest_paid]"]');
-        var mrpField = document.querySelector('input[name="acf[field_cdc_mrp]"]');
-        var totalField = document.querySelector('input[name="acf[field_cdc_total_debt]"]');
+        var shortField = document.querySelector('[data-cdc-field="current_liabilities"]');
+        var longField = document.querySelector('[data-cdc-field="long_term_liabilities"]');
+        var leaseField = document.querySelector('[data-cdc-field="finance_lease_pfi_liabilities"]');
+        var manualField = document.querySelector('[data-cdc-field="manual_debt_entry"]');
+        var adjustmentsField = document.querySelector('[data-cdc-field="debt_adjustments"]');
+        var interestField = document.querySelector('[data-cdc-field="interest_paid_on_debt"]');
+        var mrpField = document.querySelector('[data-cdc-field="minimum_revenue_provision"]');
+        var totalField = document.querySelector('[data-cdc-field="total_debt"]');
         var ratesOutput = document.createElement('div');
         ratesOutput.id = 'cdc-debt-rates';
         ratesOutput.className = 'mt-2 alert alert-info';

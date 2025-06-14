@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Council Debt Counters
  * Description: Animated counters visualising council debt figures.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Author: Mike Rouse using OpenAI Codex
  * Author URI: https://www.mikerouse.co.uk
  * Text Domain: council-debt-counters
@@ -22,16 +22,18 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-docs-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-license-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-post-type.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-admin-page.php';
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-acf-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-custom-fields.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-openai-helper.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-debt-adjustments-page.php';
+
+register_activation_hook( __FILE__, [ '\\CouncilDebtCounters\\Custom_Fields', 'install' ] );
 
 add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Error_Logger::init();
     \CouncilDebtCounters\Settings_Page::init();
     \CouncilDebtCounters\Council_Post_Type::init();
     \CouncilDebtCounters\Council_Admin_Page::init();
-    \CouncilDebtCounters\ACF_Manager::init();
+    \CouncilDebtCounters\Custom_Fields::init();
     \CouncilDebtCounters\Shortcode_Renderer::init();
     \CouncilDebtCounters\Debt_Adjustments_Page::init();
     \CouncilDebtCounters\Data_Loader::init();

@@ -1,6 +1,8 @@
 <?php
 namespace CouncilDebtCounters;
 
+use CouncilDebtCounters\Custom_Fields;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -27,12 +29,12 @@ class Shortcode_Renderer {
             return '';
         }
 
-        $total = get_field( 'total_debt', $id );
+        $total = Custom_Fields::get_value( $id, 'total_debt' );
         if ( ! $total ) {
             $total = 0;
         }
-        $interest = (float) get_field( 'interest_paid_on_debt', $id );
-        $mrp = (float) get_field( 'minimum_revenue_provision', $id );
+        $interest = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
+        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
         $net_growth_per_year = $interest - $mrp;
         $growth_per_second = $net_growth_per_year / (365 * 24 * 60 * 60);
 
@@ -61,19 +63,19 @@ class Shortcode_Renderer {
 
         // Get band property counts
         $bands = [
-            'A' => (int) get_field( 'band_a_properties', $id ),
-            'B' => (int) get_field( 'band_b_properties', $id ),
-            'C' => (int) get_field( 'band_c_properties', $id ),
-            'D' => (int) get_field( 'band_d_properties', $id ),
-            'E' => (int) get_field( 'band_e_properties', $id ),
-            'F' => (int) get_field( 'band_f_properties', $id ),
-            'G' => (int) get_field( 'band_g_properties', $id ),
-            'H' => (int) get_field( 'band_h_properties', $id ),
+            'A' => (int) Custom_Fields::get_value( $id, 'band_a_properties' ),
+            'B' => (int) Custom_Fields::get_value( $id, 'band_b_properties' ),
+            'C' => (int) Custom_Fields::get_value( $id, 'band_c_properties' ),
+            'D' => (int) Custom_Fields::get_value( $id, 'band_d_properties' ),
+            'E' => (int) Custom_Fields::get_value( $id, 'band_e_properties' ),
+            'F' => (int) Custom_Fields::get_value( $id, 'band_f_properties' ),
+            'G' => (int) Custom_Fields::get_value( $id, 'band_g_properties' ),
+            'H' => (int) Custom_Fields::get_value( $id, 'band_h_properties' ),
         ];
 
-        $population = (int) get_field( 'population', $id );
+        $population = (int) Custom_Fields::get_value( $id, 'population' );
 
-        $mrp = (float) get_field( 'minimum_revenue_provision', $id );
+        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
         $debt_repayment_explainer = '';
         if ( $mrp > 0 ) {
             $principal_repayment = $mrp - $interest;
