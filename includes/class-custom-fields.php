@@ -11,7 +11,8 @@ class Custom_Fields {
     const PAGE_SLUG = 'cdc-custom-fields';
 
     public static function init() {
-        add_action( 'admin_menu', [ __CLASS__, 'admin_menu' ] );
+        // Ensure this submenu appears after the main menu is registered.
+        add_action( 'admin_menu', [ __CLASS__, 'admin_menu' ], 11 );
     }
 
     public static function install() {

@@ -12,7 +12,8 @@ class Council_Admin_Page {
      * Register hooks.
      */
     public static function init() {
-        add_action( 'admin_menu', [ __CLASS__, 'add_page' ] );
+        // Register submenu after the main plugin menu is added.
+        add_action( 'admin_menu', [ __CLASS__, 'add_page' ], 11 );
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
         add_action( 'admin_post_cdc_save_council', [ __CLASS__, 'handle_save' ] );
     }

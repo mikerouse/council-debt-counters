@@ -42,14 +42,6 @@ class Settings_Page {
             'cdc-troubleshooting',
             [ __CLASS__, 'render_troubleshooting_page' ]
         );
-        add_submenu_page(
-            'council-debt-counters',
-            __( 'Debt Adjustments', 'council-debt-counters' ),
-            __( 'Debt Adjustments', 'council-debt-counters' ),
-            'manage_options',
-            Debt_Adjustments_Page::SLUG,
-            [ Debt_Adjustments_Page::class, 'render' ]
-        );
     }
 
     public static function register_settings() {

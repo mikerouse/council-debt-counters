@@ -78,5 +78,4 @@ $councils = get_posts([
             <?php endforeach; endif; ?>
         </tbody>
     </table>
-    <p><a href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-custom-fields' ) ); ?>"><?php esc_html_e( 'Manage custom fields', 'council-debt-counters' ); ?></a></p>
 </div>
