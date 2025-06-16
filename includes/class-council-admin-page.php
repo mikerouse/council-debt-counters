@@ -55,7 +55,15 @@ class Council_Admin_Page {
         check_admin_referer( 'cdc_save_council' );
 
         $post_id = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
-        $title   = sanitize_text_field( $_POST['post_title'] ?? '' );
+
+        $fields = Custom_Fields::get_fields();
+        $title  = '';
+        foreach ( $fields as $field ) {
+            if ( $field->name === 'council_name' ) {
+                $title = sanitize_text_field( $_POST['cdc_fields'][ $field->id ] ?? '' );
+                break;
+            }
+        }
 
         if ( $post_id ) {
             wp_update_post( [ 'ID' => $post_id, 'post_title' => $title ] );
@@ -63,7 +71,6 @@ class Council_Admin_Page {
             $post_id = wp_insert_post( [ 'post_type' => 'council', 'post_status' => 'publish', 'post_title' => $title ] );
         }
 
-        $fields = Custom_Fields::get_fields();
         foreach ( $fields as $field ) {
             $value = $_POST['cdc_fields'][ $field->id ] ?? '';
             Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ) );

@@ -14,7 +14,6 @@ if ( $action === 'delete' && $post_id ) {
 if ( $action === 'edit' ) {
     echo '<div class="wrap">';
     echo '<h1>' . esc_html( $post_id ? __( 'Edit Council', 'council-debt-counters' ) : __( 'Add Council', 'council-debt-counters' ) ) . '</h1>';
-    $title = $post_id ? get_the_title( $post_id ) : '';
     $fields = \CouncilDebtCounters\Custom_Fields::get_fields();
     ?>
     <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -22,17 +21,14 @@ if ( $action === 'edit' ) {
         <?php wp_nonce_field( 'cdc_save_council' ); ?>
         <input type="hidden" name="post_id" value="<?php echo esc_attr( $post_id ); ?>">
         <table class="form-table" role="presentation">
-            <tr>
-                <th scope="row"><label for="cdc-title"><?php esc_html_e( 'Council Name', 'council-debt-counters' ); ?></label></th>
-                <td><input type="text" id="cdc-title" name="post_title" value="<?php echo esc_attr( $title ); ?>" class="regular-text" required></td>
-            </tr>
             <?php foreach ( $fields as $field ) :
                 $val = $post_id ? \CouncilDebtCounters\Custom_Fields::get_value( $post_id, $field->name ) : '';
                 $type = $field->type === 'text' ? 'text' : 'number';
+                $required = $field->required ? 'required' : '';
             ?>
             <tr>
-                <th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?></label></th>
-                <td><input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="<?php echo esc_attr( $type ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="regular-text"></td>
+                <th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?><?php if ( $field->required ) echo ' *'; ?></label></th>
+                <td><input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="<?php echo esc_attr( $type ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="regular-text" <?php echo $required; ?>></td>
             </tr>
             <?php endforeach; ?>
         </table>

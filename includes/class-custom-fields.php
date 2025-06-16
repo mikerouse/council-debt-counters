@@ -10,6 +10,20 @@ class Custom_Fields {
     const TABLE_VALUES = 'cdc_field_values';
     const PAGE_SLUG = 'cdc-custom-fields';
 
+    const DEFAULT_FIELDS = [
+        ['name' => 'council_name', 'label' => 'Council Name', 'type' => 'text', 'required' => 1],
+        ['name' => 'council_type', 'label' => 'Council Type', 'type' => 'text', 'required' => 0],
+        ['name' => 'population', 'label' => 'Population', 'type' => 'number', 'required' => 0],
+        ['name' => 'households', 'label' => 'Households', 'type' => 'number', 'required' => 0],
+        ['name' => 'current_liabilities', 'label' => 'Current Liabilities', 'type' => 'money', 'required' => 1],
+        ['name' => 'long_term_liabilities', 'label' => 'Long-Term Liabilities', 'type' => 'money', 'required' => 1],
+        ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI or Finance Lease Liabilities', 'type' => 'money', 'required' => 1],
+        ['name' => 'interest_paid_on_debt', 'label' => 'Interest Paid on Debt', 'type' => 'money', 'required' => 1],
+        ['name' => 'minimum_revenue_provision', 'label' => 'Minimum Revenue Provision (Debt Repayment)', 'type' => 'money', 'required' => 1],
+        ['name' => 'total_debt', 'label' => 'Total Debt', 'type' => 'money', 'required' => 0],
+        ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
+    ];
+
     public static function init() {
         // Ensure this submenu appears after the main menu is registered.
         add_action( 'admin_menu', [ __CLASS__, 'admin_menu' ], 11 );
@@ -27,6 +41,7 @@ class Custom_Fields {
             name varchar(100) NOT NULL,
             label varchar(255) NOT NULL,
             type varchar(20) NOT NULL,
+            required tinyint(1) NOT NULL DEFAULT 0,
             PRIMARY KEY  (id),
             UNIQUE KEY name (name)
         ) $charset_collate;";
@@ -45,6 +60,8 @@ class Custom_Fields {
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta( $sql_fields );
         dbDelta( $sql_values );
+
+        self::ensure_default_fields();
     }
 
     /**
@@ -55,7 +72,13 @@ class Custom_Fields {
         $fields_table = $wpdb->prefix . self::TABLE_FIELDS;
         if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $fields_table ) ) !== $fields_table ) {
             self::install();
+        } else {
+            $columns = $wpdb->get_col( "DESC $fields_table", 0 );
+            if ( ! in_array( 'required', $columns, true ) ) {
+                $wpdb->query( "ALTER TABLE $fields_table ADD required tinyint(1) NOT NULL DEFAULT 0" );
+            }
         }
+        self::ensure_default_fields();
     }
 
     public static function admin_menu() {
@@ -69,6 +92,14 @@ class Custom_Fields {
         );
     }
 
+    private static function ensure_default_fields() {
+        foreach ( self::DEFAULT_FIELDS as $def ) {
+            if ( ! self::get_field_by_name( $def['name'] ) ) {
+                self::add_field( $def['name'], $def['label'], $def['type'], $def['required'] );
+            }
+        }
+    }
+
     public static function get_fields() {
         global $wpdb;
         return $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " ORDER BY id" );
@@ -79,17 +110,22 @@ class Custom_Fields {
         return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE name = %s", $name ) );
     }
 
-    public static function add_field( string $name, string $label, string $type ) {
+    public static function add_field( string $name, string $label, string $type, int $required = 0 ) {
         global $wpdb;
         $wpdb->insert( $wpdb->prefix . self::TABLE_FIELDS, [
-            'name'  => $name,
-            'label' => $label,
-            'type'  => $type,
-        ], [ '%s', '%s', '%s' ] );
+            'name'     => $name,
+            'label'    => $label,
+            'type'     => $type,
+            'required' => $required,
+        ], [ '%s', '%s', '%s', '%d' ] );
     }
 
     public static function delete_field( int $id ) {
         global $wpdb;
+        $req = $wpdb->get_var( $wpdb->prepare( "SELECT required FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE id = %d", $id ) );
+        if ( $req && intval( $req ) === 1 ) {
+            return;
+        }
         $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $id ], [ '%d' ] );
         $wpdb->delete( $wpdb->prefix . self::TABLE_VALUES, [ 'field_id' => $id ], [ '%d' ] );
     }
@@ -167,9 +203,10 @@ class Custom_Fields {
 
         if ( isset( $_POST['cdc_add_field_nonce'] ) && wp_verify_nonce( $_POST['cdc_add_field_nonce'], 'cdc_add_field' ) ) {
             $name  = sanitize_key( $_POST['name'] );
-            $label = sanitize_text_field( $_POST['label'] );
-            $type  = sanitize_key( $_POST['type'] );
-            self::add_field( $name, $label, $type );
+            $label    = sanitize_text_field( $_POST['label'] );
+            $type     = sanitize_key( $_POST['type'] );
+            $required = isset( $_POST['required'] ) ? 1 : 0;
+            self::add_field( $name, $label, $type, $required );
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Field added.', 'council-debt-counters' ) . '</p></div>';
         }
 
@@ -183,6 +220,7 @@ class Custom_Fields {
                         <th><?php esc_html_e( 'Label', 'council-debt-counters' ); ?></th>
                         <th><?php esc_html_e( 'Name', 'council-debt-counters' ); ?></th>
                         <th><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></th>
+                        <th><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></th>
                         <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
                     </tr>
                 </thead>
@@ -192,8 +230,11 @@ class Custom_Fields {
                         <td><?php echo esc_html( $field->label ); ?></td>
                         <td><?php echo esc_html( $field->name ); ?></td>
                         <td><?php echo esc_html( $field->type ); ?></td>
+                        <td><?php echo $field->required ? esc_html__( 'Yes', 'council-debt-counters' ) : esc_html__( 'No', 'council-debt-counters' ); ?></td>
                         <td>
-                            <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&delete=' . $field->id ), 'cdc_delete_field_' . $field->id ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Delete this field?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></a>
+                            <?php if ( ! $field->required ) : ?>
+                                <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&delete=' . $field->id ), 'cdc_delete_field_' . $field->id ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Delete this field?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -220,6 +261,10 @@ class Custom_Fields {
                                 <option value="money"><?php esc_html_e( 'Monetary', 'council-debt-counters' ); ?></option>
                             </select>
                         </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="cdc-field-required"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></label></th>
+                        <td><input type="checkbox" id="cdc-field-required" name="required" value="1"></td>
                     </tr>
                 </table>
                 <?php submit_button( __( 'Add Field', 'council-debt-counters' ) ); ?>
