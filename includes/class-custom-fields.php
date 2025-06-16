@@ -34,6 +34,13 @@ class Custom_Fields {
         'long_term_liabilities',
     ];
 
+    /**
+     * Fields that are calculated by the system and are not editable via the UI.
+     */
+    const READONLY_FIELDS = [
+        'total_debt',
+    ];
+
     public static function init() {
         // Ensure this submenu appears after the main menu is registered.
         add_action( 'admin_menu', [ __CLASS__, 'admin_menu' ], 11 );
@@ -142,6 +149,10 @@ class Custom_Fields {
 
     public static function update_field( int $id, array $data ) {
         global $wpdb;
+        $field = self::get_field( $id );
+        if ( $field && in_array( $field->name, self::READONLY_FIELDS, true ) ) {
+            return;
+        }
         $allowed = [ 'name', 'label', 'type', 'required' ];
         $update  = [];
         $formats = [];
@@ -162,7 +173,7 @@ class Custom_Fields {
         if ( ! $field ) {
             return;
         }
-        if ( $field->required || in_array( $field->name, self::IMMUTABLE_FIELDS, true ) ) {
+        if ( $field->required || in_array( $field->name, self::IMMUTABLE_FIELDS, true ) || in_array( $field->name, self::READONLY_FIELDS, true ) ) {
             return;
         }
         $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $id ], [ '%d' ] );
@@ -280,15 +291,20 @@ class Custom_Fields {
                 </thead>
                 <tbody>
                 <?php foreach ( $fields as $field ) : ?>
+                    <?php $readonly = in_array( $field->name, self::READONLY_FIELDS, true ); ?>
                     <tr>
                         <td><?php echo esc_html( $field->label ); ?></td>
                         <td><?php echo esc_html( $field->name ); ?></td>
                         <td><?php echo esc_html( $field->type ); ?></td>
                         <td><?php echo $field->required ? esc_html__( 'Yes', 'council-debt-counters' ) : esc_html__( 'No', 'council-debt-counters' ); ?></td>
                         <td>
-                            <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&edit=' . $field->id ) ); ?>" class="button button-small"><?php esc_html_e( 'Edit', 'council-debt-counters' ); ?></a>
-                            <?php if ( ! $field->required && ! in_array( $field->name, self::IMMUTABLE_FIELDS, true ) ) : ?>
-                                <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&delete=' . $field->id ), 'cdc_delete_field_' . $field->id ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Delete this field?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></a>
+                            <?php if ( ! $readonly ) : ?>
+                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&edit=' . $field->id ) ); ?>" class="button button-small"><?php esc_html_e( 'Edit', 'council-debt-counters' ); ?></a>
+                                <?php if ( ! $field->required && ! in_array( $field->name, self::IMMUTABLE_FIELDS, true ) ) : ?>
+                                    <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&delete=' . $field->id ), 'cdc_delete_field_' . $field->id ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Delete this field?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></a>
+                                <?php endif; ?>
+                            <?php else : ?>
+                                <?php esc_html_e( 'System', 'council-debt-counters' ); ?>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -297,7 +313,7 @@ class Custom_Fields {
             </table>
             <?php if ( isset( $_GET['edit'] ) ) : ?>
                 <?php $edit_field = self::get_field( intval( $_GET['edit'] ) ); ?>
-                <?php if ( $edit_field ) : ?>
+                <?php if ( $edit_field && ! in_array( $edit_field->name, self::READONLY_FIELDS, true ) ) : ?>
                 <h2><?php esc_html_e( 'Edit Field', 'council-debt-counters' ); ?></h2>
                 <form method="post">
                     <?php wp_nonce_field( 'cdc_edit_field', 'cdc_edit_field_nonce' ); ?>

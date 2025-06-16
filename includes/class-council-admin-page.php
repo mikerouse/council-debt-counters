@@ -72,6 +72,9 @@ class Council_Admin_Page {
         }
 
         foreach ( $fields as $field ) {
+            if ( $field->name === 'total_debt' ) {
+                continue;
+            }
             $value = $_POST['cdc_fields'][ $field->id ] ?? '';
             Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ) );
         }

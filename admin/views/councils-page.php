@@ -25,10 +25,13 @@ if ( $action === 'edit' ) {
                 $val = $post_id ? \CouncilDebtCounters\Custom_Fields::get_value( $post_id, $field->name ) : '';
                 $type = $field->type === 'text' ? 'text' : 'number';
                 $required = $field->required ? 'required' : '';
+                $readonly = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
             ?>
             <tr>
                 <th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?><?php if ( $field->required ) echo ' *'; ?></label></th>
-                <td><input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="<?php echo esc_attr( $type ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="regular-text" <?php echo $required; ?>></td>
+                <td>
+                    <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="<?php echo esc_attr( $type ); ?>" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="regular-text" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']" ' . $required; ?>>
+                </td>
             </tr>
             <?php endforeach; ?>
         </table>
