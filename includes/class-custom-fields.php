@@ -13,6 +13,8 @@ class Custom_Fields {
     public static function init() {
         // Ensure this submenu appears after the main menu is registered.
         add_action( 'admin_menu', [ __CLASS__, 'admin_menu' ], 11 );
+        // Verify tables exist in case the plugin was updated without reactivation.
+        add_action( 'init', [ __CLASS__, 'maybe_install' ] );
     }
 
     public static function install() {
@@ -43,6 +45,17 @@ class Custom_Fields {
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta( $sql_fields );
         dbDelta( $sql_values );
+    }
+
+    /**
+     * Create tables if they do not exist.
+     */
+    public static function maybe_install() {
+        global $wpdb;
+        $fields_table = $wpdb->prefix . self::TABLE_FIELDS;
+        if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $fields_table ) ) !== $fields_table ) {
+            self::install();
+        }
     }
 
     public static function admin_menu() {
