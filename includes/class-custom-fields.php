@@ -24,6 +24,16 @@ class Custom_Fields {
         ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
     ];
 
+    /**
+     * Fields that must always exist and cannot be removed.
+     * The field type and name for these are locked.
+     */
+    const IMMUTABLE_FIELDS = [
+        'council_name',
+        'current_liabilities',
+        'long_term_liabilities',
+    ];
+
     public static function init() {
         // Ensure this submenu appears after the main menu is registered.
         add_action( 'admin_menu', [ __CLASS__, 'admin_menu' ], 11 );
@@ -78,6 +88,11 @@ class Custom_Fields {
                 $wpdb->query( "ALTER TABLE $fields_table ADD required tinyint(1) NOT NULL DEFAULT 0" );
             }
         }
+
+        foreach ( self::IMMUTABLE_FIELDS as $name ) {
+            $wpdb->update( $fields_table, [ 'required' => 1 ], [ 'name' => $name ], [ '%d' ], [ '%s' ] );
+        }
+
         self::ensure_default_fields();
     }
 
@@ -105,6 +120,11 @@ class Custom_Fields {
         return $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " ORDER BY id" );
     }
 
+    public static function get_field( int $id ) {
+        global $wpdb;
+        return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE id = %d", $id ) );
+    }
+
     public static function get_field_by_name( string $name ) {
         global $wpdb;
         return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE name = %s", $name ) );
@@ -120,10 +140,29 @@ class Custom_Fields {
         ], [ '%s', '%s', '%s', '%d' ] );
     }
 
+    public static function update_field( int $id, array $data ) {
+        global $wpdb;
+        $allowed = [ 'name', 'label', 'type', 'required' ];
+        $update  = [];
+        $formats = [];
+        foreach ( $allowed as $key ) {
+            if ( isset( $data[ $key ] ) ) {
+                $update[ $key ] = $data[ $key ];
+                $formats[]      = ( $key === 'required' ) ? '%d' : '%s';
+            }
+        }
+        if ( ! empty( $update ) ) {
+            $wpdb->update( $wpdb->prefix . self::TABLE_FIELDS, $update, [ 'id' => $id ], $formats, [ '%d' ] );
+        }
+    }
+
     public static function delete_field( int $id ) {
         global $wpdb;
-        $req = $wpdb->get_var( $wpdb->prepare( "SELECT required FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE id = %d", $id ) );
-        if ( $req && intval( $req ) === 1 ) {
+        $field = $wpdb->get_row( $wpdb->prepare( "SELECT name, required FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE id = %d", $id ) );
+        if ( ! $field ) {
+            return;
+        }
+        if ( $field->required || in_array( $field->name, self::IMMUTABLE_FIELDS, true ) ) {
             return;
         }
         $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $id ], [ '%d' ] );
@@ -202,12 +241,27 @@ class Custom_Fields {
         }
 
         if ( isset( $_POST['cdc_add_field_nonce'] ) && wp_verify_nonce( $_POST['cdc_add_field_nonce'], 'cdc_add_field' ) ) {
-            $name  = sanitize_key( $_POST['name'] );
+            $name     = sanitize_key( $_POST['name'] );
             $label    = sanitize_text_field( $_POST['label'] );
             $type     = sanitize_key( $_POST['type'] );
             $required = isset( $_POST['required'] ) ? 1 : 0;
             self::add_field( $name, $label, $type, $required );
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Field added.', 'council-debt-counters' ) . '</p></div>';
+        }
+
+        if ( isset( $_POST['cdc_edit_field_nonce'] ) && wp_verify_nonce( $_POST['cdc_edit_field_nonce'], 'cdc_edit_field' ) ) {
+            $id    = intval( $_POST['field_id'] );
+            $field = self::get_field( $id );
+            if ( $field ) {
+                $data  = [ 'label' => sanitize_text_field( $_POST['label'] ) ];
+                if ( ! in_array( $field->name, self::IMMUTABLE_FIELDS, true ) ) {
+                    $data['name']     = sanitize_key( $_POST['name'] );
+                    $data['type']     = sanitize_key( $_POST['type'] );
+                    $data['required'] = isset( $_POST['required'] ) ? 1 : 0;
+                }
+                self::update_field( $id, $data );
+                echo '<div class="notice notice-success"><p>' . esc_html__( 'Field updated.', 'council-debt-counters' ) . '</p></div>';
+            }
         }
 
         $fields = self::get_fields();
@@ -232,7 +286,8 @@ class Custom_Fields {
                         <td><?php echo esc_html( $field->type ); ?></td>
                         <td><?php echo $field->required ? esc_html__( 'Yes', 'council-debt-counters' ) : esc_html__( 'No', 'council-debt-counters' ); ?></td>
                         <td>
-                            <?php if ( ! $field->required ) : ?>
+                            <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&edit=' . $field->id ) ); ?>" class="button button-small"><?php esc_html_e( 'Edit', 'council-debt-counters' ); ?></a>
+                            <?php if ( ! $field->required && ! in_array( $field->name, self::IMMUTABLE_FIELDS, true ) ) : ?>
                                 <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&delete=' . $field->id ), 'cdc_delete_field_' . $field->id ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Delete this field?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></a>
                             <?php endif; ?>
                         </td>
@@ -240,6 +295,47 @@ class Custom_Fields {
                 <?php endforeach; ?>
                 </tbody>
             </table>
+            <?php if ( isset( $_GET['edit'] ) ) : ?>
+                <?php $edit_field = self::get_field( intval( $_GET['edit'] ) ); ?>
+                <?php if ( $edit_field ) : ?>
+                <h2><?php esc_html_e( 'Edit Field', 'council-debt-counters' ); ?></h2>
+                <form method="post">
+                    <?php wp_nonce_field( 'cdc_edit_field', 'cdc_edit_field_nonce' ); ?>
+                    <input type="hidden" name="field_id" value="<?php echo esc_attr( $edit_field->id ); ?>">
+                    <table class="form-table" role="presentation">
+                        <tr>
+                            <th scope="row"><label for="cdc-edit-label"><?php esc_html_e( 'Label', 'council-debt-counters' ); ?></label></th>
+                            <td><input name="label" id="cdc-edit-label" type="text" class="regular-text" value="<?php echo esc_attr( $edit_field->label ); ?>" required></td>
+                        </tr>
+                        <?php if ( ! in_array( $edit_field->name, self::IMMUTABLE_FIELDS, true ) ) : ?>
+                        <tr>
+                            <th scope="row"><label for="cdc-edit-name"><?php esc_html_e( 'Name', 'council-debt-counters' ); ?></label></th>
+                            <td><input name="name" id="cdc-edit-name" type="text" class="regular-text" value="<?php echo esc_attr( $edit_field->name ); ?>" required></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cdc-edit-type"><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></label></th>
+                            <td>
+                                <select name="type" id="cdc-edit-type">
+                                    <option value="text" <?php selected( $edit_field->type, 'text' ); ?>><?php esc_html_e( 'Text', 'council-debt-counters' ); ?></option>
+                                    <option value="number" <?php selected( $edit_field->type, 'number' ); ?>><?php esc_html_e( 'Number', 'council-debt-counters' ); ?></option>
+                                    <option value="money" <?php selected( $edit_field->type, 'money' ); ?>><?php esc_html_e( 'Monetary', 'council-debt-counters' ); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cdc-edit-required"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></label></th>
+                            <td><input type="checkbox" id="cdc-edit-required" name="required" value="1" <?php checked( $edit_field->required, 1 ); ?>></td>
+                        </tr>
+                        <?php else : ?>
+                            <input type="hidden" name="name" value="<?php echo esc_attr( $edit_field->name ); ?>">
+                            <input type="hidden" name="type" value="<?php echo esc_attr( $edit_field->type ); ?>">
+                            <input type="hidden" name="required" value="1">
+                        <?php endif; ?>
+                    </table>
+                    <?php submit_button( __( 'Save Field', 'council-debt-counters' ) ); ?>
+                </form>
+                <?php endif; ?>
+            <?php endif; ?>
             <h2><?php esc_html_e( 'Add Field', 'council-debt-counters' ); ?></h2>
             <form method="post">
                 <?php wp_nonce_field( 'cdc_add_field', 'cdc_add_field_nonce' ); ?>

@@ -8,7 +8,7 @@ Version 0.2 replaces the dependency on Advanced Custom Fields with a built‑in 
 
 The plugin will automatically create the necessary database tables on activation or if they are missing after an update.
 
-By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**, and **Minimum Revenue Provision (Debt Repayment)**. These mandatory fields cannot be removed but you can add your own custom fields from the admin screen.
+By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**, and **Minimum Revenue Provision (Debt Repayment)**. These mandatory fields cannot be removed, though you may edit their labels. Additional custom fields can be added, edited or removed from the admin screen and you can change whether they are required as well as their field type (text, number or monetary).
 
 Councils can be added, edited, and deleted from the **Debt Counters → Councils** page which uses a clean Bootstrap design. All custom fields are displayed on this screen so you can capture relevant information before uploading finance documents.
 
