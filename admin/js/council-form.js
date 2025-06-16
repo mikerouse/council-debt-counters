@@ -1,7 +1,7 @@
 (function() {
     function formatCurrency(val) {
         if (isNaN(val)) return '';
-        return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 1 }).format(val);
+        return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 }).format(val);
     }
 
     function addHelper(field) {

@@ -116,8 +116,20 @@ class Custom_Fields {
 
     private static function ensure_default_fields() {
         foreach ( self::DEFAULT_FIELDS as $def ) {
-            if ( ! self::get_field_by_name( $def['name'] ) ) {
+            $existing = self::get_field_by_name( $def['name'] );
+            if ( ! $existing ) {
                 self::add_field( $def['name'], $def['label'], $def['type'], $def['required'] );
+            } else {
+                $update = [];
+                if ( $existing->type !== $def['type'] ) {
+                    $update['type'] = $def['type'];
+                }
+                if ( (int) $existing->required !== (int) $def['required'] ) {
+                    $update['required'] = $def['required'];
+                }
+                if ( ! empty( $update ) ) {
+                    self::update_field( (int) $existing->id, $update );
+                }
             }
         }
     }
