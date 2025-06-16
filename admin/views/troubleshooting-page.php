@@ -13,6 +13,11 @@ if ( isset( $_POST['cdc_clear_log'] ) ) {
     $log = \CouncilDebtCounters\Error_Logger::get_log();
     echo '<div class="notice notice-success"><p>' . esc_html__( 'Log cleared.', 'council-debt-counters' ) . '</p></div>';
 }
+
+if ( isset( $_POST['cdc_migrate_acf_nonce'] ) && wp_verify_nonce( $_POST['cdc_migrate_acf_nonce'], 'cdc_migrate_acf' ) ) {
+    \CouncilDebtCounters\Custom_Fields::migrate_from_meta();
+    echo '<div class="notice notice-success"><p>' . esc_html__( 'ACF data migrated.', 'council-debt-counters' ) . '</p></div>';
+}
 ?>
 <div class="wrap">
     <h1><?php esc_html_e( 'Troubleshooting', 'council-debt-counters' ); ?></h1>
@@ -20,5 +25,9 @@ if ( isset( $_POST['cdc_clear_log'] ) ) {
     <form method="post">
         <textarea readonly rows="20" style="width:100%;" aria-label="<?php echo esc_attr__( 'Error log', 'council-debt-counters' ); ?>"><?php echo esc_textarea( $log ); ?></textarea>
         <p><button type="submit" name="cdc_clear_log" class="button"><?php esc_html_e( 'Clear Log', 'council-debt-counters' ); ?></button></p>
+    </form>
+    <form method="post">
+        <?php wp_nonce_field( 'cdc_migrate_acf', 'cdc_migrate_acf_nonce' ); ?>
+        <p><button type="submit" class="button button-primary"><?php esc_html_e( 'Migrate ACF Data', 'council-debt-counters' ); ?></button></p>
     </form>
 </div>

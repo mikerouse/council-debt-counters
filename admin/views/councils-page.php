@@ -14,19 +14,38 @@ if ( $action === 'delete' && $post_id ) {
 if ( $action === 'edit' ) {
     echo '<div class="wrap">';
     echo '<h1>' . esc_html( $post_id ? __( 'Edit Council', 'council-debt-counters' ) : __( 'Add Council', 'council-debt-counters' ) ) . '</h1>';
-    $args = [
-        'post_id'     => $post_id ? $post_id : 'new_post',
-        'new_post'    => [
-            'post_type'   => 'council',
-            'post_status' => 'publish',
-        ],
-        'return'      => admin_url( 'admin.php?page=cdc-manage-councils' ),
-        'submit_value' => __( 'Save Council', 'council-debt-counters' ),
-    ];
-    if ( function_exists( 'acf_form' ) ) {
-        acf_form( $args );
-    }
-    echo '</div>';
+    $fields = \CouncilDebtCounters\Custom_Fields::get_fields();
+    ?>
+    <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+        <input type="hidden" name="action" value="cdc_save_council">
+        <?php wp_nonce_field( 'cdc_save_council' ); ?>
+        <input type="hidden" name="post_id" value="<?php echo esc_attr( $post_id ); ?>">
+        <table class="form-table" role="presentation">
+            <?php foreach ( $fields as $field ) :
+                $val = $post_id ? \CouncilDebtCounters\Custom_Fields::get_value( $post_id, $field->name ) : '';
+                $type = $field->type === 'text' ? 'text' : 'number';
+                $required = $field->required ? 'required' : '';
+                $readonly = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
+            ?>
+            <tr>
+                <th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?><?php if ( $field->required ) echo ' *'; ?></label></th>
+                <td>
+                    <?php if ( $field->type === 'money' ) : ?>
+                        <div class="input-group">
+                            <span class="input-group-text">&pound;</span>
+                            <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="number" step="0.01" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="regular-text" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']" ' . $required; ?>>
+                        </div>
+                    <?php else : ?>
+                        <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="<?php echo esc_attr( $type ); ?>" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="regular-text" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']" ' . $required; ?>>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+        <?php submit_button( __( 'Save Council', 'council-debt-counters' ) ); ?>
+    </form>
+    </div>
+    <?php
     return;
 }
 
@@ -65,5 +84,4 @@ $councils = get_posts([
             <?php endforeach; endif; ?>
         </tbody>
     </table>
-    <p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=acf-field-group' ) ); ?>"><?php esc_html_e( 'Manage field groups', 'council-debt-counters' ); ?></a></p>
 </div>

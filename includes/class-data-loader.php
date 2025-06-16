@@ -1,6 +1,8 @@
 <?php
 namespace CouncilDebtCounters;
 
+use CouncilDebtCounters\Custom_Fields;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -78,11 +80,7 @@ class Data_Loader {
                 if ( '' === $value ) {
                     continue;
                 }
-                if ( function_exists( 'update_field' ) ) {
-                    update_field( $field, $value, $post_id );
-                } else {
-                    update_post_meta( $post_id, $field, $value );
-                }
+                \CouncilDebtCounters\Custom_Fields::update_value( $post_id, $field, $value );
             }
 
             if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {

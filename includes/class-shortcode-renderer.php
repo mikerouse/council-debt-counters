@@ -1,6 +1,8 @@
 <?php
 namespace CouncilDebtCounters;
 
+use CouncilDebtCounters\Custom_Fields;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -27,12 +29,12 @@ class Shortcode_Renderer {
             return '';
         }
 
-        $total = get_field( 'total_debt', $id );
+        $total = Custom_Fields::get_value( $id, 'total_debt' );
         if ( ! $total ) {
             $total = 0;
         }
-        $interest = (float) get_field( 'interest_paid_on_debt', $id );
-        $mrp = (float) get_field( 'minimum_revenue_provision', $id );
+        $interest = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
+        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
         $net_growth_per_year = $interest - $mrp;
         $growth_per_second = $net_growth_per_year / (365 * 24 * 60 * 60);
 
@@ -61,19 +63,19 @@ class Shortcode_Renderer {
 
         // Get band property counts
         $bands = [
-            'A' => (int) get_field( 'band_a_properties', $id ),
-            'B' => (int) get_field( 'band_b_properties', $id ),
-            'C' => (int) get_field( 'band_c_properties', $id ),
-            'D' => (int) get_field( 'band_d_properties', $id ),
-            'E' => (int) get_field( 'band_e_properties', $id ),
-            'F' => (int) get_field( 'band_f_properties', $id ),
-            'G' => (int) get_field( 'band_g_properties', $id ),
-            'H' => (int) get_field( 'band_h_properties', $id ),
+            'A' => (int) Custom_Fields::get_value( $id, 'band_a_properties' ),
+            'B' => (int) Custom_Fields::get_value( $id, 'band_b_properties' ),
+            'C' => (int) Custom_Fields::get_value( $id, 'band_c_properties' ),
+            'D' => (int) Custom_Fields::get_value( $id, 'band_d_properties' ),
+            'E' => (int) Custom_Fields::get_value( $id, 'band_e_properties' ),
+            'F' => (int) Custom_Fields::get_value( $id, 'band_f_properties' ),
+            'G' => (int) Custom_Fields::get_value( $id, 'band_g_properties' ),
+            'H' => (int) Custom_Fields::get_value( $id, 'band_h_properties' ),
         ];
 
-        $population = (int) get_field( 'population', $id );
+        $population = (int) Custom_Fields::get_value( $id, 'population' );
 
-        $mrp = (float) get_field( 'minimum_revenue_provision', $id );
+        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
         $debt_repayment_explainer = '';
         if ( $mrp > 0 ) {
             $principal_repayment = $mrp - $interest;
@@ -84,16 +86,16 @@ class Shortcode_Renderer {
                     /* translators: 1: years to clear debt, 2: principal per year, 3: interest per year, 4: years if no interest */
                     __( 'At the current rate of debt repayment (Minimum Revenue Provision), the council pays £%2$s per year towards the debt and £%3$s per year in interest. At this rate, it would take approximately %1$d years to clear the debt, assuming no new borrowing and constant repayments/interest. If all interest payments stopped tomorrow, it would take about %4$d years to clear the debt at the same repayment rate.', 'council-debt-counters' ),
                     $years_to_clear,
-                    number_format_i18n( $principal_repayment, 0 ),
-                    number_format_i18n( $interest, 0 ),
+                    number_format_i18n( $principal_repayment, 2 ),
+                    number_format_i18n( $interest, 2 ),
                     $years_no_interest
                 );
             } else {
                 $debt_repayment_explainer = sprintf(
                     /* translators: 1: interest per year, 2: repayment per year */
                     __( 'At the current rate of debt repayment (Minimum Revenue Provision), the council pays £%2$s per year towards the debt but pays £%1$s per year in interest. This means the debt will never be paid off, as repayments are not even covering the interest.', 'council-debt-counters' ),
-                    number_format_i18n( $interest, 0 ),
-                    number_format_i18n( $mrp, 0 )
+                    number_format_i18n( $interest, 2 ),
+                    number_format_i18n( $mrp, 2 )
                 );
                 if ( $mrp > 0 ) {
                     $years_no_interest = ceil( $total / $mrp );
@@ -117,8 +119,8 @@ class Shortcode_Renderer {
             </button>
             <div class="collapse" id="cdc-detail-<?php echo esc_attr( $id ); ?>">
                 <ul class="mt-2 list-unstyled">
-                    <li><?php esc_html_e( 'Interest Paid on Debt (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 0 ); ?></li>
-                    <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 0 ); ?></li>
+                    <li><?php esc_html_e( 'Interest Paid on Debt (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 2 ); ?></li>
+                    <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 2 ); ?></li>
                     <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( $growth_per_second, 6 ); ?></li>
                 </ul>
                 <?php if ( array_sum( $bands ) > 0 ) : ?>
@@ -128,14 +130,14 @@ class Shortcode_Renderer {
                         if ( $count > 0 ) :
                             $debt_per_property = $total / $count;
                     ?>
-                        <li><?php echo esc_html( sprintf( 'Band %s: £%s per property', $band, number_format_i18n( $debt_per_property, 0 ) ) ); ?></li>
+                        <li><?php echo esc_html( sprintf( 'Band %s: £%s per property', $band, number_format_i18n( $debt_per_property, 2 ) ) ); ?></li>
                     <?php endif; endforeach; ?>
                     </ul>
                 <?php endif; ?>
                 <?php if ( $population > 0 ) : ?>
                 <h5><?php esc_html_e( 'Debt per person:', 'council-debt-counters' ); ?></h5>
                 <ul class="mt-2 list-unstyled">
-                    <li><?php echo esc_html( sprintf( '£%s per person', number_format_i18n( $total / $population, 0 ) ) ); ?></li>
+                    <li><?php echo esc_html( sprintf( '£%s per person', number_format_i18n( $total / $population, 2 ) ) ); ?></li>
                 </ul>
                 <?php endif; ?>
                 <?php if ( $debt_repayment_explainer ) : ?>
