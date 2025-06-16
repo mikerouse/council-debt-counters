@@ -123,6 +123,36 @@ class Custom_Fields {
         return true;
     }
 
+    /**
+     * Migrate legacy ACF post meta values into the custom field tables.
+     */
+    public static function migrate_from_meta() {
+        $posts = get_posts([
+            'post_type'   => 'council',
+            'numberposts' => -1,
+        ]);
+
+        foreach ( $posts as $post ) {
+            $meta = get_post_meta( $post->ID );
+            foreach ( $meta as $key => $values ) {
+                if ( empty( $values ) || strpos( $key, '_' ) === 0 ) {
+                    continue;
+                }
+
+                $value = maybe_unserialize( $values[0] );
+
+                $field = self::get_field_by_name( $key );
+                if ( ! $field ) {
+                    $label = ucwords( str_replace( '_', ' ', $key ) );
+                    $type  = is_numeric( $value ) ? 'number' : 'text';
+                    self::add_field( $key, $label, $type );
+                }
+
+                self::update_value( $post->ID, $key, $value );
+            }
+        }
+    }
+
     public static function render_page() {
         if ( ! current_user_can( 'manage_options' ) ) {
             return;
