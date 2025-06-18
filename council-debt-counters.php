@@ -24,9 +24,11 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-post-type.php
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-admin-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-custom-fields.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-openai-helper.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-ai-extractor.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-debt-adjustments-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-whistleblower-form.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-dashboard-widget.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-shortcode-playground.php';
 
 register_activation_hook( __FILE__, function() {
     \CouncilDebtCounters\Custom_Fields::install();
@@ -46,6 +48,7 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\License_Manager::init();
     \CouncilDebtCounters\Whistleblower_Form::init();
     \CouncilDebtCounters\Admin_Dashboard_Widget::init();
+    \CouncilDebtCounters\Shortcode_Playground::init();
 } );
 
 /**

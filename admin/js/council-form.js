@@ -47,28 +47,7 @@
             shortField.parentElement.appendChild(ratesOutput);
         }
 
-        var sidebar = document.createElement('div');
-        sidebar.id = 'cdc-counter-sidebar';
-        sidebar.className = 'card mb-3 ms-3';
-        sidebar.style.width = '18rem';
-        sidebar.innerHTML = '<div class="card-body">' +
-            '<h5 class="card-title">Live Counter</h5>' +
-            '<div id="cdc-counter-display" class="h3" role="status" aria-live="polite">£0</div>' +
-            '<p id="cdc-counter-rate" class="mb-0"></p>' +
-            '</div>';
-        form.parentElement.appendChild(sidebar);
-        var counterDisplay = sidebar.querySelector('#cdc-counter-display');
-        var rateDisplay = sidebar.querySelector('#cdc-counter-rate');
-        var baseTotal = 0;
-        var startTime = Date.now();
         var growthPerSecond = 0;
-
-        function tick() {
-            var elapsed = (Date.now() - startTime) / 1000;
-            var current = baseTotal + elapsed * growthPerSecond;
-            counterDisplay.textContent = current.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 });
-        }
-        setInterval(tick, 1000);
 
         function updateAll() {
             var shortVal = parseFloat(shortField ? shortField.value : 0) || 0;
@@ -90,9 +69,6 @@
             ratesOutput.textContent = 'Debt per day: £' + perDay.toFixed(2) + ', per hour: £' + perHour.toFixed(2) + ', per second: £' + perSecond.toFixed(2);
 
             growthPerSecond = (interest - mrp) / (365 * 24 * 60 * 60);
-            baseTotal = total;
-            startTime = Date.now();
-            rateDisplay.textContent = 'Growth per second: £' + growthPerSecond.toFixed(6);
         }
 
         if (shortField) shortField.addEventListener('input', updateAll);
@@ -101,10 +77,5 @@
         if (interestField) interestField.addEventListener('input', updateAll);
         if (mrpField) mrpField.addEventListener('input', updateAll);
         updateAll();
-        // Add explainer for calculation
-        var explainer = document.createElement('div');
-        explainer.className = 'alert alert-warning mt-2';
-        explainer.innerHTML = 'Total debt = <strong>Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments</strong>. The growth or shrinkage estimate uses interest from the last statement of accounts.';
-        sidebar.querySelector('.card-body').appendChild(explainer);
     });
 })();
