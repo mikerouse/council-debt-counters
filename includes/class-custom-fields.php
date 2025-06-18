@@ -30,6 +30,7 @@ class Custom_Fields {
         ['name' => 'usable_reserves', 'label' => 'Usable Reserves', 'type' => 'money', 'required' => 0],
         ['name' => 'consultancy_spend', 'label' => 'Consultancy Spend', 'type' => 'money', 'required' => 0],
         ['name' => 'waste_report_count', 'label' => 'Waste Report Count', 'type' => 'number', 'required' => 0],
+        ['name' => 'statement_of_accounts', 'label' => 'Statement of Accounts (PDF)', 'type' => 'text', 'required' => 0],
     ];
 
     /**
@@ -40,6 +41,7 @@ class Custom_Fields {
         'council_name',
         'current_liabilities',
         'long_term_liabilities',
+        'statement_of_accounts',
     ];
 
     /**

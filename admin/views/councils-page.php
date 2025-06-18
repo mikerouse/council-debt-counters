@@ -27,6 +27,29 @@ if ( $action === 'edit' ) {
                 $required = $field->required ? 'required' : '';
                 $readonly = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
             ?>
+            <?php if ( $field->name === 'statement_of_accounts' ) : ?>
+            <tr>
+                <th scope="row"><label for="cdc-soa"><?php echo esc_html( $field->label ); ?></label></th>
+                <td>
+                    <?php if ( $val ) : ?>
+                        <p><a href="<?php echo esc_url( plugins_url( 'docs/' . $val, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View current document', 'council-debt-counters' ); ?></a></p>
+                    <?php endif; ?>
+                    <input type="file" id="cdc-soa" name="statement_of_accounts_file" accept="application/pdf">
+                    <p class="description"><?php esc_html_e( 'or import from URL', 'council-debt-counters' ); ?></p>
+                    <input type="url" name="statement_of_accounts_url" class="regular-text" placeholder="https://example.com/file.pdf">
+                    <?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
+                    <?php if ( ! empty( $orphans ) ) : ?>
+                        <p class="description mt-2"><?php esc_html_e( 'Or attach an existing document', 'council-debt-counters' ); ?></p>
+                        <select name="statement_of_accounts_existing">
+                            <option value=""><?php esc_html_e( 'Select document', 'council-debt-counters' ); ?></option>
+                            <?php foreach ( $orphans as $doc ) : ?>
+                                <option value="<?php echo esc_attr( $doc->filename ); ?>"><?php echo esc_html( $doc->filename ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php else : ?>
             <tr>
                 <th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?><?php if ( $field->required ) echo ' *'; ?></label></th>
                 <td>
@@ -40,6 +63,7 @@ if ( $action === 'edit' ) {
                     <?php endif; ?>
                 </td>
             </tr>
+            <?php endif; ?>
             <?php endforeach; ?>
         </table>
         <?php submit_button( __( 'Save Council', 'council-debt-counters' ) ); ?>

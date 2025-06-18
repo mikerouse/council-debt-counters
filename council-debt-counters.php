@@ -28,7 +28,10 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-debt-adjustments-page
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-whistleblower-form.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-dashboard-widget.php';
 
-register_activation_hook( __FILE__, [ '\\CouncilDebtCounters\\Custom_Fields', 'install' ] );
+register_activation_hook( __FILE__, function() {
+    \CouncilDebtCounters\Custom_Fields::install();
+    \CouncilDebtCounters\Docs_Manager::install();
+} );
 
 add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Error_Logger::init();
@@ -36,6 +39,7 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Council_Post_Type::init();
     \CouncilDebtCounters\Council_Admin_Page::init();
     \CouncilDebtCounters\Custom_Fields::init();
+    \CouncilDebtCounters\Docs_Manager::init();
     \CouncilDebtCounters\Shortcode_Renderer::init();
     \CouncilDebtCounters\Debt_Adjustments_Page::init();
     \CouncilDebtCounters\Data_Loader::init();
