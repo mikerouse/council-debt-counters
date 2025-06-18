@@ -17,8 +17,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        var form = document.querySelector('form[action*="cdc_save_council"]');
-        if (!form) return; // only on edit/add page
+        var actionInput = document.querySelector('input[name="action"][value="cdc_save_council"]');
+        if (!actionInput) return; // only on edit/add page
+        var form = actionInput.closest('form');
+        if (!form) return;
 
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
             // Only add helper if field represents a monetary value
