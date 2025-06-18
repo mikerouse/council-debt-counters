@@ -22,6 +22,14 @@ class Custom_Fields {
         ['name' => 'minimum_revenue_provision', 'label' => 'Minimum Revenue Provision (Debt Repayment)', 'type' => 'money', 'required' => 1],
         ['name' => 'total_debt', 'label' => 'Total Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
+        ['name' => 'annual_spending', 'label' => 'Annual Spending', 'type' => 'money', 'required' => 0],
+        ['name' => 'total_income', 'label' => 'Total Income', 'type' => 'money', 'required' => 0],
+        ['name' => 'annual_deficit', 'label' => 'Annual Deficit', 'type' => 'money', 'required' => 0],
+        ['name' => 'interest_paid', 'label' => 'Interest Paid', 'type' => 'money', 'required' => 0],
+        ['name' => 'capital_financing_requirement', 'label' => 'Capital Financing Requirement', 'type' => 'money', 'required' => 0],
+        ['name' => 'usable_reserves', 'label' => 'Usable Reserves', 'type' => 'money', 'required' => 0],
+        ['name' => 'consultancy_spend', 'label' => 'Consultancy Spend', 'type' => 'money', 'required' => 0],
+        ['name' => 'waste_report_count', 'label' => 'Waste Report Count', 'type' => 'number', 'required' => 0],
     ];
 
     /**
@@ -46,6 +54,7 @@ class Custom_Fields {
         add_action( 'admin_menu', [ __CLASS__, 'admin_menu' ], 11 );
         // Verify tables exist in case the plugin was updated without reactivation.
         add_action( 'init', [ __CLASS__, 'maybe_install' ] );
+        add_action( 'init', [ __CLASS__, 'register_meta_fields' ] );
     }
 
     public static function install() {
@@ -101,6 +110,21 @@ class Custom_Fields {
         }
 
         self::ensure_default_fields();
+    }
+
+    /**
+     * Register custom meta keys for REST and sanitisation.
+     */
+    public static function register_meta_fields() {
+        foreach ( self::DEFAULT_FIELDS as $field ) {
+            register_meta( 'post', $field['name'], [
+                'object_subtype' => 'council',
+                'type'           => in_array( $field['type'], [ 'number', 'money' ], true ) ? 'number' : 'string',
+                'single'         => true,
+                'show_in_rest'   => true,
+                'sanitize_callback' => in_array( $field['type'], [ 'number', 'money' ], true ) ? 'floatval' : 'sanitize_text_field',
+            ] );
+        }
     }
 
     public static function admin_menu() {

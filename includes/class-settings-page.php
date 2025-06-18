@@ -48,6 +48,7 @@ class Settings_Page {
         register_setting( 'council-debt-counters', License_Manager::OPTION_KEY );
         register_setting( 'council-debt-counters', License_Manager::OPTION_VALID );
         register_setting( 'council-debt-counters', 'cdc_openai_api_key' );
+        register_setting( 'council-debt-counters', 'cdc_enabled_counters', [ 'type' => 'array', 'default' => [] ] );
     }
 
     public static function render_page() {

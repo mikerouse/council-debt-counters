@@ -9,15 +9,57 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Shortcode_Renderer {
 
+    private static function get_council_id_from_atts( array $atts ) {
+        $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+        if ( ! $id && ! empty( $atts['council'] ) ) {
+            $post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
+            if ( $post ) {
+                $id = $post->ID;
+            }
+        }
+        return $id;
+    }
+
+    private static function render_annual_counter( int $id, string $field, string $type = '' ) {
+        $enabled = (array) get_option( 'cdc_enabled_counters', [] );
+        if ( $type && ! in_array( $type, $enabled, true ) ) {
+            return '';
+        }
+        $annual = (float) Custom_Fields::get_value( $id, $field );
+        $rate   = Counter_Manager::per_second_rate( $annual );
+        $current = $rate * Counter_Manager::seconds_since_fy_start();
+
+        wp_enqueue_style( 'bootstrap-5' );
+        wp_enqueue_style( 'cdc-counter' );
+        wp_enqueue_script( 'bootstrap-5' );
+        wp_enqueue_script( 'cdc-counter-animations' );
+
+        ob_start();
+        ?>
+        <div class="card card-counter text-center mb-3">
+            <div class="card-body">
+                <div class="cdc-counter display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="0" data-prefix="£">£0</div>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
     public static function init() {
         add_shortcode( 'council_counter', [ __CLASS__, 'render_counter' ] );
+        add_shortcode( 'spending_counter', [ __CLASS__, 'render_spending_counter' ] );
+        add_shortcode( 'deficit_counter', [ __CLASS__, 'render_deficit_counter' ] );
+        add_shortcode( 'interest_counter', [ __CLASS__, 'render_interest_counter' ] );
+        add_shortcode( 'revenue_counter', [ __CLASS__, 'render_revenue_counter' ] );
+        add_shortcode( 'custom_counter', [ __CLASS__, 'render_custom_counter' ] );
         add_action( 'wp_enqueue_scripts', [ __CLASS__, 'register_assets' ] );
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'register_assets' ] );
     }
 
     public static function register_assets() {
         wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
-        wp_register_script( 'cdc-counter', plugins_url( 'public/js/counter.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0', true );
+        wp_register_script( 'countup', 'https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js', [], '2.6.2', true );
+        wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), [ 'countup' ], '0.1.0', true );
         wp_register_style( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css', [], '5.3.1' );
         wp_register_script( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js', [], '5.3.1', true );
     }
@@ -26,6 +68,10 @@ class Shortcode_Renderer {
         $atts = shortcode_atts( [ 'id' => 0 ], $atts );
         $id   = intval( $atts['id'] );
         if ( ! $id ) {
+            return '';
+        }
+        $enabled = (array) get_option( 'cdc_enabled_counters', [] );
+        if ( ! in_array( 'debt', $enabled, true ) ) {
             return '';
         }
 
@@ -53,7 +99,7 @@ class Shortcode_Renderer {
         wp_enqueue_style( 'bootstrap-5' );
         wp_enqueue_style( 'cdc-counter' );
         wp_enqueue_script( 'bootstrap-5' );
-        wp_enqueue_script( 'cdc-counter' );
+        wp_enqueue_script( 'cdc-counter-animations' );
 
         $details  = [
             'interest'           => $interest,
@@ -110,9 +156,11 @@ class Shortcode_Renderer {
 
         ob_start();
         ?>
-        <div class="cdc-counter-wrapper mb-3">
-            <div class="cdc-counter display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>">
-                £0.00
+        <div class="card card-counter text-center mb-3">
+            <div class="card-body">
+                <div class="cdc-counter display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
+                    £0.00
+                </div>
             </div>
             <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#cdc-detail-<?php echo esc_attr( $id ); ?>" aria-expanded="false" aria-controls="cdc-detail-<?php echo esc_attr( $id ); ?>">
                 <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
@@ -152,5 +200,57 @@ class Shortcode_Renderer {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    public static function render_spending_counter( $atts ) {
+        $id = self::get_council_id_from_atts( $atts );
+        if ( ! $id ) {
+            return '';
+        }
+        return self::render_annual_counter( $id, 'annual_spending', 'spending' );
+    }
+
+    public static function render_deficit_counter( $atts ) {
+        $id = self::get_council_id_from_atts( $atts );
+        if ( ! $id ) {
+            return '';
+        }
+        return self::render_annual_counter( $id, 'annual_deficit', 'deficit' );
+    }
+
+    public static function render_interest_counter( $atts ) {
+        $id = self::get_council_id_from_atts( $atts );
+        if ( ! $id ) {
+            return '';
+        }
+        return self::render_annual_counter( $id, 'interest_paid', 'interest' );
+    }
+
+    public static function render_revenue_counter( $atts ) {
+        $id = self::get_council_id_from_atts( $atts );
+        if ( ! $id ) {
+            return '';
+        }
+        return self::render_annual_counter( $id, 'total_income', 'income' );
+    }
+
+    public static function render_custom_counter( $atts ) {
+        $id = self::get_council_id_from_atts( $atts );
+        $type = sanitize_key( $atts['type'] ?? '' );
+        if ( ! $id || ! $type ) {
+            return '';
+        }
+        $map = [
+            'reserves'   => 'usable_reserves',
+            'spending'   => 'annual_spending',
+            'income'     => 'total_income',
+            'deficit'    => 'annual_deficit',
+            'interest'   => 'interest_paid',
+            'consultancy'=> 'consultancy_spend',
+        ];
+        if ( ! isset( $map[ $type ] ) ) {
+            return '';
+        }
+        return self::render_annual_counter( $id, $map[ $type ], $type );
     }
 }
