@@ -17,6 +17,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        var form = document.querySelector('form[action*="cdc_save_council"]');
+        if (!form) return; // only on edit/add page
+
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
             // Only add helper if field represents a monetary value
             var meta = field.getAttribute('data-cdc-field') || '';
@@ -44,14 +47,14 @@
 
         var sidebar = document.createElement('div');
         sidebar.id = 'cdc-counter-sidebar';
-        sidebar.className = 'card position-fixed end-0 top-0 m-3';
+        sidebar.className = 'card mb-3 ms-3';
         sidebar.style.width = '18rem';
         sidebar.innerHTML = '<div class="card-body">' +
             '<h5 class="card-title">Live Counter</h5>' +
             '<div id="cdc-counter-display" class="h3" role="status" aria-live="polite">£0</div>' +
             '<p id="cdc-counter-rate" class="mb-0"></p>' +
             '</div>';
-        document.body.appendChild(sidebar);
+        form.parentElement.appendChild(sidebar);
         var counterDisplay = sidebar.querySelector('#cdc-counter-display');
         var rateDisplay = sidebar.querySelector('#cdc-counter-rate');
         var baseTotal = 0;
