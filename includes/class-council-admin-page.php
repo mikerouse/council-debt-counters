@@ -72,11 +72,34 @@ class Council_Admin_Page {
         }
 
         foreach ( $fields as $field ) {
-            if ( $field->name === 'total_debt' ) {
+            if ( $field->name === 'total_debt' || $field->name === 'statement_of_accounts' ) {
                 continue;
             }
             $value = $_POST['cdc_fields'][ $field->id ] ?? '';
             Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ) );
+        }
+
+        $soa_value = Custom_Fields::get_value( $post_id, 'statement_of_accounts' );
+
+        if ( ! empty( $_FILES['statement_of_accounts_file']['name'] ) ) {
+            $result = Docs_Manager::upload_document( $_FILES['statement_of_accounts_file'], 'statement_of_accounts', $post_id );
+            if ( $result === true ) {
+                $soa_value = sanitize_file_name( $_FILES['statement_of_accounts_file']['name'] );
+            }
+        } elseif ( ! empty( $_POST['statement_of_accounts_url'] ) ) {
+            $url = esc_url_raw( $_POST['statement_of_accounts_url'] );
+            $result = Docs_Manager::import_from_url( $url, 'statement_of_accounts', $post_id );
+            if ( $result === true ) {
+                $soa_value = sanitize_file_name( basename( parse_url( $url, PHP_URL_PATH ) ) );
+            }
+        } elseif ( ! empty( $_POST['statement_of_accounts_existing'] ) ) {
+            $existing = sanitize_file_name( $_POST['statement_of_accounts_existing'] );
+            Docs_Manager::assign_document( $existing, $post_id, 'statement_of_accounts' );
+            $soa_value = $existing;
+        }
+
+        if ( $soa_value ) {
+            Custom_Fields::update_value( $post_id, 'statement_of_accounts', $soa_value );
         }
 
         wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
