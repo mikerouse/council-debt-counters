@@ -13,6 +13,13 @@ class Docs_Manager {
     const TABLE = 'cdc_documents';
     const DOC_TYPES = ['statement_of_accounts'];
 
+    public static function current_financial_year() {
+        $year = (int) date( 'Y' );
+        $start = ( date( 'n' ) < 4 ) ? $year - 1 : $year;
+        $end = $start + 1;
+        return sprintf( '%d/%02d', $start, $end % 100 );
+    }
+
     public static function init() {
         add_action( 'init', [ __CLASS__, 'maybe_install' ] );
     }
@@ -26,6 +33,7 @@ class Docs_Manager {
             filename varchar(255) NOT NULL,
             doc_type varchar(100) NOT NULL,
             council_id bigint(20) NOT NULL DEFAULT 0,
+            financial_year varchar(9) NOT NULL,
             PRIMARY KEY  (id),
             UNIQUE KEY filename (filename)
         ) $charset_collate;";
@@ -38,6 +46,11 @@ class Docs_Manager {
         $table = $wpdb->prefix . self::TABLE;
         if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
             self::install();
+        } else {
+            $columns = $wpdb->get_col( "DESC $table", 0 );
+            if ( ! in_array( 'financial_year', $columns, true ) ) {
+                $wpdb->query( "ALTER TABLE $table ADD financial_year varchar(9) NOT NULL DEFAULT '" . self::current_financial_year() . "'" );
+            }
         }
     }
 
@@ -49,9 +62,9 @@ class Docs_Manager {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
         if ( $council_id > 0 ) {
-            return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE council_id = %d", $council_id ) );
+            return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE council_id = %d ORDER BY financial_year DESC", $council_id ) );
         }
-        return $wpdb->get_results( "SELECT * FROM $table" );
+        return $wpdb->get_results( "SELECT * FROM $table ORDER BY financial_year DESC" );
     }
 
     public static function list_orphan_documents() {
@@ -66,7 +79,7 @@ class Docs_Manager {
         return count( self::list_documents() ) < self::FREE_LIMIT;
     }
 
-    public static function upload_document( $file, string $doc_type = '', int $council_id = 0 ) {
+    public static function upload_document( $file, string $doc_type = '', int $council_id = 0, string $financial_year = '' ) {
         $ext = strtolower( pathinfo( $file['name'], PATHINFO_EXTENSION ) );
         if ( ! in_array( $ext, self::ALLOWED_EXTENSIONS ) ) {
             Error_Logger::log( 'Attempted upload of invalid file type: ' . $file['name'] );
@@ -79,7 +92,7 @@ class Docs_Manager {
         $filename = basename( $file['name'] );
         $target   = self::get_docs_path() . $filename;
         if ( move_uploaded_file( $file['tmp_name'], $target ) ) {
-            self::add_document( $filename, $doc_type, $council_id );
+            self::add_document( $filename, $doc_type, $council_id, $financial_year );
             return true;
         }
         Error_Logger::log( 'Failed to move uploaded document: ' . $file['name'] );
@@ -103,7 +116,7 @@ class Docs_Manager {
      * @param string $url Remote file URL.
      * @return true|string True on success or error message.
      */
-    public static function import_from_url( string $url, string $doc_type = '', int $council_id = 0 ) {
+    public static function import_from_url( string $url, string $doc_type = '', int $council_id = 0, string $financial_year = '' ) {
         $path = parse_url( $url, PHP_URL_PATH );
         $ext  = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
         if ( ! in_array( $ext, self::ALLOWED_EXTENSIONS ) ) {
@@ -134,7 +147,7 @@ class Docs_Manager {
             return __( 'Import failed.', 'council-debt-counters' );
         }
         unlink( $tmp );
-        self::add_document( $filename, $doc_type, $council_id );
+        self::add_document( $filename, $doc_type, $council_id, $financial_year );
         return true;
     }
 
@@ -143,16 +156,20 @@ class Docs_Manager {
         return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE . " WHERE filename = %s", $filename ) );
     }
 
-    public static function add_document( string $filename, string $doc_type = '', int $council_id = 0 ) {
+    public static function add_document( string $filename, string $doc_type = '', int $council_id = 0, string $financial_year = '' ) {
+        if ( empty( $financial_year ) ) {
+            $financial_year = self::current_financial_year();
+        }
         global $wpdb;
         $wpdb->insert( $wpdb->prefix . self::TABLE, [
             'filename'   => $filename,
             'doc_type'   => $doc_type,
             'council_id' => $council_id,
-        ], [ '%s', '%s', '%d' ] );
+            'financial_year' => $financial_year,
+        ], [ '%s', '%s', '%d', '%s' ] );
     }
 
-    public static function assign_document( string $filename, int $council_id, string $doc_type ) {
+    public static function assign_document( string $filename, int $council_id, string $doc_type, string $financial_year = '' ) {
         if ( ! in_array( $doc_type, self::DOC_TYPES, true ) ) {
             return false;
         }
@@ -162,9 +179,10 @@ class Docs_Manager {
             $wpdb->update( $wpdb->prefix . self::TABLE, [
                 'council_id' => $council_id,
                 'doc_type'   => $doc_type,
-            ], [ 'id' => $doc->id ], [ '%d', '%s' ], [ '%d' ] );
+                'financial_year' => $financial_year ?: $doc->financial_year,
+            ], [ 'id' => $doc->id ], [ '%d', '%s', '%s' ], [ '%d' ] );
         } else {
-            self::add_document( $filename, $doc_type, $council_id );
+            self::add_document( $filename, $doc_type, $council_id, $financial_year );
         }
         return true;
     }

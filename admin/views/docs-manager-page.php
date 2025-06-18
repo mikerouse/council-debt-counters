@@ -13,7 +13,8 @@ if ( isset( $_POST['cdc_assign_doc'], $_POST['cdc_doc_name'], $_POST['cdc_counci
     $file = sanitize_file_name( $_POST['cdc_doc_name'] );
     $council = intval( $_POST['cdc_council'] );
     $type = sanitize_key( $_POST['cdc_doc_type'] );
-    Docs_Manager::assign_document( $file, $council, $type );
+    $year = sanitize_text_field( $_POST['cdc_doc_year'] );
+    Docs_Manager::assign_document( $file, $council, $type, $year );
     if ( $type === 'statement_of_accounts' ) {
         \CouncilDebtCounters\Custom_Fields::update_value( $council, 'statement_of_accounts', $file );
     }
@@ -28,7 +29,8 @@ if ( isset( $_POST['cdc_delete_doc'], $_POST['cdc_doc_name'], $_POST['cdc_delete
 }
 
 if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0 ) {
-    $result = Docs_Manager::upload_document( $_FILES['cdc_upload_doc'] );
+    $year = sanitize_text_field( $_POST['cdc_upload_year'] ?? Docs_Manager::current_financial_year() );
+    $result = Docs_Manager::upload_document( $_FILES['cdc_upload_doc'], '', 0, $year );
     if ( $result === true ) {
         echo '<div class="notice notice-success"><p>' . esc_html__( 'Document uploaded.', 'council-debt-counters' ) . '</p></div>';
         $docs = Docs_Manager::list_documents();
@@ -48,6 +50,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
     <?php endif; ?>
     <form method="post" enctype="multipart/form-data">
         <input type="file" name="cdc_upload_doc" accept=".csv,.pdf,.xlsx" <?php if ( ! $can_upload ) echo 'disabled'; ?> />
+        <input type="text" name="cdc_upload_year" value="<?php echo esc_attr( Docs_Manager::current_financial_year() ); ?>" class="regular-text" style="margin-left:10px;" />
         <button type="submit" class="button button-primary" <?php if ( ! $can_upload ) echo 'disabled'; ?>><?php esc_html_e( 'Upload', 'council-debt-counters' ); ?></button>
         <?php if ( ! $can_upload ) : ?>
             <p class="description" style="color:red;"><?php esc_html_e( 'Free version limit reached. Delete a document or upgrade to Pro.', 'council-debt-counters' ); ?></p>
@@ -59,6 +62,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
             <tr>
                 <th><?php esc_html_e( 'File Name', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Council', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
             </tr>
@@ -72,6 +76,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
                     <td>
                         <?php echo $doc->council_id ? esc_html( get_the_title( $doc->council_id ) ) : esc_html__( 'Unassigned', 'council-debt-counters' ); ?>
                     </td>
+                    <td><?php echo esc_html( $doc->financial_year ); ?></td>
                     <td><?php echo esc_html( $doc->doc_type ); ?></td>
                     <td>
                         <form method="post" style="display:inline;">
@@ -92,6 +97,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
                                 <select name="cdc_doc_type">
                                     <option value="statement_of_accounts"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></option>
                                 </select>
+                                <input type="text" name="cdc_doc_year" value="<?php echo esc_attr( Docs_Manager::current_financial_year() ); ?>" class="regular-text" />
                                 <button type="submit" name="cdc_assign_doc" class="button button-primary"><?php esc_html_e( 'Assign', 'council-debt-counters' ); ?></button>
                             </form>
                         <?php endif; ?>
