@@ -15,6 +15,7 @@ class Data_Loader {
         add_action( 'admin_init', [ __CLASS__, 'handle_admin_action' ] );
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             \WP_CLI::add_command( 'cdc load_csv', [ __CLASS__, 'cli_load_csv' ] );
+            \WP_CLI::add_command( 'cdc load_json', [ __CLASS__, 'cli_load_json' ] );
         }
     }
 
@@ -95,11 +96,80 @@ class Data_Loader {
     }
 
     /**
+     * Parse a JSON file and create or update council posts.
+     *
+     * @param string $path Path to JSON file.
+     * @return int|\WP_Error Number of imported rows or WP_Error on failure.
+     */
+    public static function load_json( string $path ) {
+        if ( ! file_exists( $path ) ) {
+            return new \WP_Error( 'json_missing', __( 'JSON file not found.', 'council-debt-counters' ) );
+        }
+        $contents = file_get_contents( $path );
+        if ( false === $contents ) {
+            return new \WP_Error( 'json_read', __( 'Unable to read JSON file.', 'council-debt-counters' ) );
+        }
+        $data = json_decode( $contents, true );
+        if ( ! is_array( $data ) ) {
+            return new \WP_Error( 'json_invalid', __( 'Invalid JSON.', 'council-debt-counters' ) );
+        }
+        $count = 0;
+        foreach ( $data as $row ) {
+            if ( empty( $row['council_name'] ) ) {
+                continue;
+            }
+            $name    = sanitize_text_field( $row['council_name'] );
+            $post    = get_page_by_title( $name, OBJECT, 'council' );
+            $post_id = $post ? $post->ID : 0;
+
+            if ( $post_id ) {
+                wp_update_post( [ 'ID' => $post_id, 'post_title' => $name ] );
+            } else {
+                $post_id = wp_insert_post( [
+                    'post_title'  => $name,
+                    'post_type'   => 'council',
+                    'post_status' => 'publish',
+                ] );
+                if ( is_wp_error( $post_id ) ) {
+                    continue;
+                }
+            }
+
+            foreach ( $row as $field => $value ) {
+                if ( 'council_name' === $field ) {
+                    continue;
+                }
+                if ( '' === $value ) {
+                    continue;
+                }
+                Custom_Fields::update_value( $post_id, $field, $value );
+            }
+
+            if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
+                Council_Post_Type::calculate_total_debt( $post_id );
+            }
+
+            $count++;
+        }
+        Error_Logger::log_info( 'Imported councils from JSON: ' . $path );
+        return $count;
+    }
+
+    /**
      * Handle CLI command to load CSV.
      */
     public static function cli_load_csv( $args, $assoc_args ) {
         $path = $args[0] ?? '';
         $result = self::load_csv( $path );
+        if ( is_wp_error( $result ) ) {
+            \WP_CLI::error( $result->get_error_message() );
+        }
+        \WP_CLI::success( sprintf( __( 'Imported %d councils.', 'council-debt-counters' ), $result ) );
+    }
+
+    public static function cli_load_json( $args, $assoc_args ) {
+        $path = $args[0] ?? '';
+        $result = self::load_json( $path );
         if ( is_wp_error( $result ) ) {
             \WP_CLI::error( $result->get_error_message() );
         }
@@ -117,7 +187,13 @@ class Data_Loader {
             return;
         }
         check_admin_referer( 'cdc_load_csv', 'cdc_load_csv_nonce' );
-        $result = self::load_csv( $_FILES['cdc_csv_file']['tmp_name'] );
+        $file = $_FILES['cdc_csv_file']['tmp_name'];
+        $ext  = pathinfo( $_FILES['cdc_csv_file']['name'], PATHINFO_EXTENSION );
+        if ( strtolower( $ext ) === 'json' ) {
+            $result = self::load_json( $file );
+        } else {
+            $result = self::load_csv( $file );
+        }
         add_action( 'admin_notices', function() use ( $result ) {
             if ( is_wp_error( $result ) ) {
                 echo '<div class="notice notice-error"><p>' . esc_html( $result->get_error_message() ) . '</p></div>';
