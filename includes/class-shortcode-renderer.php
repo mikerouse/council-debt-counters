@@ -56,6 +56,8 @@ class Shortcode_Renderer {
         add_shortcode( 'custom_counter', [ __CLASS__, 'render_custom_counter' ] );
         add_action( 'wp_enqueue_scripts', [ __CLASS__, 'register_assets' ] );
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'register_assets' ] );
+        add_action( 'wp_ajax_cdc_log_js', [ __CLASS__, 'ajax_log_js' ] );
+        add_action( 'wp_ajax_nopriv_cdc_log_js', [ __CLASS__, 'ajax_log_js' ] );
     }
 
     public static function register_assets() {
@@ -64,6 +66,10 @@ class Shortcode_Renderer {
         wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), [ 'countup' ], '0.1.0', true );
         wp_register_style( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css', [], '5.3.1' );
         wp_register_script( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js', [], '5.3.1', true );
+        wp_localize_script( 'cdc-counter-animations', 'CDC_LOGGER', [
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            'nonce'   => wp_create_nonce( 'cdc_log_js' ),
+        ] );
     }
 
     public static function render_counter( $atts ) {
@@ -254,5 +260,14 @@ class Shortcode_Renderer {
             return '';
         }
         return self::render_annual_counter( $id, $map[ $type ], $type );
+    }
+
+    public static function ajax_log_js() {
+        check_ajax_referer( 'cdc_log_js', 'nonce' );
+        $message = sanitize_text_field( wp_unslash( $_POST['message'] ?? '' ) );
+        if ( $message ) {
+            Error_Logger::log_info( 'JS: ' . $message );
+        }
+        wp_die();
     }
 }
