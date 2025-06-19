@@ -57,6 +57,11 @@ class Council_Admin_Page {
             '0.1.0',
             true
         );
+        wp_enqueue_style( "cdc-ai-progress", plugins_url( "admin/css/ai-progress.css", dirname( __DIR__ ) . "/council-debt-counters.php" ), [], "0.1.0" );
+        wp_localize_script( "cdc-council-form", "cdcAiMessages", [
+            "start" => __( "Analysing document…", "council-debt-counters" ),
+            "error" => __( "Extraction failed", "council-debt-counters" )
+        ] );
     }
 
     public static function handle_save() {

@@ -41,6 +41,7 @@ class Docs_Manager {
         add_action( 'admin_post_cdc_confirm_ai_figures', [ __CLASS__, 'handle_confirm_ai' ] );
         add_action( 'admin_post_cdc_dismiss_ai_figures', [ __CLASS__, 'handle_dismiss_ai' ] );
         add_action( 'admin_notices', [ __CLASS__, 'show_ai_suggestions' ] );
+        add_action( 'wp_ajax_cdc_extract_figures', [ __CLASS__, 'handle_ajax_extract' ] );
     }
 
     public static function install() {
@@ -325,6 +326,23 @@ class Docs_Manager {
         update_option( 'cdc_ai_suggestions', $all );
         wp_safe_redirect( wp_get_referer() );
         exit;
+    }
+
+    public static function handle_ajax_extract() {
+        if ( ! current_user_can( "manage_options" ) ) {
+            wp_send_json_error( __( "Permission denied.", "council-debt-counters" ) );
+        }
+        $doc_id = intval( $_POST["doc_id"] ?? 0 );
+        $doc = $doc_id ? self::get_document_by_id( $doc_id ) : null;
+        if ( ! $doc ) {
+            wp_send_json_error( __( "Document not found.", "council-debt-counters" ) );
+        }
+        if ( $doc->doc_type !== "statement_of_accounts" || $doc->council_id <= 0 ) {
+            wp_send_json_error( __( "Invalid document.", "council-debt-counters" ) );
+        }
+        $path = self::get_docs_path() . $doc->filename;
+        self::maybe_extract_figures( $path, (int) $doc->council_id );
+        wp_send_json_success( __( "Extraction complete. Review suggestions below.", "council-debt-counters" ) );
     }
 
     private static function extract_text( string $file ) {
