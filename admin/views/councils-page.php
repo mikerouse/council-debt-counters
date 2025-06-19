@@ -82,6 +82,7 @@ if ( $action === 'edit' ) {
             </div>
             <?php foreach ( $enabled as $tab ) : if ( empty( $groups[ $tab ] ) ) continue; ?>
             <div class="tab-pane fade" id="tab-<?php echo esc_attr( $tab ); ?>" role="tabpanel">
+                <p class="description"><code>[council_counter id="<?php echo esc_attr( $post_id ); ?>" type="<?php echo esc_attr( $tab ); ?>"]</code></p>
                 <table class="form-table" role="presentation">
                 <?php foreach ( $groups[ $tab ] as $field ) :
                     $val = $post_id ? \CouncilDebtCounters\Custom_Fields::get_value( $post_id, $field->name ) : '';
@@ -120,7 +121,11 @@ if ( $action === 'edit' ) {
                             <input type="url" name="statement_of_accounts_url" class="regular-text" placeholder="https://example.com/file.pdf">
                             <p class="description mt-2">
                                 <label for="cdc-soa-year" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
-                                <input type="text" id="cdc-soa-year" name="statement_of_accounts_year" value="<?php echo esc_attr( \CouncilDebtCounters\Docs_Manager::current_financial_year() ); ?>" class="regular-text">
+                                <select id="cdc-soa-year" name="statement_of_accounts_year">
+                                    <?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+                                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </p>
                             <?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
                             <?php if ( ! empty( $orphans ) ) : ?>
@@ -138,10 +143,35 @@ if ( $action === 'edit' ) {
                 <?php if ( ! empty( $docs ) ) : ?>
                 <h2><?php esc_html_e( 'Existing Documents', 'council-debt-counters' ); ?></h2>
                 <table class="widefat">
-                    <thead><tr><th><?php esc_html_e( 'File', 'council-debt-counters' ); ?></th><th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e( 'File', 'council-debt-counters' ); ?></th>
+                            <th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th>
+                            <th><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></th>
+                            <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
+                        </tr>
+                    </thead>
                     <tbody>
                     <?php foreach ( $docs as $d ) : ?>
-                        <tr><td><?php echo esc_html( $d->filename ); ?></td><td><?php echo esc_html( $d->financial_year ); ?></td></tr>
+                        <tr>
+                            <td><?php echo esc_html( $d->filename ); ?></td>
+                            <td>
+                                <select name="docs[<?php echo esc_attr( $d->id ); ?>][financial_year]">
+                                    <?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+                                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $d->financial_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="docs[<?php echo esc_attr( $d->id ); ?>][doc_type]">
+                                    <option value="statement_of_accounts" <?php selected( $d->doc_type, 'statement_of_accounts' ); ?>><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></option>
+                                </select>
+                            </td>
+                            <td>
+                                <button type="submit" name="update_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-secondary"><?php esc_html_e( 'Update', 'council-debt-counters' ); ?></button>
+                                <button type="submit" name="delete_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
