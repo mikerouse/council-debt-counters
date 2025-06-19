@@ -76,6 +76,20 @@ class Settings_Page {
         register_setting( 'council-debt-counters', License_Manager::OPTION_VALID );
         register_setting( 'council-debt-counters', 'cdc_openai_api_key' );
         register_setting( 'council-debt-counters', 'cdc_enabled_counters', [ 'type' => 'array', 'default' => [] ] );
+        register_setting(
+            'council-debt-counters',
+            'cdc_log_level',
+            [
+                'type'              => 'string',
+                'default'           => 'standard',
+                'sanitize_callback' => [ __CLASS__, 'sanitize_log_level' ],
+            ]
+        );
+    }
+
+    public static function sanitize_log_level( $value ) {
+        $value = sanitize_key( $value );
+        return in_array( $value, [ 'verbose', 'standard', 'quiet' ], true ) ? $value : 'standard';
     }
 
     public static function render_page() {

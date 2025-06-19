@@ -87,6 +87,7 @@ class Shortcode_Renderer {
         wp_localize_script( 'cdc-counter-animations', 'CDC_LOGGER', [
             'ajaxUrl' => admin_url( 'admin-ajax.php' ),
             'nonce'   => wp_create_nonce( 'cdc_log_js' ),
+            'logLevel' => get_option( 'cdc_log_level', 'standard' ),
         ] );
     }
 
