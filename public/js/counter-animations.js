@@ -1,57 +1,83 @@
 (function(){
-    function getCountUpClass(){
-        if(window.CountUp){
-            return window.CountUp;
+    'use strict';
+
+    function debugLog(message, data){
+        if(window.CDC_DEBUG !== false){
+            if(data !== undefined){
+                console.log('[CDC]', message, data);
+            }else{
+                console.log('[CDC]', message);
+            }
         }
-        if(window.countUp && window.countUp.CountUp){
+    }
+
+    function getCountUpClass(){
+        // Prefer the CountUp instance bundled with this plugin. Some themes
+        // include an old global `CountUp` (v1) which does not support prefixes
+        // or decimal places.
+        if (window.countUp && window.countUp.CountUp) {
+            debugLog('Using bundled CountUp', {version: window.countUp.CountUp.version});
             return window.countUp.CountUp;
         }
-        console.error('CountUp library not loaded');
-        logToServer('CountUp library missing');
+        if (window.CountUp && window.CountUp.version) {
+            debugLog('Using global CountUp', {version: window.CountUp.version});
+            return window.CountUp;
+        }
+        console.error('CountUp library not loaded or incompatible');
+        logToServer('CountUp library missing or bad version');
         return null;
     }
 
     function logToServer(message){
-        if(!window.CDC_LOGGER) return;
-        try{
-            var data=new FormData();
-            data.append('action','cdc_log_js');
-            data.append('nonce',window.CDC_LOGGER.nonce);
-            data.append('message',message);
-            navigator.sendBeacon(window.CDC_LOGGER.ajaxUrl,data);
-        }catch(e){
-            console.warn('Logging failed',e);
+        if (!window.CDC_LOGGER) return;
+        try {
+            const data = new FormData();
+            data.append('action', 'cdc_log_js');
+            data.append('nonce', window.CDC_LOGGER.nonce);
+            data.append('message', message);
+            navigator.sendBeacon(window.CDC_LOGGER.ajaxUrl, data);
+        } catch (e) {
+            console.warn('Logging failed', e);
         }
     }
 
     function init(el){
-        var CountUpClass=getCountUpClass();
-        if(!CountUpClass) return;
-        var target=parseFloat(el.dataset.target)||0;
-        var start=parseFloat(el.dataset.start)||0;
-        var growth=parseFloat(el.dataset.growth)||0;
-        var prefix=el.dataset.prefix||'';
-        var decimals=2;
+        const CountUpClass = getCountUpClass();
+        if (!CountUpClass) return;
 
-        console.log('CDC counter init', {target:target,start:start,growth:growth});
+        const target  = parseFloat(el.dataset.target) || 0;
+        let start     = parseFloat(el.dataset.start)  || 0;
+        const growth  = parseFloat(el.dataset.growth) || 0;
+        const prefix  = el.dataset.prefix || '';
+        const decimals = 2;
 
-        var counter=new CountUpClass(el,target,{startVal:start,decimalPlaces:decimals,prefix:prefix});
-        if(counter.error){
-            console.error(counter.error);
+        debugLog('Initialising counter', {target, start, growth, prefix});
+
+        const counter = new CountUpClass(el, target, {
+            startVal: start,
+            decimalPlaces: decimals,
+            prefix: prefix
+        });
+
+        if (counter.error) {
             logToServer(counter.error);
             return;
         }
-        counter.start(function(){
-            if(growth!==0){
-                setInterval(function(){
-                    start+=growth;
+
+        counter.start(() => {
+            debugLog('Counter started', {target});
+            if (growth !== 0) {
+                setInterval(() => {
+                    start += growth;
                     counter.update(start);
-                },1000);
+                    debugLog('Counter tick', {value: start});
+                }, 1000);
             }
         });
     }
 
-    document.addEventListener('DOMContentLoaded',function(){
+    document.addEventListener('DOMContentLoaded', () => {
+        debugLog('DOM loaded - launching counters');
         document.querySelectorAll('.cdc-counter').forEach(init);
     });
 })();
