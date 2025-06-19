@@ -153,7 +153,6 @@ class Shortcode_Renderer {
 
         $population = (int) Custom_Fields::get_value( $id, 'population' );
 
-        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
         $debt_repayment_explainer = '';
         if ( $mrp > 0 ) {
             $principal_repayment = $mrp - $interest;
