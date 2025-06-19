@@ -9,64 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <p><?php esc_html_e( 'To get started, upload baseline debt figures or manually enter data for each council.', 'council-debt-counters' ); ?></p>
     <p><?php esc_html_e( 'Manage councils from the "Councils" submenu under Debt Counters.', 'council-debt-counters' ); ?></p>
 
-    <form method="post" action="options.php">
-        <?php
-        settings_fields( 'council-debt-counters' );
-        do_settings_sections( 'council-debt-counters' );
-        ?>
-        <table class="form-table" role="presentation">
-            <tr>
-                <th scope="row"><label for="<?php echo esc_attr( License_Manager::OPTION_KEY ); ?>"><?php esc_html_e( 'License Key', 'council-debt-counters' ); ?></label></th>
-                <td>
-                    <input name="<?php echo esc_attr( License_Manager::OPTION_KEY ); ?>" type="text" id="<?php echo esc_attr( License_Manager::OPTION_KEY ); ?>" value="<?php echo esc_attr( License_Manager::get_license_key() ); ?>" class="regular-text" />
-                    <button type="button" id="cdc-check-license" class="button" style="margin-left:10px;">
-                        <?php esc_html_e( 'Check License', 'council-debt-counters' ); ?>
-                    </button>
-                    <p id="cdc-license-result" class="description">
-                        <?php echo License_Manager::is_valid() ? esc_html__( 'License is valid.', 'council-debt-counters' ) : ''; ?>
-                    </p>
-                    <p class="description"><?php esc_html_e( 'Enter a valid license key to unlock unlimited councils.', 'council-debt-counters' ); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="cdc_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'council-debt-counters' ); ?></label></th>
-                <td>
-                    <input name="cdc_openai_api_key" type="text" id="cdc_openai_api_key" value="<?php echo esc_attr( get_option( 'cdc_openai_api_key', '' ) ); ?>" class="regular-text" />
-                    <p class="description"><?php esc_html_e( 'Optional: provide an OpenAI API key to assist with generating council information.', 'council-debt-counters' ); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e( 'Enabled Counters', 'council-debt-counters' ); ?></th>
-                <td>
-                    <?php $enabled = (array) get_option( 'cdc_enabled_counters', [] ); ?>
-                    <?php
-                    $types = [
-                        'debt' => __( 'Debt', 'council-debt-counters' ),
-                        'spending' => __( 'Spending', 'council-debt-counters' ),
-                        'income' => __( 'Income', 'council-debt-counters' ),
-                        'deficit' => __( 'Deficit', 'council-debt-counters' ),
-                        'interest' => __( 'Interest', 'council-debt-counters' ),
-                        'reserves' => __( 'Reserves', 'council-debt-counters' ),
-                        'consultancy' => __( 'Consultancy', 'council-debt-counters' ),
-                    ];
-                    foreach ( $types as $key => $label ) : ?>
-                        <label style="display:block;margin-bottom:4px;">
-                            <input type="checkbox" name="cdc_enabled_counters[]" value="<?php echo esc_attr( $key ); ?>" <?php checked( in_array( $key, $enabled, true ) ); ?> />
-                            <?php echo esc_html( $label ); ?>
-                        </label>
-                    <?php endforeach; ?>
-                    <p class="description"><?php esc_html_e( 'Select which counters are available for shortcodes.', 'council-debt-counters' ); ?></p>
-                </td>
-            </tr>
-        </table>
-        <?php submit_button(); ?>
-    </form>
-    <h2><?php esc_html_e( "Import Councils from CSV", 'council-debt-counters' ); ?></h2>
-    <form method="post" enctype="multipart/form-data">
-        <?php wp_nonce_field( "cdc_load_csv", "cdc_load_csv_nonce" ); ?>
-        <input type="file" name="cdc_csv_file" accept=".csv" required />
-        <button type="submit" class="button"><?php esc_html_e( "Import CSV", 'council-debt-counters' ); ?></button>
-    </form>
+    <p><?php esc_html_e( 'Use the submenu pages to configure license keys, settings, and data import/export.', 'council-debt-counters' ); ?></p>
     <div class="notice notice-info" style="margin-top:20px;">
         <p><strong><?php esc_html_e( 'Legal notice', 'council-debt-counters' ); ?></strong></p>
         <p><?php esc_html_e( 'When publishing council data you must comply with the Copyright, Designs and Patents Act 1988, Section 11A of the Freedom of Information Act 2001, and the Re-Use of Public Sector Information Regulations 2005. Data must not be shown in a misleading context or for commercial gain, including behind paywalls. Always attribute the source council wherever the data is displayed, including when using a shortcode.', 'council-debt-counters' ); ?></p>

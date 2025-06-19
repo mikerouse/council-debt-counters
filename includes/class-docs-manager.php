@@ -13,6 +13,22 @@ class Docs_Manager {
     const TABLE = 'cdc_documents';
     const DOC_TYPES = ['statement_of_accounts'];
 
+    /**
+     * Return a list of financial years including the current year and
+     * the previous $count years.
+     */
+    public static function financial_years( int $count = 10 ) {
+        $current = self::current_financial_year();
+        list( $start, $end ) = explode( '/', $current );
+        $start = (int) $start;
+        $years = [];
+        for ( $i = 0; $i <= $count; $i++ ) {
+            $y = $start - $i;
+            $years[] = sprintf( '%d/%02d', $y, ( $y + 1 ) % 100 );
+        }
+        return $years;
+    }
+
     public static function current_financial_year() {
         $year = (int) date( 'Y' );
         $start = ( date( 'n' ) < 4 ) ? $year - 1 : $year;
@@ -93,6 +109,7 @@ class Docs_Manager {
         $target   = self::get_docs_path() . $filename;
         if ( move_uploaded_file( $file['tmp_name'], $target ) ) {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
+            Error_Logger::log_info( 'Document uploaded: ' . $filename );
             return true;
         }
         Error_Logger::log( 'Failed to move uploaded document: ' . $file['name'] );
@@ -105,6 +122,7 @@ class Docs_Manager {
             unlink( $file );
             global $wpdb;
             $wpdb->delete( $wpdb->prefix . self::TABLE, [ 'filename' => $filename ], [ '%s' ] );
+            Error_Logger::log_info( 'Document deleted: ' . $filename );
             return true;
         }
         return false;
@@ -156,6 +174,11 @@ class Docs_Manager {
         return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE . " WHERE filename = %s", $filename ) );
     }
 
+    public static function get_document_by_id( int $id ) {
+        global $wpdb;
+        return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE . " WHERE id = %d", $id ) );
+    }
+
     public static function add_document( string $filename, string $doc_type = '', int $council_id = 0, string $financial_year = '' ) {
         if ( empty( $financial_year ) ) {
             $financial_year = self::current_financial_year();
@@ -184,6 +207,26 @@ class Docs_Manager {
         } else {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
         }
+        Error_Logger::log_info( 'Document assigned: ' . $filename . ' to council ' . $council_id );
+        return true;
+    }
+
+    /**
+     * Update document details.
+     */
+    public static function update_document( int $id, array $data ) {
+        global $wpdb;
+        $fields = [];
+        if ( isset( $data['doc_type'] ) ) {
+            $fields['doc_type'] = sanitize_key( $data['doc_type'] );
+        }
+        if ( isset( $data['financial_year'] ) ) {
+            $fields['financial_year'] = sanitize_text_field( $data['financial_year'] );
+        }
+        if ( empty( $fields ) ) {
+            return false;
+        }
+        $wpdb->update( $wpdb->prefix . self::TABLE, $fields, [ 'id' => $id ], [ '%s', '%s' ], [ '%d' ] );
         return true;
     }
 }

@@ -50,7 +50,11 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
     <?php endif; ?>
     <form method="post" enctype="multipart/form-data">
         <input type="file" name="cdc_upload_doc" accept=".csv,.pdf,.xlsx" <?php if ( ! $can_upload ) echo 'disabled'; ?> />
-        <input type="text" name="cdc_upload_year" value="<?php echo esc_attr( Docs_Manager::current_financial_year() ); ?>" class="regular-text" style="margin-left:10px;" />
+        <select name="cdc_upload_year" style="margin-left:10px;">
+            <?php foreach ( Docs_Manager::financial_years() as $y ) : ?>
+                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+            <?php endforeach; ?>
+        </select>
         <button type="submit" class="button button-primary" <?php if ( ! $can_upload ) echo 'disabled'; ?>><?php esc_html_e( 'Upload', 'council-debt-counters' ); ?></button>
         <?php if ( ! $can_upload ) : ?>
             <p class="description" style="color:red;"><?php esc_html_e( 'Free version limit reached. Delete a document or upgrade to Pro.', 'council-debt-counters' ); ?></p>
@@ -97,7 +101,11 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
                                 <select name="cdc_doc_type">
                                     <option value="statement_of_accounts"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></option>
                                 </select>
-                                <input type="text" name="cdc_doc_year" value="<?php echo esc_attr( Docs_Manager::current_financial_year() ); ?>" class="regular-text" />
+                                <select name="cdc_doc_year">
+                                    <?php foreach ( Docs_Manager::financial_years() as $y ) : ?>
+                                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                                 <button type="submit" name="cdc_assign_doc" class="button button-primary"><?php esc_html_e( 'Assign', 'council-debt-counters' ); ?></button>
                             </form>
                         <?php endif; ?>
