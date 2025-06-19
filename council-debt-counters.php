@@ -54,6 +54,7 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Debt_Adjustments_Page::init();
     \CouncilDebtCounters\Data_Loader::init();
     \CouncilDebtCounters\License_Manager::init();
+    \CouncilDebtCounters\OpenAI_Helper::init();
     \CouncilDebtCounters\Whistleblower_Form::init();
     \CouncilDebtCounters\Admin_Dashboard_Widget::init();
     \CouncilDebtCounters\Shortcode_Playground::init();

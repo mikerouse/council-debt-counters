@@ -340,7 +340,8 @@ class Docs_Manager {
         }
 
         if ( ! License_Manager::is_valid() ) {
-            Error_Logger::log( 'AI extraction blocked: license invalid' );
+            $prefix = substr( License_Manager::get_license_key(), 0, 8 );
+            Error_Logger::log( 'AI extraction blocked: license invalid (key ' . $prefix . '…)');
             wp_send_json_error( [ 'message' => __( 'AI features require a Pro license.', 'council-debt-counters' ) ] );
         }
 
