@@ -101,9 +101,9 @@ class Custom_Fields {
         if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $fields_table ) ) !== $fields_table ) {
             self::install();
         } else {
-            $columns = $wpdb->get_col( "DESC $fields_table", 0 );
+            $columns = $wpdb->get_col( 'DESC ' . $fields_table, 0 );
             if ( ! in_array( 'required', $columns, true ) ) {
-                $wpdb->query( "ALTER TABLE $fields_table ADD required tinyint(1) NOT NULL DEFAULT 0" );
+                $wpdb->query( 'ALTER TABLE ' . $fields_table . ' ADD required tinyint(1) NOT NULL DEFAULT 0' );
             }
         }
 
@@ -162,17 +162,17 @@ class Custom_Fields {
 
     public static function get_fields() {
         global $wpdb;
-        return $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " ORDER BY id" );
+        return $wpdb->get_results( 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_FIELDS . ' ORDER BY id' );
     }
 
     public static function get_field( int $id ) {
         global $wpdb;
-        return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE id = %d", $id ) );
+        return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_FIELDS . ' WHERE id = %d', $id ) );
     }
 
     public static function get_field_by_name( string $name ) {
         global $wpdb;
-        return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE name = %s", $name ) );
+        return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_FIELDS . ' WHERE name = %s', $name ) );
     }
 
     public static function add_field( string $name, string $label, string $type, int $required = 0 ) {
@@ -197,7 +197,7 @@ class Custom_Fields {
         foreach ( $allowed as $key ) {
             if ( isset( $data[ $key ] ) ) {
                 $update[ $key ] = $data[ $key ];
-                $formats[]      = ( $key === 'required' ) ? '%d' : '%s';
+                $formats[]      = ( 'required' === $key ) ? '%d' : '%s';
             }
         }
         if ( ! empty( $update ) ) {
@@ -207,7 +207,7 @@ class Custom_Fields {
 
     public static function delete_field( int $id ) {
         global $wpdb;
-        $field = $wpdb->get_row( $wpdb->prepare( "SELECT name, required FROM {$wpdb->prefix}" . self::TABLE_FIELDS . " WHERE id = %d", $id ) );
+        $field = $wpdb->get_row( $wpdb->prepare( 'SELECT name, required FROM ' . $wpdb->prefix . self::TABLE_FIELDS . ' WHERE id = %d', $id ) );
         if ( ! $field ) {
             return;
         }
@@ -224,7 +224,8 @@ class Custom_Fields {
             return '';
         }
         global $wpdb;
-        return $wpdb->get_var( $wpdb->prepare( "SELECT value FROM {$wpdb->prefix}" . self::TABLE_VALUES . " WHERE council_id = %d AND field_id = %d", $council_id, $field->id ) );
+        $raw = $wpdb->get_var( $wpdb->prepare( 'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d', $council_id, $field->id ) );
+        return maybe_unserialize( $raw );
     }
 
     public static function update_value( int $council_id, string $name, $value ) {
@@ -234,7 +235,7 @@ class Custom_Fields {
         }
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE_VALUES;
-        $existing = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE council_id = %d AND field_id = %d", $council_id, $field->id ) );
+        $existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . $table . ' WHERE council_id = %d AND field_id = %d', $council_id, $field->id ) );
         if ( $existing ) {
             $wpdb->update( $table, [ 'value' => maybe_serialize( $value ) ], [ 'id' => $existing ], [ '%s' ], [ '%d' ] );
         } else {
