@@ -394,15 +394,27 @@ class Docs_Manager {
         }
         $ext = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
         Error_Logger::log_debug( 'extract_text extension ' . $ext );
-        if ( $ext === 'pdf' && class_exists( '\\Smalot\\PdfParser\\Parser' ) ) {
-            try {
-                $parser = new \Smalot\PdfParser\Parser();
-                $pdf    = $parser->parseFile( $file );
-                return $pdf->getText();
-            } catch ( \Exception $e ) {
-                Error_Logger::log_error( 'PDF parse error: ' . $e->getMessage() );
-                return '';
+        if ( $ext === 'pdf' ) {
+            if ( class_exists( '\\Smalot\\PdfParser\\Parser' ) ) {
+                try {
+                    $parser = new \Smalot\PdfParser\Parser();
+                    $pdf    = $parser->parseFile( $file );
+                    return $pdf->getText();
+                } catch ( \Exception $e ) {
+                    Error_Logger::log_error( 'PDF parse error: ' . $e->getMessage() );
+                }
             }
+            // Fallback to pdftotext if available.
+            if ( function_exists( 'shell_exec' ) && trim( shell_exec( 'command -v pdftotext' ) ) ) {
+                $cmd    = 'pdftotext ' . escapeshellarg( $file ) . ' -';
+                $output = shell_exec( $cmd );
+                if ( ! empty( $output ) ) {
+                    Error_Logger::log_debug( 'pdftotext used for extraction' );
+                    return $output;
+                }
+                Error_Logger::log_error( 'pdftotext returned no output for ' . $file );
+            }
+            return '';
         }
         if ( $ext === 'csv' || $ext === 'txt' ) {
             $contents = file_get_contents( $file );
