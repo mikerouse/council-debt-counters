@@ -39,6 +39,22 @@ class Error_Logger {
         self::log( 'INFO: ' . $message );
     }
 
+    /**
+     * Log verbose debugging information when log level is set to verbose.
+     */
+    public static function log_debug( string $message ) {
+        if ( get_option( 'cdc_log_level', 'standard' ) === 'verbose' ) {
+            self::log( 'DEBUG: ' . $message );
+        }
+    }
+
+    /**
+     * Log an error level message.
+     */
+    public static function log_error( string $message ) {
+        self::log( 'ERROR: ' . $message );
+    }
+
     public static function init() {
         // Store existing handlers so they can be restored on deactivation.
         self::$previous_error_handler    = set_error_handler( [ __CLASS__, 'handle_error' ] );

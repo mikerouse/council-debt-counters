@@ -246,23 +246,37 @@ class Docs_Manager {
     }
 
     private static function maybe_extract_figures( string $file, int $council_id ) {
+        Error_Logger::log_info( 'AI extraction starting for council ' . $council_id . ' file ' . basename( $file ) );
+        if ( ! file_exists( $file ) ) {
+            Error_Logger::log_error( 'Document not found: ' . $file );
+            return new \WP_Error( 'missing_file', __( 'Document not found.', 'council-debt-counters' ) );
+        }
+        if ( ! is_readable( $file ) ) {
+            Error_Logger::log_error( 'Document not readable: ' . $file );
+            return new \WP_Error( 'unreadable_file', __( 'Document not readable.', 'council-debt-counters' ) );
+        }
+        $size = filesize( $file );
+        $ext  = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+        Error_Logger::log_debug( 'Reading document ' . $file . ' (' . $ext . ', ' . $size . ' bytes)' );
         $text = self::extract_text( $file );
         if ( empty( $text ) ) {
             $error = new \WP_Error( 'no_text', __( 'Failed to read document.', 'council-debt-counters' ) );
-            Error_Logger::log( 'AI extraction error: ' . $error->get_error_message() );
+            Error_Logger::log_error( 'AI extraction error: ' . $error->get_error_message() . ' from ' . $file );
             return $error;
         }
+        Error_Logger::log_debug( 'Extracted ' . strlen( $text ) . ' chars of text' );
         $data = AI_Extractor::extract_key_figures( $text );
         if ( is_wp_error( $data ) ) {
-            Error_Logger::log( 'AI extraction error: ' . $data->get_error_message() );
+            Error_Logger::log_error( 'AI extraction error: ' . $data->get_error_message() );
             return $data;
         }
         if ( is_array( $data ) ) {
             self::store_ai_suggestions( $council_id, $data );
+            Error_Logger::log_info( 'AI extraction complete for council ' . $council_id );
             return $data;
         }
         $error = new \WP_Error( 'invalid_ai_data', __( 'Invalid AI response.', 'council-debt-counters' ) );
-        Error_Logger::log( 'AI extraction error: unexpected data' );
+        Error_Logger::log_error( 'AI extraction error: unexpected data' );
         return $error;
     }
 
@@ -342,23 +356,25 @@ class Docs_Manager {
         // Licence validity is checked when the key is saved in the admin.
 
         if ( ! get_option( 'cdc_openai_api_key' ) ) {
-            Error_Logger::log( 'AI extraction blocked: API key missing' );
+            Error_Logger::log_error( 'AI extraction blocked: API key missing' );
             wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'council-debt-counters' ) ] );
         }
 
         $doc_id = intval( $_POST['doc_id'] ?? 0 );
+        Error_Logger::log_debug( 'AJAX extract requested for doc ' . $doc_id );
         $doc    = $doc_id ? self::get_document_by_id( $doc_id ) : null;
         if ( ! $doc ) {
-            Error_Logger::log( 'AI extraction failed: document not found #' . $doc_id );
+            Error_Logger::log_error( 'AI extraction failed: document not found #' . $doc_id );
             wp_send_json_error( [ 'message' => __( 'Document not found.', 'council-debt-counters' ) ] );
         }
 
         if ( $doc->doc_type !== 'statement_of_accounts' || $doc->council_id <= 0 ) {
-            Error_Logger::log( 'AI extraction failed: invalid document #' . $doc_id );
+            Error_Logger::log_error( 'AI extraction failed: invalid document #' . $doc_id );
             wp_send_json_error( [ 'message' => __( 'Invalid document.', 'council-debt-counters' ) ] );
         }
 
         $path   = self::get_docs_path() . $doc->filename;
+        Error_Logger::log_debug( 'Using file path ' . $path );
         $result = self::maybe_extract_figures( $path, (int) $doc->council_id );
         if ( is_wp_error( $result ) ) {
             wp_send_json_error( [ 'message' => sprintf( __( 'Extraction failed: %s', 'council-debt-counters' ), $result->get_error_message() ) ] );
@@ -368,20 +384,35 @@ class Docs_Manager {
     }
 
     private static function extract_text( string $file ) {
+        if ( ! file_exists( $file ) ) {
+            Error_Logger::log_error( 'extract_text file missing: ' . $file );
+            return '';
+        }
+        if ( ! is_readable( $file ) ) {
+            Error_Logger::log_error( 'extract_text file unreadable: ' . $file );
+            return '';
+        }
         $ext = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+        Error_Logger::log_debug( 'extract_text extension ' . $ext );
         if ( $ext === 'pdf' && class_exists( '\\Smalot\\PdfParser\\Parser' ) ) {
             try {
                 $parser = new \Smalot\PdfParser\Parser();
                 $pdf    = $parser->parseFile( $file );
                 return $pdf->getText();
             } catch ( \Exception $e ) {
-                Error_Logger::log( 'PDF parse error: ' . $e->getMessage() );
+                Error_Logger::log_error( 'PDF parse error: ' . $e->getMessage() );
                 return '';
             }
         }
         if ( $ext === 'csv' || $ext === 'txt' ) {
-            return file_get_contents( $file );
+            $contents = file_get_contents( $file );
+            if ( false === $contents ) {
+                Error_Logger::log_error( 'Failed to read file: ' . $file );
+                return '';
+            }
+            return $contents;
         }
+        Error_Logger::log_debug( 'extract_text unsupported extension: ' . $ext );
         return '';
     }
 }
