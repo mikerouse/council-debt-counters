@@ -35,7 +35,15 @@ register_activation_hook( __FILE__, function() {
     \CouncilDebtCounters\Docs_Manager::install();
 } );
 
+// Ensure custom error handling does not persist after deactivation.
+register_deactivation_hook( __FILE__, function() {
+    \CouncilDebtCounters\Error_Logger::cleanup();
+} );
+
+
 add_action( 'plugins_loaded', function() {
+    // Initialise error logging; Error_Logger::cleanup() will restore
+    // the previous handlers on plugin deactivation.
     \CouncilDebtCounters\Error_Logger::init();
     \CouncilDebtCounters\Settings_Page::init();
     \CouncilDebtCounters\Council_Post_Type::init();

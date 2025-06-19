@@ -21,6 +21,9 @@ The **Troubleshooting** submenu lets you view error logs and choose how much Jav
 2. Activate **Council Debt Counters** in the WordPress admin.
 3. Visit **Debt Counters** in the admin menu to enter your license key and start adding councils.
 
+## Uninstalling
+Deleting the plugin from the Plugins screen removes all data it created. This includes the custom `council` posts, uploaded documents, custom database tables and stored options like the licence key or OpenAI API key.
+
 ## Legal notice
 
 When displaying council data you must comply with the **Copyright, Designs and Patents Act 1988**, **Section 11A of the Freedom of Information Act 2001**, and the **Re-Use of Public Sector Information Regulations 2005**. Data must not be shown in a misleading context or used for commercial gain, including behind paywalls. Always attribute the data source to the relevant council whenever it is displayed, including when output via shortcodes.
