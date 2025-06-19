@@ -55,6 +55,9 @@ if ( $action === 'edit' ) {
             <?php if ( $docs_field ) : ?>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Documents', 'council-debt-counters' ); ?></button></li>
             <?php endif; ?>
+            <?php if ( $post_id ) : ?>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reports" type="button" role="tab"><?php esc_html_e( 'Whistleblowers', 'council-debt-counters' ); ?></button></li>
+            <?php endif; ?>
         </ul>
         <div class="tab-content pt-3">
             <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
@@ -171,6 +174,46 @@ if ( $action === 'edit' ) {
                                 <button type="submit" name="update_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-secondary"><?php esc_html_e( 'Update', 'council-debt-counters' ); ?></button>
                                 <button type="submit" name="delete_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
                             </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+            <?php if ( $post_id ) : ?>
+            <div class="tab-pane fade" id="tab-reports" role="tabpanel">
+                <p class="description"><code>[whistleblower_form id="<?php echo esc_attr( $post_id ); ?>"]</code></p>
+                <?php $reports = get_posts([
+                    'post_type'   => \CouncilDebtCounters\Whistleblower_Form::CPT,
+                    'numberposts' => -1,
+                    'meta_key'    => 'council_id',
+                    'meta_value'  => $post_id,
+                ]); ?>
+                <?php if ( empty( $reports ) ) : ?>
+                    <p><?php esc_html_e( 'No reports yet.', 'council-debt-counters' ); ?></p>
+                <?php else : ?>
+                <table class="widefat">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e( 'Date', 'council-debt-counters' ); ?></th>
+                            <th><?php esc_html_e( 'Description', 'council-debt-counters' ); ?></th>
+                            <th><?php esc_html_e( 'Attachment', 'council-debt-counters' ); ?></th>
+                            <th><?php esc_html_e( 'Email', 'council-debt-counters' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ( $reports as $r ) : ?>
+                        <tr>
+                            <td><?php echo esc_html( get_the_date( '', $r ) ); ?></td>
+                            <td><?php echo esc_html( wp_trim_words( $r->post_content, 15, '…' ) ); ?></td>
+                            <td>
+                                <?php $aid = get_post_meta( $r->ID, 'attachment_id', true ); ?>
+                                <?php if ( $aid ) : ?>
+                                    <?php echo wp_get_attachment_link( $aid ); ?>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo esc_html( get_post_meta( $r->ID, 'contact_email', true ) ); ?></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
