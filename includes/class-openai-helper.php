@@ -8,10 +8,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class OpenAI_Helper {
     const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
-    public static function query( string $prompt ) {
+    public static function query( string $prompt, string $model = '' ) {
         $api_key = get_option( 'cdc_openai_api_key', '' );
         if ( empty( $api_key ) ) {
             return new \WP_Error( 'missing_key', __( 'OpenAI API key not configured.', 'council-debt-counters' ) );
+        }
+
+        if ( empty( $model ) ) {
+            $model = get_option( 'cdc_openai_model', 'gpt-3.5-turbo' );
         }
 
         $args = [
@@ -20,7 +24,7 @@ class OpenAI_Helper {
                 'Authorization' => 'Bearer ' . $api_key,
             ],
             'body'    => wp_json_encode([
-                'model' => 'gpt-3.5-turbo',
+                'model' => $model,
                 'messages' => [
                     [ 'role' => 'user', 'content' => $prompt ]
                 ],

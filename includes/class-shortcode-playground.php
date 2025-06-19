@@ -29,8 +29,19 @@ class Shortcode_Playground {
         if ( $hook !== 'debt-counters_page_' . self::SLUG ) {
             return;
         }
-        wp_enqueue_style( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css', [], '5.3.1' );
-        wp_enqueue_script( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js', [], '5.3.1', true );
+        $plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
+        $use_cdn     = apply_filters( 'cdc_use_cdn', false );
+
+        if ( $use_cdn ) {
+            $bootstrap_css = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css';
+            $bootstrap_js  = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js';
+        } else {
+            $bootstrap_css = plugins_url( 'public/css/bootstrap.min.css', $plugin_file );
+            $bootstrap_js  = plugins_url( 'public/js/bootstrap.bundle.min.js', $plugin_file );
+        }
+
+        wp_enqueue_style( 'bootstrap-5', $bootstrap_css, [], '5.3.1' );
+        wp_enqueue_script( 'bootstrap-5', $bootstrap_js, [], '5.3.1', true );
         wp_enqueue_script(
             'cdc-playground',
             plugins_url( 'admin/js/playground.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),

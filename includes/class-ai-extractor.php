@@ -13,7 +13,12 @@ class AI_Extractor {
      * @return mixed WP_Error on failure or array of extracted values.
      */
     public static function extract_key_figures( string $text ) {
-        $prompt = 'Extract the Current Liabilities, Long Term Liabilities and any other useful financial figures from the following statement of accounts. Respond in JSON.' . "\n" . $text;
+        $prompt = "You are analysing a UK council's statement of accounts. "
+            . "Return ONLY a JSON object with these keys: current_liabilities, "
+            . "long_term_liabilities, finance_lease_pfi_liabilities, "
+            . "interest_paid_on_debt and minimum_revenue_provision. "
+            . "Numbers should be plain digits without currency symbols or commas."
+            . "\n" . $text;
         $response = OpenAI_Helper::query( $prompt );
         if ( is_wp_error( $response ) ) {
             return $response;

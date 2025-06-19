@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Load WordPress stubs but remove serialization helpers so we can provide our own implementations.
@@ -66,4 +67,3 @@ function maybe_unserialize($data) {
     if (is_serialized($data, false)) return @unserialize(trim($data));
     return $data;
 }
-
