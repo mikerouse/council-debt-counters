@@ -79,11 +79,24 @@ class Shortcode_Renderer {
     }
 
     public static function register_assets() {
-        wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
-        wp_register_script( 'countup', 'https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js', [], '2.6.2', true );
-        wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), [ 'countup' ], '0.1.0', true );
-        wp_register_style( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css', [], '5.3.1' );
-        wp_register_script( 'bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js', [], '5.3.1', true );
+        $plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
+        $use_cdn     = apply_filters( 'cdc_use_cdn', false );
+
+        if ( $use_cdn ) {
+            $bootstrap_css = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css';
+            $bootstrap_js  = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js';
+            $countup_js    = 'https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js';
+        } else {
+            $bootstrap_css = plugins_url( 'public/css/bootstrap.min.css', $plugin_file );
+            $bootstrap_js  = plugins_url( 'public/js/bootstrap.bundle.min.js', $plugin_file );
+            $countup_js    = plugins_url( 'public/js/countUp.umd.js', $plugin_file );
+        }
+
+        wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', $plugin_file ), [], '0.1.0' );
+        wp_register_script( 'countup', $countup_js, [], '2.6.2', true );
+        wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', $plugin_file ), [ 'countup' ], '0.1.0', true );
+        wp_register_style( 'bootstrap-5', $bootstrap_css, [], '5.3.1' );
+        wp_register_script( 'bootstrap-5', $bootstrap_js, [], '5.3.1', true );
         wp_localize_script( 'cdc-counter-animations', 'CDC_LOGGER', [
             'ajaxUrl' => admin_url( 'admin-ajax.php' ),
             'nonce'   => wp_create_nonce( 'cdc_log_js' ),
@@ -153,7 +166,6 @@ class Shortcode_Renderer {
 
         $population = (int) Custom_Fields::get_value( $id, 'population' );
 
-        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
         $debt_repayment_explainer = '';
         if ( $mrp > 0 ) {
             $principal_repayment = $mrp - $interest;
