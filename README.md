@@ -23,6 +23,14 @@ The **Troubleshooting** submenu lets you view error logs and choose how much Jav
 2. Activate **Council Debt Counters** in the WordPress admin.
 3. Visit **Debt Counters** in the admin menu to enter your license key and start adding councils.
 
+## Asset loading and CDNs
+
+Bootstrap 5 and CountUp.js are bundled locally inside the plugin's `public/` directory. These files are loaded by default to avoid external requests. If you prefer to use a CDN instead, hook into the `cdc_use_cdn` filter:
+
+```php
+add_filter( 'cdc_use_cdn', '__return_true' );
+```
+
 ## Uninstalling
 Deleting the plugin from the Plugins screen removes all data it created. This includes the custom `council` posts, uploaded documents, custom database tables and stored options like the licence key or OpenAI API key.
 
