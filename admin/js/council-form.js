@@ -77,5 +77,42 @@
         if (interestField) interestField.addEventListener('input', updateAll);
         if (mrpField) mrpField.addEventListener('input', updateAll);
         updateAll();
+        document.querySelectorAll(".cdc-extract-ai").forEach(function(btn){
+            btn.addEventListener("click", function(e){
+                e.preventDefault();
+                var docId = btn.value;
+                var overlay = document.createElement("div");
+                overlay.id = "cdc-ai-overlay";
+                overlay.innerHTML = "<span class=\"spinner is-active\"></span><p></p>";
+                var p = overlay.querySelector("p");
+                document.body.appendChild(overlay);
+
+                var steps = cdcAiMessages.steps || [];
+                var i = 0;
+                p.textContent = steps[i] || '';
+                var interval = setInterval(function(){
+                    i++;
+                    if (i < steps.length) {
+                        p.textContent = steps[i];
+                    }
+                }, 1500);
+
+                var data = new FormData();
+                data.append("action","cdc_extract_figures");
+                data.append("doc_id", docId);
+                fetch(ajaxurl,{method:"POST",credentials:"same-origin",body:data})
+                    .then(function(r){return r.json();})
+                    .then(function(res){
+                        clearInterval(interval);
+                        var msg = (res.data && res.data.message) || res.message;
+                        p.textContent = msg || cdcAiMessages.error;
+                        setTimeout(function(){location.reload();},1200);
+                    })
+                    .catch(function(){
+                        clearInterval(interval);
+                        p.textContent = cdcAiMessages.error;
+                    });
+            });
+        });
     });
 })();

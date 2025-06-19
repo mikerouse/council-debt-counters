@@ -41,6 +41,7 @@ class Docs_Manager {
         add_action( 'admin_post_cdc_confirm_ai_figures', [ __CLASS__, 'handle_confirm_ai' ] );
         add_action( 'admin_post_cdc_dismiss_ai_figures', [ __CLASS__, 'handle_dismiss_ai' ] );
         add_action( 'admin_notices', [ __CLASS__, 'show_ai_suggestions' ] );
+        add_action( 'wp_ajax_cdc_extract_figures', [ __CLASS__, 'handle_ajax_extract' ] );
     }
 
     public static function install() {
@@ -247,16 +248,22 @@ class Docs_Manager {
     private static function maybe_extract_figures( string $file, int $council_id ) {
         $text = self::extract_text( $file );
         if ( empty( $text ) ) {
-            return;
+            $error = new \WP_Error( 'no_text', __( 'Failed to read document.', 'council-debt-counters' ) );
+            Error_Logger::log( 'AI extraction error: ' . $error->get_error_message() );
+            return $error;
         }
         $data = AI_Extractor::extract_key_figures( $text );
         if ( is_wp_error( $data ) ) {
             Error_Logger::log( 'AI extraction error: ' . $data->get_error_message() );
-            return;
+            return $data;
         }
         if ( is_array( $data ) ) {
             self::store_ai_suggestions( $council_id, $data );
+            return $data;
         }
+        $error = new \WP_Error( 'invalid_ai_data', __( 'Invalid AI response.', 'council-debt-counters' ) );
+        Error_Logger::log( 'AI extraction error: unexpected data' );
+        return $error;
     }
 
     private static function store_ai_suggestions( int $council_id, array $data ) {
@@ -325,6 +332,42 @@ class Docs_Manager {
         update_option( 'cdc_ai_suggestions', $all );
         wp_safe_redirect( wp_get_referer() );
         exit;
+    }
+
+    public static function handle_ajax_extract() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'council-debt-counters' ) ] );
+        }
+
+        if ( ! License_Manager::is_valid() ) {
+            Error_Logger::log( 'AI extraction blocked: license invalid' );
+            wp_send_json_error( [ 'message' => __( 'AI features require a Pro license.', 'council-debt-counters' ) ] );
+        }
+
+        if ( ! get_option( 'cdc_openai_api_key' ) ) {
+            Error_Logger::log( 'AI extraction blocked: API key missing' );
+            wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'council-debt-counters' ) ] );
+        }
+
+        $doc_id = intval( $_POST['doc_id'] ?? 0 );
+        $doc    = $doc_id ? self::get_document_by_id( $doc_id ) : null;
+        if ( ! $doc ) {
+            Error_Logger::log( 'AI extraction failed: document not found #' . $doc_id );
+            wp_send_json_error( [ 'message' => __( 'Document not found.', 'council-debt-counters' ) ] );
+        }
+
+        if ( $doc->doc_type !== 'statement_of_accounts' || $doc->council_id <= 0 ) {
+            Error_Logger::log( 'AI extraction failed: invalid document #' . $doc_id );
+            wp_send_json_error( [ 'message' => __( 'Invalid document.', 'council-debt-counters' ) ] );
+        }
+
+        $path   = self::get_docs_path() . $doc->filename;
+        $result = self::maybe_extract_figures( $path, (int) $doc->council_id );
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => sprintf( __( 'Extraction failed: %s', 'council-debt-counters' ), $result->get_error_message() ) ] );
+        }
+
+        wp_send_json_success( [ 'message' => __( 'Extraction complete. Review suggestions below.', 'council-debt-counters' ) ] );
     }
 
     private static function extract_text( string $file ) {
