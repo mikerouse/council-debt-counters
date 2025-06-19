@@ -1,0 +1,14 @@
+{
+  "name": "mikerouse/council-debt-counters",
+  "description": "WordPress plugin for financial counters per council",
+  "type": "wordpress-plugin",
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "php-stubs/wordpress-stubs": "^6.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "CouncilDebtCounters\\": "includes/"
+    }
+  }
+}
