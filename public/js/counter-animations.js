@@ -35,7 +35,7 @@
 
         console.log('CDC counter init', {target:target,start:start,growth:growth});
 
-        var counter=new CountUpClass(el,start,target,{decimalPlaces:decimals,prefix:prefix});
+        var counter=new CountUpClass(el,target,{startVal:start,decimalPlaces:decimals,prefix:prefix});
         if(counter.error){
             console.error(counter.error);
             logToServer(counter.error);
