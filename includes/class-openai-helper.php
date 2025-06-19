@@ -11,6 +11,7 @@ class OpenAI_Helper {
     public static function query( string $prompt, string $model = '' ) {
         $api_key = get_option( 'cdc_openai_api_key', '' );
         if ( empty( $api_key ) ) {
+            Error_Logger::log( 'OpenAI API key missing' );
             return new \WP_Error( 'missing_key', __( 'OpenAI API key not configured.', 'council-debt-counters' ) );
         }
 
