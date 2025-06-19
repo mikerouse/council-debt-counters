@@ -1,14 +1,26 @@
 (function(){
     'use strict';
 
+    function debugLog(message, data){
+        if(window.CDC_DEBUG !== false){
+            if(data !== undefined){
+                console.log('[CDC]', message, data);
+            }else{
+                console.log('[CDC]', message);
+            }
+        }
+    }
+
     function getCountUpClass(){
         // Prefer the CountUp instance bundled with this plugin. Some themes
         // include an old global `CountUp` (v1) which does not support prefixes
         // or decimal places.
         if (window.countUp && window.countUp.CountUp) {
+            debugLog('Using bundled CountUp', {version: window.countUp.CountUp.version});
             return window.countUp.CountUp;
         }
         if (window.CountUp && window.CountUp.version) {
+            debugLog('Using global CountUp', {version: window.CountUp.version});
             return window.CountUp;
         }
         console.error('CountUp library not loaded or incompatible');
@@ -39,6 +51,8 @@
         const prefix  = el.dataset.prefix || '';
         const decimals = 2;
 
+        debugLog('Initialising counter', {target, start, growth, prefix});
+
         const counter = new CountUpClass(el, target, {
             startVal: start,
             decimalPlaces: decimals,
@@ -51,16 +65,19 @@
         }
 
         counter.start(() => {
+            debugLog('Counter started', {target});
             if (growth !== 0) {
                 setInterval(() => {
                     start += growth;
                     counter.update(start);
+                    debugLog('Counter tick', {value: start});
                 }, 1000);
             }
         });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        debugLog('DOM loaded - launching counters');
         document.querySelectorAll('.cdc-counter').forEach(init);
     });
 })();
