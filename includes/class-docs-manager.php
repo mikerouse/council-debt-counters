@@ -38,6 +38,9 @@ class Docs_Manager {
 
     public static function init() {
         add_action( 'init', [ __CLASS__, 'maybe_install' ] );
+        add_action( 'admin_post_cdc_confirm_ai_figures', [ __CLASS__, 'handle_confirm_ai' ] );
+        add_action( 'admin_post_cdc_dismiss_ai_figures', [ __CLASS__, 'handle_dismiss_ai' ] );
+        add_action( 'admin_notices', [ __CLASS__, 'show_ai_suggestions' ] );
     }
 
     public static function install() {
@@ -252,10 +255,76 @@ class Docs_Manager {
             return;
         }
         if ( is_array( $data ) ) {
-            foreach ( $data as $field => $value ) {
-                Custom_Fields::update_value( $council_id, sanitize_key( $field ), $value );
-            }
+            self::store_ai_suggestions( $council_id, $data );
         }
+    }
+
+    private static function store_ai_suggestions( int $council_id, array $data ) {
+        $all = get_option( 'cdc_ai_suggestions', [] );
+        $all[ $council_id ] = $data;
+        update_option( 'cdc_ai_suggestions', $all );
+    }
+
+    public static function show_ai_suggestions() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $all = get_option( 'cdc_ai_suggestions', [] );
+        if ( empty( $all ) ) {
+            return;
+        }
+        foreach ( $all as $cid => $data ) {
+            $name = get_the_title( $cid );
+            echo '<div class="notice notice-info"><p>';
+            printf( esc_html__( 'OpenAI suggested figures for %s. Review and confirm below.', 'council-debt-counters' ), esc_html( $name ) );
+            echo '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+            echo '<input type="hidden" name="action" value="cdc_confirm_ai_figures" />';
+            echo '<input type="hidden" name="council_id" value="' . esc_attr( $cid ) . '" />';
+            wp_nonce_field( 'cdc_confirm_ai_figures' );
+            echo '<table class="form-table">';
+            foreach ( $data as $field => $value ) {
+                echo '<tr><th>' . esc_html( $field ) . '</th><td><input type="text" name="figures[' . esc_attr( $field ) . ']" value="' . esc_attr( $value ) . '" /></td></tr>';
+            }
+            echo '</table>';
+            submit_button( __( 'Save Figures', 'council-debt-counters' ) );
+            echo '</form>';
+            echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin-top:6px;">';
+            echo '<input type="hidden" name="action" value="cdc_dismiss_ai_figures" />';
+            echo '<input type="hidden" name="council_id" value="' . esc_attr( $cid ) . '" />';
+            wp_nonce_field( 'cdc_dismiss_ai_figures' );
+            submit_button( __( 'Dismiss', 'council-debt-counters' ), 'secondary' );
+            echo '</form></div>';
+        }
+    }
+
+    public static function handle_confirm_ai() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Permission denied.', 'council-debt-counters' ) );
+        }
+        check_admin_referer( 'cdc_confirm_ai_figures' );
+        $cid = intval( $_POST['council_id'] );
+        $figures = (array) ( $_POST['figures'] ?? [] );
+        foreach ( $figures as $field => $value ) {
+            Custom_Fields::update_value( $cid, sanitize_key( $field ), sanitize_text_field( $value ) );
+        }
+        $all = get_option( 'cdc_ai_suggestions', [] );
+        unset( $all[ $cid ] );
+        update_option( 'cdc_ai_suggestions', $all );
+        wp_safe_redirect( wp_get_referer() );
+        exit;
+    }
+
+    public static function handle_dismiss_ai() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Permission denied.', 'council-debt-counters' ) );
+        }
+        check_admin_referer( 'cdc_dismiss_ai_figures' );
+        $cid = intval( $_POST['council_id'] );
+        $all = get_option( 'cdc_ai_suggestions', [] );
+        unset( $all[ $cid ] );
+        update_option( 'cdc_ai_suggestions', $all );
+        wp_safe_redirect( wp_get_referer() );
+        exit;
     }
 
     private static function extract_text( string $file ) {
