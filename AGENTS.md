@@ -2,7 +2,7 @@
 
 ## 🎯 Purpose
 
-This plugin provides shortcode-driven **animated counters** that visualise public finance data (e.g. council debt) for individual UK local authorities. It is designed for **activists, campaigners, journalists, councillors, and civic tech developers** who want to embed live, meaningful financial data into WordPress websites in a user-friendly and visually compelling way.
+This plugin provides shortcode-driven **animated counters** that visualise public finance data (e.g. council debt) for individual UK local authorities. It is designed for **activists, campaigners, journalists, councillors, and civic tech developers** who want to embed live, meaningful financial data into WordPress websites in a user-friendly and visually compelling way. We also want the same people to be able to embed our counters on their own non-WordPress websites using embed codes, and we also want to provide an API for the same data to be available for things like mechanical counters that can call a particular API endpoint to make a particular request for a particular counter and get a simple number in reply. 
 
 ## 🔧 Architectural Principles
 
@@ -32,6 +32,7 @@ This plugin is built around the following key principles, which all contributors
 - All styling should be implemented using **Bootstrap 5**, ideally using Bootstrap utility classes where possible.
 - Animations must be **smooth digit transitions** (not whole-number jumps).
 - Allow theme overrides via class names and filter hooks where appropriate.
+- Allow users to choose fonts and styles for counters they create.
 
 ### ✅ **S**eparation of Concerns
 - Follow **object-oriented design** with a clear directory and file structure:
