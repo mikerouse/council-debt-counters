@@ -1,11 +1,21 @@
 (function(){
     'use strict';
 
-    function debugLog(message, data){
-        if(window.CDC_DEBUG !== false){
+    const LOG_LEVELS = { quiet: 0, standard: 1, verbose: 2 };
+
+    function getCurrentLogLevel() {
+        if (window.CDC_LOGGER && window.CDC_LOGGER.logLevel) {
+            return window.CDC_LOGGER.logLevel;
+        }
+        return 'standard';
+    }
+
+    function debugLog(message, data, level = 'standard'){
+        const current = getCurrentLogLevel();
+        if (LOG_LEVELS[current] >= LOG_LEVELS[level]) {
             if(data !== undefined){
                 console.log('[CDC]', message, data);
-            }else{
+            } else {
                 console.log('[CDC]', message);
             }
         }
@@ -70,7 +80,7 @@
                 setInterval(() => {
                     start += growth;
                     counter.update(start);
-                    debugLog('Counter tick', {value: start});
+                    debugLog('Counter tick', {value: start}, 'verbose');
                 }, 1000);
             }
         });

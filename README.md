@@ -14,6 +14,8 @@ Councils can be added, edited, and deleted from the **Debt Counters → Councils
 
 Currently the plugin includes an admin page with instructions for uploading starting debt figures via CSV. Additional functionality such as data uploading and counter rendering will be added in future versions.
 
+The **Troubleshooting** submenu lets you view error logs and choose how much JavaScript debugging information appears in the browser console. Available levels are **Verbose**, **Standard**, and **Quiet**.
+
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.
 2. Activate **Council Debt Counters** in the WordPress admin.
