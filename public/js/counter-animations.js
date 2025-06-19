@@ -1,13 +1,14 @@
 (function(){
+    'use strict';
+
     function getCountUpClass(){
-        // Always prefer the namespaced CountUp class bundled with this plugin.
-        // Some themes ship an old global `CountUp` which is incompatible with
-        // the v2 API we rely on. Using that version results in counters dropping
-        // the currency prefix and decimal places.
-        if(window.countUp && window.countUp.CountUp){
+        // Prefer the CountUp instance bundled with this plugin. Some themes
+        // include an old global `CountUp` (v1) which does not support prefixes
+        // or decimal places.
+        if (window.countUp && window.countUp.CountUp) {
             return window.countUp.CountUp;
         }
-        if(window.CountUp && window.CountUp.version){
+        if (window.CountUp && window.CountUp.version) {
             return window.CountUp;
         }
         console.error('CountUp library not loaded or incompatible');
@@ -16,46 +17,50 @@
     }
 
     function logToServer(message){
-        if(!window.CDC_LOGGER) return;
-        try{
-            var data=new FormData();
-            data.append('action','cdc_log_js');
-            data.append('nonce',window.CDC_LOGGER.nonce);
-            data.append('message',message);
-            navigator.sendBeacon(window.CDC_LOGGER.ajaxUrl,data);
-        }catch(e){
-            console.warn('Logging failed',e);
+        if (!window.CDC_LOGGER) return;
+        try {
+            const data = new FormData();
+            data.append('action', 'cdc_log_js');
+            data.append('nonce', window.CDC_LOGGER.nonce);
+            data.append('message', message);
+            navigator.sendBeacon(window.CDC_LOGGER.ajaxUrl, data);
+        } catch (e) {
+            console.warn('Logging failed', e);
         }
     }
 
     function init(el){
-        var CountUpClass=getCountUpClass();
-        if(!CountUpClass) return;
-        var target=parseFloat(el.dataset.target)||0;
-        var start=parseFloat(el.dataset.start)||0;
-        var growth=parseFloat(el.dataset.growth)||0;
-        var prefix=el.dataset.prefix||'';
-        var decimals=2;
+        const CountUpClass = getCountUpClass();
+        if (!CountUpClass) return;
 
-        console.log('CDC counter init', {target:target,start:start,growth:growth});
+        const target  = parseFloat(el.dataset.target) || 0;
+        let start     = parseFloat(el.dataset.start)  || 0;
+        const growth  = parseFloat(el.dataset.growth) || 0;
+        const prefix  = el.dataset.prefix || '';
+        const decimals = 2;
 
-        var counter=new CountUpClass(el,target,{startVal:start,decimalPlaces:decimals,prefix:prefix});
-        if(counter.error){
-            console.error(counter.error);
+        const counter = new CountUpClass(el, target, {
+            startVal: start,
+            decimalPlaces: decimals,
+            prefix: prefix
+        });
+
+        if (counter.error) {
             logToServer(counter.error);
             return;
         }
-        counter.start(function(){
-            if(growth!==0){
-                setInterval(function(){
-                    start+=growth;
+
+        counter.start(() => {
+            if (growth !== 0) {
+                setInterval(() => {
+                    start += growth;
                     counter.update(start);
-                },1000);
+                }, 1000);
             }
         });
     }
 
-    document.addEventListener('DOMContentLoaded',function(){
+    document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.cdc-counter').forEach(init);
     });
 })();
