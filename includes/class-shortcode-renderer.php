@@ -25,8 +25,26 @@ class Shortcode_Renderer {
         if ( $type && ! in_array( $type, $enabled, true ) ) {
             return '';
         }
-        $annual = (float) Custom_Fields::get_value( $id, $field );
-        $rate   = Counter_Manager::per_second_rate( $annual );
+        $raw_value = Custom_Fields::get_value( $id, $field );
+        if ( $raw_value === '' || $raw_value === null ) {
+            $label = $field;
+            $obj   = Custom_Fields::get_field_by_name( $field );
+            if ( $obj && ! empty( $obj->label ) ) {
+                $label = $obj->label;
+            } else {
+                $label = ucwords( str_replace( '_', ' ', $label ) );
+            }
+            return sprintf(
+                '<div class="alert alert-danger">%s</div>',
+                esc_html( sprintf(
+                    /* translators: %s: Field label */
+                    __( 'No %s figure found for this council. Please set this value in the admin area.', 'council-debt-counters' ),
+                    $label
+                ) )
+            );
+        }
+        $annual  = (float) $raw_value;
+        $rate    = Counter_Manager::per_second_rate( $annual );
         $current = $rate * Counter_Manager::seconds_since_fy_start();
 
         wp_enqueue_style( 'bootstrap-5' );
@@ -73,10 +91,15 @@ class Shortcode_Renderer {
     }
 
     public static function render_counter( $atts ) {
-        $atts = shortcode_atts( [ 'id' => 0 ], $atts );
+        $atts = shortcode_atts( [ 'id' => 0, 'type' => 'debt' ], $atts );
         $id   = intval( $atts['id'] );
+        $type = sanitize_key( $atts['type'] );
         if ( ! $id ) {
             return '';
+        }
+        if ( $type && $type !== 'debt' ) {
+            // Delegate to the custom counter handler for non-debt types
+            return self::render_custom_counter( $atts );
         }
         $enabled = (array) get_option( 'cdc_enabled_counters', [] );
         if ( ! in_array( 'debt', $enabled, true ) ) {
@@ -162,6 +185,7 @@ class Shortcode_Renderer {
             }
         }
 
+        $collapse_id = 'cdc-detail-' . $id . '-debt';
         ob_start();
         ?>
         <div class="card card-counter text-center mb-3">
@@ -170,10 +194,10 @@ class Shortcode_Renderer {
                     £<?php echo number_format_i18n( $start_value, 2 ); ?>
                 </div>
             </div>
-            <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#cdc-detail-<?php echo esc_attr( $id ); ?>" aria-expanded="false" aria-controls="cdc-detail-<?php echo esc_attr( $id ); ?>">
+            <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                 <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
             </button>
-            <div class="collapse" id="cdc-detail-<?php echo esc_attr( $id ); ?>">
+            <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
                 <ul class="mt-2 list-unstyled">
                     <li><?php esc_html_e( 'Interest Paid on Debt (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 2 ); ?></li>
                     <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 2 ); ?></li>
