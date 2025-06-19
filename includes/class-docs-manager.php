@@ -339,11 +339,7 @@ class Docs_Manager {
             wp_send_json_error( [ 'message' => __( 'Permission denied.', 'council-debt-counters' ) ] );
         }
 
-        if ( ! License_Manager::is_valid() ) {
-            $prefix = substr( License_Manager::get_license_key(), 0, 8 );
-            Error_Logger::log( 'AI extraction blocked: license invalid (key ' . $prefix . '…)');
-            wp_send_json_error( [ 'message' => __( 'AI features require a Pro license.', 'council-debt-counters' ) ] );
-        }
+        // Licence validity is checked when the key is saved in the admin.
 
         if ( ! get_option( 'cdc_openai_api_key' ) ) {
             Error_Logger::log( 'AI extraction blocked: API key missing' );
