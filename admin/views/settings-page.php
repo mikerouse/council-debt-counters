@@ -27,6 +27,17 @@ $types = [
                     <?php endforeach; ?>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><label for="cdc_openai_model"><?php esc_html_e( 'OpenAI Model', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <?php $model = get_option( 'cdc_openai_model', 'gpt-3.5-turbo' ); ?>
+                    <select name="cdc_openai_model" id="cdc_openai_model">
+                        <option value="gpt-3.5-turbo" <?php selected( $model, 'gpt-3.5-turbo' ); ?>>gpt-3.5-turbo</option>
+                        <option value="gpt-4" <?php selected( $model, 'gpt-4' ); ?>>gpt-4</option>
+                    </select>
+                    <p class="description"><?php esc_html_e( 'Requires an OpenAI API key on the Licences & Addons page.', 'council-debt-counters' ); ?></p>
+                </td>
+            </tr>
         </table>
         <?php submit_button(); ?>
     </form>
