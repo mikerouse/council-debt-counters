@@ -110,6 +110,11 @@ class Docs_Manager {
         if ( move_uploaded_file( $file['tmp_name'], $target ) ) {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
             Error_Logger::log_info( 'Document uploaded: ' . $filename );
+
+            if ( $doc_type === 'statement_of_accounts' && $council_id > 0 ) {
+                self::maybe_extract_figures( $target, $council_id );
+            }
+
             return true;
         }
         Error_Logger::log( 'Failed to move uploaded document: ' . $file['name'] );
@@ -208,6 +213,12 @@ class Docs_Manager {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
         }
         Error_Logger::log_info( 'Document assigned: ' . $filename . ' to council ' . $council_id );
+
+        if ( $doc_type === 'statement_of_accounts' && $council_id > 0 ) {
+            $path = self::get_docs_path() . $filename;
+            self::maybe_extract_figures( $path, $council_id );
+        }
+
         return true;
     }
 
@@ -228,5 +239,40 @@ class Docs_Manager {
         }
         $wpdb->update( $wpdb->prefix . self::TABLE, $fields, [ 'id' => $id ], [ '%s', '%s' ], [ '%d' ] );
         return true;
+    }
+
+    private static function maybe_extract_figures( string $file, int $council_id ) {
+        $text = self::extract_text( $file );
+        if ( empty( $text ) ) {
+            return;
+        }
+        $data = AI_Extractor::extract_key_figures( $text );
+        if ( is_wp_error( $data ) ) {
+            Error_Logger::log( 'AI extraction error: ' . $data->get_error_message() );
+            return;
+        }
+        if ( is_array( $data ) ) {
+            foreach ( $data as $field => $value ) {
+                Custom_Fields::update_value( $council_id, sanitize_key( $field ), $value );
+            }
+        }
+    }
+
+    private static function extract_text( string $file ) {
+        $ext = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+        if ( $ext === 'pdf' && class_exists( '\\Smalot\\PdfParser\\Parser' ) ) {
+            try {
+                $parser = new \Smalot\PdfParser\Parser();
+                $pdf    = $parser->parseFile( $file );
+                return $pdf->getText();
+            } catch ( \Exception $e ) {
+                Error_Logger::log( 'PDF parse error: ' . $e->getMessage() );
+                return '';
+            }
+        }
+        if ( $ext === 'csv' || $ext === 'txt' ) {
+            return file_get_contents( $file );
+        }
+        return '';
     }
 }
