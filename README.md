@@ -21,6 +21,16 @@ The **Troubleshooting** submenu lets you view error logs and choose how much Jav
 2. Activate **Council Debt Counters** in the WordPress admin.
 3. Visit **Debt Counters** in the admin menu to enter your license key and start adding councils.
 
+## Asset loading and CDNs
+
+Bootstrap 5 and CountUp.js are bundled locally inside the plugin's `public/` directory. These files are loaded by default to avoid external requests. If you prefer to use a CDN instead, hook into the `cdc_use_cdn` filter:
+
+```php
+add_filter( 'cdc_use_cdn', '__return_true' );
+```
+
+Removing the filter or returning `false` disables CDN usage again.
+
 ## Legal notice
 
 When displaying council data you must comply with the **Copyright, Designs and Patents Act 1988**, **Section 11A of the Freedom of Information Act 2001**, and the **Re-Use of Public Sector Information Regulations 2005**. Data must not be shown in a misleading context or used for commercial gain, including behind paywalls. Always attribute the data source to the relevant council whenever it is displayed, including when output via shortcodes.
