@@ -1,13 +1,17 @@
 (function(){
     function getCountUpClass(){
-        if(window.CountUp){
-            return window.CountUp;
-        }
+        // Always prefer the namespaced CountUp class bundled with this plugin.
+        // Some themes ship an old global `CountUp` which is incompatible with
+        // the v2 API we rely on. Using that version results in counters dropping
+        // the currency prefix and decimal places.
         if(window.countUp && window.countUp.CountUp){
             return window.countUp.CountUp;
         }
-        console.error('CountUp library not loaded');
-        logToServer('CountUp library missing');
+        if(window.CountUp && window.CountUp.version){
+            return window.CountUp;
+        }
+        console.error('CountUp library not loaded or incompatible');
+        logToServer('CountUp library missing or bad version');
         return null;
     }
 
