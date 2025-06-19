@@ -103,6 +103,24 @@ class Council_Admin_Page {
             Custom_Fields::update_value( $post_id, 'statement_of_accounts', $soa_value );
         }
 
+        // Document edits or deletions from the Documents tab
+        if ( isset( $_POST['update_doc'] ) && isset( $_POST['docs'][ $_POST['update_doc'] ] ) ) {
+            $doc_id = intval( $_POST['update_doc'] );
+            $info   = $_POST['docs'][ $doc_id ];
+            Docs_Manager::update_document( $doc_id, [
+                'doc_type'      => sanitize_key( $info['doc_type'] ?? '' ),
+                'financial_year'=> sanitize_text_field( $info['financial_year'] ?? '' ),
+            ] );
+        }
+
+        if ( isset( $_POST['delete_doc'] ) ) {
+            $doc_id = intval( $_POST['delete_doc'] );
+            $doc    = Docs_Manager::get_document_by_id( $doc_id );
+            if ( $doc ) {
+                Docs_Manager::delete_document( $doc->filename );
+            }
+        }
+
         wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
         exit;
     }

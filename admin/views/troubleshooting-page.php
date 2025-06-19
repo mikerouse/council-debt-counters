@@ -11,7 +11,15 @@ $log = \CouncilDebtCounters\Error_Logger::get_log();
 if ( isset( $_POST['cdc_clear_log'] ) ) {
     \CouncilDebtCounters\Error_Logger::clear_log();
     $log = \CouncilDebtCounters\Error_Logger::get_log();
+    \CouncilDebtCounters\Error_Logger::log_info( 'Troubleshooting log cleared' );
     echo '<div class="notice notice-success"><p>' . esc_html__( 'Log cleared.', 'council-debt-counters' ) . '</p></div>';
+}
+
+if ( isset( $_POST['cdc_download_log'] ) ) {
+    header( 'Content-Type: text/plain' );
+    header( 'Content-Disposition: attachment; filename=troubleshooting.log' );
+    echo $log;
+    exit;
 }
 
 if ( isset( $_POST['cdc_migrate_acf_nonce'] ) && wp_verify_nonce( $_POST['cdc_migrate_acf_nonce'], 'cdc_migrate_acf' ) ) {
@@ -24,7 +32,10 @@ if ( isset( $_POST['cdc_migrate_acf_nonce'] ) && wp_verify_nonce( $_POST['cdc_mi
     <p><?php esc_html_e( 'View recent plugin errors for debugging purposes.', 'council-debt-counters' ); ?></p>
     <form method="post">
         <textarea readonly rows="20" style="width:100%;" aria-label="<?php echo esc_attr__( 'Error log', 'council-debt-counters' ); ?>"><?php echo esc_textarea( $log ); ?></textarea>
-        <p><button type="submit" name="cdc_clear_log" class="button"><?php esc_html_e( 'Clear Log', 'council-debt-counters' ); ?></button></p>
+        <p>
+            <button type="submit" name="cdc_clear_log" class="button"><?php esc_html_e( 'Clear Log', 'council-debt-counters' ); ?></button>
+            <button type="submit" name="cdc_download_log" class="button" style="margin-left:10px;"><?php esc_html_e( 'Download Log', 'council-debt-counters' ); ?></button>
+        </p>
     </form>
     <form method="post">
         <?php wp_nonce_field( 'cdc_migrate_acf', 'cdc_migrate_acf_nonce' ); ?>

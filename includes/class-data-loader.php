@@ -177,11 +177,60 @@ class Data_Loader {
     }
 
     /**
+     * Export all councils as JSON or CSV.
+     */
+    public static function export_data( string $format = 'csv' ) {
+        $councils = get_posts( [ 'post_type' => 'council', 'numberposts' => -1 ] );
+        $fields    = Custom_Fields::get_fields();
+        $rows = [];
+        foreach ( $councils as $c ) {
+            $row = [ 'council_name' => $c->post_title ];
+            foreach ( $fields as $f ) {
+                if ( 'council_name' === $f->name ) {
+                    continue;
+                }
+                $row[ $f->name ] = Custom_Fields::get_value( $c->ID, $f->name );
+            }
+            $rows[] = $row;
+        }
+        if ( 'json' === $format ) {
+            return wp_json_encode( $rows );
+        }
+        if ( empty( $rows ) ) {
+            return '';
+        }
+        $fh = fopen( 'php://temp', 'r+' );
+        fputcsv( $fh, array_keys( $rows[0] ) );
+        foreach ( $rows as $r ) {
+            fputcsv( $fh, $r );
+        }
+        rewind( $fh );
+        $csv = stream_get_contents( $fh );
+        fclose( $fh );
+        return $csv;
+    }
+
+    /**
      * Handle admin CSV upload action.
      */
     public static function handle_admin_action() {
         if ( ! current_user_can( 'manage_options' ) ) {
             return;
+        }
+        if ( isset( $_POST['cdc_export'] ) ) {
+            check_admin_referer( 'cdc_export', 'cdc_export_nonce' );
+            $format = sanitize_key( $_POST['format'] ?? 'csv' );
+            $data   = self::export_data( $format );
+            Error_Logger::log_info( 'Exported councils as ' . $format );
+            if ( 'json' === $format ) {
+                header( 'Content-Type: application/json' );
+                header( 'Content-Disposition: attachment; filename=councils.json' );
+            } else {
+                header( 'Content-Type: text/csv' );
+                header( 'Content-Disposition: attachment; filename=councils.csv' );
+            }
+            echo $data;
+            exit;
         }
         if ( empty( $_FILES['cdc_csv_file']['tmp_name'] ) ) {
             return;

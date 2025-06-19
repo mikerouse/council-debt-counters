@@ -38,7 +38,9 @@ class Shortcode_Renderer {
         ?>
         <div class="card card-counter text-center mb-3">
             <div class="card-body">
-                <div class="cdc-counter display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="0" data-prefix="£">£0</div>
+                <div class="cdc-counter display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+                    £<?php echo number_format_i18n( $current, 2 ); ?>
+                </div>
             </div>
         </div>
         <?php
@@ -159,7 +161,7 @@ class Shortcode_Renderer {
         <div class="card card-counter text-center mb-3">
             <div class="card-body">
                 <div class="cdc-counter display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
-                    £0.00
+                    £<?php echo number_format_i18n( $start_value, 2 ); ?>
                 </div>
             </div>
             <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#cdc-detail-<?php echo esc_attr( $id ); ?>" aria-expanded="false" aria-controls="cdc-detail-<?php echo esc_attr( $id ); ?>">

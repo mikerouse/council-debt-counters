@@ -25,6 +25,33 @@ class Settings_Page {
             'dashicons-chart-line'
         );
 
+        add_submenu_page(
+            'council-debt-counters',
+            __( 'Licence Keys and Addons', 'council-debt-counters' ),
+            __( 'Licence Keys and Addons', 'council-debt-counters' ),
+            'manage_options',
+            'cdc-license-keys',
+            [ __CLASS__, 'render_license_page' ]
+        );
+
+        add_submenu_page(
+            'council-debt-counters',
+            __( 'Settings', 'council-debt-counters' ),
+            __( 'Settings', 'council-debt-counters' ),
+            'manage_options',
+            'cdc-settings',
+            [ __CLASS__, 'render_settings_page' ]
+        );
+
+        add_submenu_page(
+            'council-debt-counters',
+            __( 'Import & Export', 'council-debt-counters' ),
+            __( 'Import & Export', 'council-debt-counters' ),
+            'manage_options',
+            'cdc-import-export',
+            [ __CLASS__, 'render_import_export_page' ]
+        );
+
         // Only add unique submenus here (do not duplicate "Councils")
         add_submenu_page(
             'council-debt-counters',
@@ -53,6 +80,18 @@ class Settings_Page {
 
     public static function render_page() {
         include plugin_dir_path( __DIR__ ) . 'admin/views/instructions-page.php';
+    }
+
+    public static function render_license_page() {
+        include plugin_dir_path( __DIR__ ) . 'admin/views/license-page.php';
+    }
+
+    public static function render_settings_page() {
+        include plugin_dir_path( __DIR__ ) . 'admin/views/settings-page.php';
+    }
+
+    public static function render_import_export_page() {
+        include plugin_dir_path( __DIR__ ) . 'admin/views/import-export-page.php';
     }
 
     public static function render_docs_page() {
