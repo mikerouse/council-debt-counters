@@ -6,8 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <h1><?php esc_html_e( 'Licence Keys and Addons', 'council-debt-counters' ); ?></h1>
     <form method="post" action="options.php">
         <?php
-        settings_fields( 'council-debt-counters' );
-        do_settings_sections( 'council-debt-counters' );
+        settings_fields( 'cdc_license' );
+        do_settings_sections( 'cdc_license' );
         ?>
         <table class="form-table" role="presentation">
             <tr>

@@ -14,7 +14,7 @@ $types = [
 <div class="wrap">
     <h1><?php esc_html_e( 'Settings', 'council-debt-counters' ); ?></h1>
     <form method="post" action="options.php">
-        <?php settings_fields( 'council-debt-counters' ); ?>
+        <?php settings_fields( 'cdc_settings' ); ?>
         <table class="form-table" role="presentation">
             <tr>
                 <th scope="row"><?php esc_html_e( 'Enabled Counters', 'council-debt-counters' ); ?></th>
