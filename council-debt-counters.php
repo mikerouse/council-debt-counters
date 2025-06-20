@@ -13,6 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
 }
 
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
+
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-counter-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-shortcode-renderer.php';
@@ -54,6 +58,7 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Debt_Adjustments_Page::init();
     \CouncilDebtCounters\Data_Loader::init();
     \CouncilDebtCounters\License_Manager::init();
+    \CouncilDebtCounters\OpenAI_Helper::init();
     \CouncilDebtCounters\Whistleblower_Form::init();
     \CouncilDebtCounters\Admin_Dashboard_Widget::init();
     \CouncilDebtCounters\Shortcode_Playground::init();

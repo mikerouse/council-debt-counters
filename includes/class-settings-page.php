@@ -72,15 +72,18 @@ class Settings_Page {
     }
 
     public static function register_settings() {
-        register_setting( 'council-debt-counters', License_Manager::OPTION_KEY );
-        register_setting( 'council-debt-counters', License_Manager::OPTION_VALID );
-        register_setting( 'council-debt-counters', 'cdc_openai_api_key' );
-        register_setting( 'council-debt-counters', 'cdc_recaptcha_site_key' );
-        register_setting( 'council-debt-counters', 'cdc_recaptcha_secret_key' );
-        register_setting( 'council-debt-counters', 'cdc_openai_model', [ 'type' => 'string', 'default' => 'gpt-3.5-turbo' ] );
-        register_setting( 'council-debt-counters', 'cdc_enabled_counters', [ 'type' => 'array', 'default' => [] ] );
+        // Options on the Licence page.
+        register_setting( 'cdc_license', License_Manager::OPTION_KEY );
+        register_setting( 'cdc_license', License_Manager::OPTION_VALID );
+        register_setting( 'cdc_license', 'cdc_openai_api_key' );
+        register_setting( 'cdc_license', 'cdc_recaptcha_site_key' );
+        register_setting( 'cdc_license', 'cdc_recaptcha_secret_key' );
+
+        // Options on the Settings page.
+        register_setting( 'cdc_settings', 'cdc_openai_model', [ 'type' => 'string', 'default' => 'gpt-3.5-turbo' ] );
+        register_setting( 'cdc_settings', 'cdc_enabled_counters', [ 'type' => 'array', 'default' => [] ] );
         register_setting(
-            'council-debt-counters',
+            'cdc_settings',
             'cdc_log_level',
             [
                 'type'              => 'string',

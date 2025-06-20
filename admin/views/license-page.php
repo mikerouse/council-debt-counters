@@ -6,8 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <h1><?php esc_html_e( 'Licence Keys and Addons', 'council-debt-counters' ); ?></h1>
     <form method="post" action="options.php">
         <?php
-        settings_fields( 'council-debt-counters' );
-        do_settings_sections( 'council-debt-counters' );
+        settings_fields( 'cdc_license' );
+        do_settings_sections( 'cdc_license' );
         ?>
         <table class="form-table" role="presentation">
             <tr>
@@ -26,6 +26,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <th scope="row"><label for="cdc_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'council-debt-counters' ); ?></label></th>
                 <td>
                     <input name="cdc_openai_api_key" type="text" id="cdc_openai_api_key" value="<?php echo esc_attr( get_option( 'cdc_openai_api_key', '' ) ); ?>" class="regular-text" />
+                    <button type="button" id="cdc-check-openai" class="button" style="margin-left:10px;">
+                        <?php esc_html_e( 'Test Key', 'council-debt-counters' ); ?>
+                    </button>
+                    <p id="cdc-openai-result" class="description"></p>
                     <p class="description"><?php esc_html_e( 'Optional: provide an OpenAI API key to assist with generating council information.', 'council-debt-counters' ); ?></p>
                 </td>
             </tr>

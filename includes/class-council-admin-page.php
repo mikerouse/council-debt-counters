@@ -57,10 +57,16 @@ class Council_Admin_Page {
             '0.1.0',
             true
         );
-        wp_enqueue_style( "cdc-ai-progress", plugins_url( "admin/css/ai-progress.css", dirname( __DIR__ ) . "/council-debt-counters.php" ), [], "0.1.0" );
-        wp_localize_script( "cdc-council-form", "cdcAiMessages", [
-            "start" => __( "Analysing document…", "council-debt-counters" ),
-            "error" => __( "Extraction failed", "council-debt-counters" )
+        wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_localize_script( 'cdc-council-form', 'cdcAiMessages', [
+            'steps' => [
+                __( 'Checking OpenAI API key…', 'council-debt-counters' ),
+                __( 'Checking licence limits…', 'council-debt-counters' ),
+                __( 'Connecting to OpenAI API…', 'council-debt-counters' ),
+                __( 'Sending document for extraction…', 'council-debt-counters' ),
+                __( 'Waiting for AI answers…', 'council-debt-counters' ),
+            ],
+            'error' => __( 'Extraction failed', 'council-debt-counters' ),
         ] );
     }
 

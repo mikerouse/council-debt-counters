@@ -23,7 +23,14 @@ class License_Manager {
      * This is a placeholder for real validation logic.
      */
     public static function is_valid() {
-        return (bool) get_option( self::OPTION_VALID );
+        $flag = get_option( self::OPTION_VALID );
+        $valid = (bool) $flag;
+        if ( ! $valid ) {
+            $key = self::get_license_key();
+            $prefix = $key ? substr( $key, 0, 8 ) . '…' : 'none';
+            Error_Logger::log_info( 'License invalid - key prefix: ' . $prefix . ' flag: ' . $flag );
+        }
+        return $valid;
     }
 
     /**
@@ -37,7 +44,11 @@ class License_Manager {
      * Enqueue JS for license checking.
      */
     public static function enqueue_assets( $hook ) {
-        if ( $hook !== 'toplevel_page_council-debt-counters' ) {
+        $allowed = [
+            'debt-counters_page_cdc-license-keys',
+            'toplevel_page_council-debt-counters',
+        ];
+        if ( ! in_array( $hook, $allowed, true ) ) {
             return;
         }
         wp_enqueue_script(
@@ -51,6 +62,18 @@ class License_Manager {
             'nonce'        => wp_create_nonce( 'cdc_check_license' ),
             'checkingText' => __( 'Checking...', 'council-debt-counters' ),
             'errorText'    => __( 'Error validating license.', 'council-debt-counters' ),
+        ] );
+        wp_enqueue_script(
+            'cdc-openai-check',
+            plugins_url( 'admin/js/openai-check.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
+            [],
+            '0.1.0',
+            true
+        );
+        wp_localize_script( 'cdc-openai-check', 'CDC_OPENAI_CHECK', [
+            'nonce'        => wp_create_nonce( 'cdc_check_openai' ),
+            'checkingText' => __( 'Checking...', 'council-debt-counters' ),
+            'errorText'    => __( 'Error validating API key.', 'council-debt-counters' ),
         ] );
     }
 
@@ -70,13 +93,17 @@ class License_Manager {
             return $response;
         }
 
+        $code = wp_remote_retrieve_response_code( $response );
         $body = wp_remote_retrieve_body( $response );
+        Error_Logger::log_info( 'License API response ' . $code . ': ' . $body );
         $data = json_decode( $body, true );
 
         if ( isset( $data['valid'] ) && $data['valid'] && empty( $data['expired'] ) ) {
+            Error_Logger::log_info( 'License validated successfully' );
             return true;
         }
 
+        Error_Logger::log_info( 'License validation failed' );
         return new \WP_Error( 'invalid_license', __( 'License key is invalid or expired.', 'council-debt-counters' ) );
     }
 
@@ -94,10 +121,12 @@ class License_Manager {
         update_option( self::OPTION_KEY, $key );
         if ( true === $result ) {
             update_option( self::OPTION_VALID, 1 );
+            Error_Logger::log_info( 'License confirmed via AJAX' );
             wp_send_json_success( [ 'message' => __( 'License confirmed.', 'council-debt-counters' ) ] );
         } else {
             update_option( self::OPTION_VALID, 0 );
             $msg = is_wp_error( $result ) ? $result->get_error_message() : __( 'License invalid.', 'council-debt-counters' );
+            Error_Logger::log_info( 'License check failed via AJAX: ' . $msg );
             wp_send_json_error( [ 'message' => $msg ] );
         }
     }

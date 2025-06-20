@@ -21,4 +21,16 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         </select>
         <button type="submit" name="cdc_export" class="button button-primary"><?php esc_html_e( 'Download', 'council-debt-counters' ); ?></button>
     </form>
+    <h2 class="mt-4"><?php esc_html_e( 'Export Settings', 'council-debt-counters' ); ?></h2>
+    <form method="post">
+        <?php wp_nonce_field( 'cdc_export_settings', 'cdc_export_settings_nonce' ); ?>
+        <button type="submit" name="cdc_export_settings" class="button button-primary"><?php esc_html_e( 'Download Settings', 'council-debt-counters' ); ?></button>
+    </form>
+
+    <h2 class="mt-4"><?php esc_html_e( 'Import Settings', 'council-debt-counters' ); ?></h2>
+    <form method="post" enctype="multipart/form-data">
+        <?php wp_nonce_field( 'cdc_import_settings', 'cdc_import_settings_nonce' ); ?>
+        <input type="file" name="cdc_settings_file" accept=".json" required />
+        <button type="submit" class="button"><?php esc_html_e( 'Import Settings', 'council-debt-counters' ); ?></button>
+    </form>
 </div>

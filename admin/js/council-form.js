@@ -83,18 +83,35 @@
                 var docId = btn.value;
                 var overlay = document.createElement("div");
                 overlay.id = "cdc-ai-overlay";
-                overlay.innerHTML = "<span class=\"spinner is-active\"></span><p>" + cdcAiMessages.start + "</p>";
+                overlay.innerHTML = "<span class=\"spinner is-active\"></span><p></p>";
+                var p = overlay.querySelector("p");
                 document.body.appendChild(overlay);
+
+                var steps = cdcAiMessages.steps || [];
+                var i = 0;
+                p.textContent = steps[i] || '';
+                var interval = setInterval(function(){
+                    i++;
+                    if (i < steps.length) {
+                        p.textContent = steps[i];
+                    }
+                }, 1500);
+
                 var data = new FormData();
                 data.append("action","cdc_extract_figures");
                 data.append("doc_id", docId);
                 fetch(ajaxurl,{method:"POST",credentials:"same-origin",body:data})
                     .then(function(r){return r.json();})
                     .then(function(res){
-                        overlay.querySelector("p").textContent = res.message || cdcAiMessages.error;
+                        clearInterval(interval);
+                        var msg = (res.data && res.data.message) || res.message;
+                        p.textContent = msg || cdcAiMessages.error;
                         setTimeout(function(){location.reload();},1200);
                     })
-                    .catch(function(){overlay.querySelector("p").textContent = cdcAiMessages.error;});
+                    .catch(function(){
+                        clearInterval(interval);
+                        p.textContent = cdcAiMessages.error;
+                    });
             });
         });
     });

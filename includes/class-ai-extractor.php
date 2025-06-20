@@ -31,6 +31,7 @@ class AI_Extractor {
             }
             return $data;
         }
+        Error_Logger::log( 'AI extraction parse error: ' . $response );
         return new \WP_Error( 'invalid_ai_response', __( 'Failed to parse AI response.', 'council-debt-counters' ) );
     }
 }

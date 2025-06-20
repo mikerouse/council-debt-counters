@@ -211,10 +211,73 @@ class Data_Loader {
     }
 
     /**
+     * Export plugin settings and keys as JSON.
+     */
+    public static function export_settings() {
+        $options = [
+            License_Manager::OPTION_KEY   => get_option( License_Manager::OPTION_KEY, '' ),
+            License_Manager::OPTION_VALID => get_option( License_Manager::OPTION_VALID, '' ),
+            'cdc_openai_api_key'          => get_option( 'cdc_openai_api_key', '' ),
+            'cdc_recaptcha_site_key'      => get_option( 'cdc_recaptcha_site_key', '' ),
+            'cdc_recaptcha_secret_key'    => get_option( 'cdc_recaptcha_secret_key', '' ),
+            'cdc_openai_model'            => get_option( 'cdc_openai_model', 'gpt-3.5-turbo' ),
+            'cdc_enabled_counters'        => get_option( 'cdc_enabled_counters', [] ),
+            'cdc_log_level'               => get_option( 'cdc_log_level', 'standard' ),
+        ];
+        return wp_json_encode( $options );
+    }
+
+    /**
+     * Import plugin settings from a JSON file.
+     *
+     * @param string $path Path to the JSON file.
+     * @return true|\WP_Error
+     */
+    public static function import_settings( string $path ) {
+        if ( ! file_exists( $path ) ) {
+            return new \WP_Error( 'settings_missing', __( 'Settings file not found.', 'council-debt-counters' ) );
+        }
+        $contents = file_get_contents( $path );
+        if ( false === $contents ) {
+            return new \WP_Error( 'settings_read', __( 'Unable to read settings file.', 'council-debt-counters' ) );
+        }
+        $data = json_decode( $contents, true );
+        if ( ! is_array( $data ) ) {
+            return new \WP_Error( 'settings_invalid', __( 'Invalid JSON.', 'council-debt-counters' ) );
+        }
+        foreach ( $data as $option => $value ) {
+            update_option( $option, $value );
+        }
+        return true;
+    }
+
+    /**
      * Handle admin CSV upload action.
      */
     public static function handle_admin_action() {
         if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        if ( isset( $_POST['cdc_export_settings'] ) ) {
+            check_admin_referer( 'cdc_export_settings', 'cdc_export_settings_nonce' );
+            $data = self::export_settings();
+            Error_Logger::log_info( 'Exported plugin settings' );
+            header( 'Content-Type: application/json' );
+            header( 'Content-Disposition: attachment; filename=cdc-settings.json' );
+            echo $data;
+            exit;
+        }
+        if ( isset( $_FILES['cdc_settings_file']['tmp_name'] ) ) {
+            check_admin_referer( 'cdc_import_settings', 'cdc_import_settings_nonce' );
+            $file   = $_FILES['cdc_settings_file']['tmp_name'];
+            $result = self::import_settings( $file );
+            add_action( 'admin_notices', function() use ( $result ) {
+                if ( is_wp_error( $result ) ) {
+                    echo '<div class="notice notice-error"><p>' . esc_html( $result->get_error_message() ) . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings imported.', 'council-debt-counters' ) . '</p></div>';
+                }
+            } );
             return;
         }
         if ( isset( $_POST['cdc_export'] ) ) {
