@@ -10,14 +10,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Shortcode_Renderer {
 
 	private static function get_council_id_from_atts( array $atts ) {
-		$id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+			$id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+
 		if ( 0 === $id && ! empty( $atts['council'] ) ) {
-			$post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
+				$name = sanitize_text_field( $atts['council'] );
+				$post = get_page_by_title( $name, OBJECT, 'council' );
+
+			if ( ! $post ) {
+					$post = get_page_by_path( sanitize_title( $name ), OBJECT, 'council' );
+			}
+
 			if ( $post ) {
-				$id = $post->ID;
+						$id = $post->ID;
 			}
 		}
-		return $id;
+
+			return $id;
 	}
 
 	private static function render_annual_counter( int $id, string $field, string $type = '', bool $with_details = true ) {
