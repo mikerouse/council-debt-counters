@@ -67,6 +67,7 @@ class Council_Admin_Page {
                 __( 'Waiting for AI answers…', 'council-debt-counters' ),
             ],
             'error' => __( 'Extraction failed', 'council-debt-counters' ),
+            'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
         ] );
     }
 

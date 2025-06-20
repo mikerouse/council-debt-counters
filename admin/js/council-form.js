@@ -83,8 +83,17 @@
                 var docId = btn.value;
                 var overlay = document.createElement("div");
                 overlay.id = "cdc-ai-overlay";
-                overlay.innerHTML = "<span class=\"spinner is-active\"></span><p></p>";
+                overlay.innerHTML = "<span class=\"spinner is-active\"></span><div class=\"progress w-75 mt-2\" style=\"height:8px\"><div class=\"progress-bar\" style=\"width:0%\"></div></div><p></p>";
                 var p = overlay.querySelector("p");
+                var bar = overlay.querySelector('.progress-bar');
+                var maxTime = cdcAiMessages.timeout || 60;
+                var elapsed = 0;
+                var barTimer = setInterval(function(){
+                    elapsed++;
+                    var pct = Math.min(100, (elapsed / maxTime) * 100);
+                    bar.style.width = pct + '%';
+                    if (elapsed >= maxTime) clearInterval(barTimer);
+                },1000);
                 document.body.appendChild(overlay);
 
                 var steps = cdcAiMessages.steps || [];
@@ -104,12 +113,18 @@
                     .then(function(r){return r.json();})
                     .then(function(res){
                         clearInterval(interval);
+                        clearInterval(barTimer);
                         var msg = (res.data && res.data.message) || res.message;
+                        var tokens = res.data && res.data.tokens ? res.data.tokens : 0;
+                        if (tokens) {
+                            msg += ' (' + tokens + ' tokens)';
+                        }
                         p.textContent = msg || cdcAiMessages.error;
                         setTimeout(function(){location.reload();},1200);
                     })
                     .catch(function(){
                         clearInterval(interval);
+                        clearInterval(barTimer);
                         p.textContent = cdcAiMessages.error;
                     });
             });

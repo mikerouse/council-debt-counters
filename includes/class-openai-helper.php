@@ -8,6 +8,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 class OpenAI_Helper {
     const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
+    /**
+     * Approximate tokens per minute limits per model.
+     * These values are conservative defaults and can be filtered.
+     */
+    private static $tpm_limits = [
+        'gpt-3.5-turbo' => 10000,
+        'gpt-4'         => 10000,
+        'o3'            => 20000,
+        'o4-mini'       => 200000,
+        'gpt-4o'        => 30000,
+    ];
+
+    private static function throttle( int $tokens, string $model ) {
+        $limits = apply_filters( 'cdc_openai_tpm_limits', self::$tpm_limits );
+        $limit  = isset( $limits[ $model ] ) ? intval( $limits[ $model ] ) : 10000;
+
+        $state = get_transient( 'cdc_openai_tpm_state' );
+        if ( ! is_array( $state ) || time() > $state['reset'] ) {
+            $state = [ 'tokens' => 0, 'reset' => time() + 60 ];
+        }
+
+        if ( $state['tokens'] + $tokens > $limit ) {
+            $wait = max( 0, $state['reset'] - time() );
+            if ( $wait > 0 ) {
+                sleep( $wait );
+            }
+            $state = [ 'tokens' => 0, 'reset' => time() + 60 ];
+        }
+
+        $state['tokens'] += $tokens;
+        set_transient( 'cdc_openai_tpm_state', $state, 120 );
+    }
+
+
     public static function init() {
         add_action( 'wp_ajax_cdc_check_openai_key', [ __CLASS__, 'ajax_check_key' ] );
     }
@@ -23,6 +57,9 @@ class OpenAI_Helper {
             $model = get_option( 'cdc_openai_model', 'gpt-3.5-turbo' );
         }
 
+        $estimate = (int) ceil( strlen( $prompt ) / 4 ) + 500;
+        self::throttle( $estimate, $model );
+
         $args = [
             'headers' => [
                 'Content-Type'  => 'application/json',
@@ -34,7 +71,7 @@ class OpenAI_Helper {
                     [ 'role' => 'user', 'content' => $prompt ]
                 ],
             ]),
-            'timeout' => 20,
+            'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
         ];
 
         $response = wp_remote_post( self::API_ENDPOINT, $args );
@@ -43,10 +80,28 @@ class OpenAI_Helper {
             return $response;
         }
 
+        $code = wp_remote_retrieve_response_code( $response );
         $body = wp_remote_retrieve_body( $response );
+        if ( 429 === $code ) {
+            if ( preg_match( '/try again in ([0-9\.]+)s/i', $body, $m ) ) {
+                $delay = (int) ceil( floatval( $m[1] ) );
+                sleep( $delay );
+                $response = wp_remote_post( self::API_ENDPOINT, $args );
+                $code     = wp_remote_retrieve_response_code( $response );
+                $body     = wp_remote_retrieve_body( $response );
+            }
+        }
+
         $data = json_decode( $body, true );
         if ( isset( $data['choices'][0]['message']['content'] ) ) {
-            return $data['choices'][0]['message']['content'];
+            $tokens = $data['usage']['total_tokens'] ?? 0;
+            if ( $tokens > $estimate ) {
+                self::throttle( $tokens - $estimate, $model );
+            }
+            return [
+                'content' => $data['choices'][0]['message']['content'],
+                'tokens'  => $tokens,
+            ];
         }
 
         Error_Logger::log( 'OpenAI API unexpected response: ' . $body );
@@ -67,7 +122,7 @@ class OpenAI_Helper {
                 'messages' => [ [ 'role' => 'user', 'content' => 'Hello' ] ],
                 'max_tokens' => 1,
             ]),
-            'timeout' => 20,
+            'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
         ];
 
         $response = wp_remote_post( self::API_ENDPOINT, $args );
