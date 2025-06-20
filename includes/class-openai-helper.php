@@ -16,11 +16,11 @@ class OpenAI_Helper {
         'gpt-3.5-turbo' => 10000,
         'gpt-4'         => 10000,
         'o3'            => 20000,
-        'o4-mini'       => 20000,
-        'gpt-4o'        => 20000,
+        'o4-mini'       => 200000,
+        'gpt-4o'        => 30000,
     ];
 
-    private static function apply_rate_limit( int $tokens, string $model ) {
+    private static function throttle( int $tokens, string $model ) {
         $limits = apply_filters( 'cdc_openai_tpm_limits', self::$tpm_limits );
         $limit  = isset( $limits[ $model ] ) ? intval( $limits[ $model ] ) : 10000;
 
@@ -29,17 +29,18 @@ class OpenAI_Helper {
             $state = [ 'tokens' => 0, 'reset' => time() + 60 ];
         }
 
-        $state['tokens'] += $tokens;
-        if ( $state['tokens'] > $limit ) {
+        if ( $state['tokens'] + $tokens > $limit ) {
             $wait = max( 0, $state['reset'] - time() );
             if ( $wait > 0 ) {
                 sleep( $wait );
             }
-            $state = [ 'tokens' => $tokens, 'reset' => time() + 60 ];
+            $state = [ 'tokens' => 0, 'reset' => time() + 60 ];
         }
 
+        $state['tokens'] += $tokens;
         set_transient( 'cdc_openai_tpm_state', $state, 120 );
     }
+
 
     public static function init() {
         add_action( 'wp_ajax_cdc_check_openai_key', [ __CLASS__, 'ajax_check_key' ] );
@@ -55,6 +56,9 @@ class OpenAI_Helper {
         if ( empty( $model ) ) {
             $model = get_option( 'cdc_openai_model', 'gpt-3.5-turbo' );
         }
+
+        $estimate = (int) ceil( strlen( $prompt ) / 4 ) + 500;
+        self::throttle( $estimate, $model );
 
         $args = [
             'headers' => [
@@ -91,7 +95,9 @@ class OpenAI_Helper {
         $data = json_decode( $body, true );
         if ( isset( $data['choices'][0]['message']['content'] ) ) {
             $tokens = $data['usage']['total_tokens'] ?? 0;
-            self::apply_rate_limit( $tokens, $model );
+            if ( $tokens > $estimate ) {
+                self::throttle( $tokens - $estimate, $model );
+            }
             return [
                 'content' => $data['choices'][0]['message']['content'],
                 'tokens'  => $tokens,
