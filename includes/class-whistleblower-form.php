@@ -184,10 +184,10 @@ class Whistleblower_Form {
 			return '<div class="alert alert-success">' . esc_html__( 'Thank you for your report.', 'council-debt-counters' ) . '</div>';
 		}
 
-		$site_key = get_option( 'cdc_recaptcha_site_key', '' );
-		if ( $site_key ) {
-			wp_enqueue_script( 'google-recaptcha', 'https://www.google.com/recaptcha/api.js', array(), null, true );
-		}
+               $site_key = get_option( 'cdc_recaptcha_site_key', '' );
+               if ( $site_key ) {
+                       wp_enqueue_script( 'google-recaptcha', 'https://www.google.com/recaptcha/enterprise.js?render=' . $site_key, array(), null, true );
+               }
 
 		ob_start();
 		?>
@@ -206,12 +206,26 @@ class Whistleblower_Form {
 				<label for="cdc-email" class="form-label"><?php esc_html_e( 'Contact email (optional)', 'council-debt-counters' ); ?></label>
 				<input type="email" class="form-control" id="cdc-email" name="cdc_email" />
 			</div>
-		<?php if ( $site_key ) : ?>
-				<div class="g-recaptcha mb-3" data-sitekey="<?php echo esc_attr( $site_key ); ?>"></div>
-			<?php endif; ?>
-			<button type="submit" class="btn btn-primary"><?php esc_html_e( 'Submit Report', 'council-debt-counters' ); ?></button>
-		</form>
-		<?php
-		return ob_get_clean();
-	}
+               <?php if ( $site_key ) : ?>
+                               <input type="hidden" name="g-recaptcha-response" />
+                       <?php endif; ?>
+                       <button type="submit" class="btn btn-primary"><?php esc_html_e( 'Submit Report', 'council-debt-counters' ); ?></button>
+               </form>
+               <?php if ( $site_key ) : ?>
+               <script>
+                       document.querySelector('.cdc-waste-form').addEventListener('submit', function(e) {
+                               e.preventDefault();
+                               const form = this;
+                               grecaptcha.enterprise.ready(() => {
+                                       grecaptcha.enterprise.execute('<?php echo esc_js( $site_key ); ?>', {action: 'report'}).then(token => {
+                                               document.querySelector('input[name="g-recaptcha-response"]').value = token;
+                                               form.submit();
+                                       });
+                               });
+                       });
+               </script>
+               <?php endif; ?>
+               <?php
+               return ob_get_clean();
+       }
 }
