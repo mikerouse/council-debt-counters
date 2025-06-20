@@ -71,7 +71,7 @@ class OpenAI_Helper {
                     [ 'role' => 'user', 'content' => $prompt ]
                 ],
             ]),
-            'timeout' => 20,
+            'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
         ];
 
         $response = wp_remote_post( self::API_ENDPOINT, $args );
@@ -122,7 +122,7 @@ class OpenAI_Helper {
                 'messages' => [ [ 'role' => 'user', 'content' => 'Hello' ] ],
                 'max_tokens' => 1,
             ]),
-            'timeout' => 20,
+            'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
         ];
 
         $response = wp_remote_post( self::API_ENDPOINT, $args );
