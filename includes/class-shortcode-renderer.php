@@ -49,16 +49,17 @@ class Shortcode_Renderer {
 
         wp_enqueue_style( 'bootstrap-5' );
         wp_enqueue_style( 'cdc-counter' );
+        wp_enqueue_style( 'cdc-counter-font' );
         wp_enqueue_script( 'bootstrap-5' );
         wp_enqueue_script( 'cdc-counter-animations' );
 
+        $counter_id = 'cdc-counter-' . $id . '-' . sanitize_html_class( $field );
+        $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
         ob_start();
         ?>
-        <div class="card card-counter text-center mb-3">
-            <div class="card-body">
-                <div class="cdc-counter display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
-                    £<?php echo number_format_i18n( $current, 2 ); ?>
-                </div>
+        <div class="cdc-counter-wrapper text-center mb-3">
+            <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+                £<?php echo number_format_i18n( $current, 2 ); ?>
             </div>
         </div>
         <?php
@@ -93,6 +94,11 @@ class Shortcode_Renderer {
         }
 
         wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', $plugin_file ), [], '0.1.0' );
+        $font      = get_option( 'cdc_counter_font', 'Oswald' );
+        $weight    = get_option( 'cdc_counter_weight', '600' );
+        $font_url  = 'https://fonts.googleapis.com/css2?family=' . rawurlencode( $font ) . ':wght@' . $weight . '&display=swap';
+        wp_register_style( 'cdc-counter-font', $font_url, [], null );
+        wp_add_inline_style( 'cdc-counter-font', ".cdc-counter{font-family:'{$font}',sans-serif;font-weight:{$weight};}" );
         wp_register_script( 'countup', $countup_js, [], '2.6.2', true );
         wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', $plugin_file ), [ 'countup' ], '0.1.0', true );
         wp_register_style( 'bootstrap-5', $bootstrap_css, [], '5.3.1' );
@@ -125,9 +131,7 @@ class Shortcode_Renderer {
             $total = 0;
         }
         $interest = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
-        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
-        $net_growth_per_year = $interest - $mrp;
-        $growth_per_second = $net_growth_per_year / (365 * 24 * 60 * 60);
+        $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
         // Council balance sheets cover the year ending 31 March.
         // Calculations therefore start on 1 April.
@@ -143,13 +147,13 @@ class Shortcode_Renderer {
 
         wp_enqueue_style( 'bootstrap-5' );
         wp_enqueue_style( 'cdc-counter' );
+        wp_enqueue_style( 'cdc-counter-font' );
         wp_enqueue_script( 'bootstrap-5' );
         wp_enqueue_script( 'cdc-counter-animations' );
 
         $details  = [
             'interest'           => $interest,
-            'mrp'                => $mrp,
-            'counter_start_date' => null, // removed
+            'counter_start_date' => null,
         ];
 
         // Get band property counts
@@ -166,54 +170,21 @@ class Shortcode_Renderer {
 
         $population = (int) Custom_Fields::get_value( $id, 'population' );
 
-        $debt_repayment_explainer = '';
-        if ( $mrp > 0 ) {
-            $principal_repayment = $mrp - $interest;
-            if ( $principal_repayment > 0 ) {
-                $years_to_clear = ceil( $total / $principal_repayment );
-                $years_no_interest = ceil( $total / $mrp );
-                $debt_repayment_explainer = sprintf(
-                    /* translators: 1: years to clear debt, 2: principal per year, 3: interest per year, 4: years if no interest */
-                    __( 'At the current rate of debt repayment (Minimum Revenue Provision), the council pays £%2$s per year towards the debt and £%3$s per year in interest. At this rate, it would take approximately %1$d years to clear the debt, assuming no new borrowing and constant repayments/interest. If all interest payments stopped tomorrow, it would take about %4$d years to clear the debt at the same repayment rate.', 'council-debt-counters' ),
-                    $years_to_clear,
-                    number_format_i18n( $principal_repayment, 2 ),
-                    number_format_i18n( $interest, 2 ),
-                    $years_no_interest
-                );
-            } else {
-                $debt_repayment_explainer = sprintf(
-                    /* translators: 1: interest per year, 2: repayment per year */
-                    __( 'At the current rate of debt repayment (Minimum Revenue Provision), the council pays £%2$s per year towards the debt but pays £%1$s per year in interest. This means the debt will never be paid off, as repayments are not even covering the interest.', 'council-debt-counters' ),
-                    number_format_i18n( $interest, 2 ),
-                    number_format_i18n( $mrp, 2 )
-                );
-                if ( $mrp > 0 ) {
-                    $years_no_interest = ceil( $total / $mrp );
-                    $debt_repayment_explainer .= ' ' . sprintf(
-                        /* translators: %d: years if no interest */
-                        __( 'If all interest payments stopped tomorrow, it would take about %d years to clear the debt at the same repayment rate.', 'council-debt-counters' ),
-                        $years_no_interest
-                    );
-                }
-            }
-        }
+        $debt_repayment_explainer = __( 'Growth uses the annual interest figure from the latest accounts. Actual borrowing and repayments may differ.', 'council-debt-counters' );
 
         $collapse_id = 'cdc-detail-' . $id . '-debt';
         ob_start();
         ?>
-        <div class="card card-counter text-center mb-3">
-            <div class="card-body">
-                <div class="cdc-counter display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
-                    £<?php echo number_format_i18n( $start_value, 2 ); ?>
-                </div>
+        <div class="cdc-counter-wrapper text-center mb-3">
+            <div id="<?php echo esc_attr( 'cdc-counter-' . $id . '-debt' ); ?>" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
+                £<?php echo number_format_i18n( $start_value, 2 ); ?>
             </div>
             <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                 <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
             </button>
             <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
                 <ul class="mt-2 list-unstyled">
-                    <li><?php esc_html_e( 'Interest Paid on Debt (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 2 ); ?></li>
-                    <li><?php esc_html_e( 'Minimum Revenue Provision (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['mrp'], 2 ); ?></li>
+                    <li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( (float) $details['interest'], 2 ); ?></li>
                     <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo number_format_i18n( $growth_per_second, 6 ); ?></li>
                 </ul>
                 <?php if ( array_sum( $bands ) > 0 ) : ?>
@@ -239,7 +210,7 @@ class Shortcode_Renderer {
                 </div>
                 <?php endif; ?>
                 <div class="alert alert-warning mt-2">
-                    <?php esc_html_e( 'Total debt = Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments. The growth or shrinkage estimate uses interest from the last statement of accounts. This counter is an estimate. It assumes the council will pay the same amount of interest on its debt as last year, spread evenly over the year. In reality, the council could pay off debt faster or slower, refinance at a different rate, or borrow more. The actual interest paid will only be known when the next set of financial statements is published. This is just a live estimate, not an official figure.', 'council-debt-counters' ); ?>
+                    <?php esc_html_e( 'Total debt = Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments. Growth is estimated using the latest annual interest figure spread evenly across the year. Borrowing or repayments may change the real total, so treat this as a guide.', 'council-debt-counters' ); ?>
                 </div>
             </div>
         </div>

@@ -17,7 +17,7 @@ if ( $action === 'edit' ) {
     $fields = \CouncilDebtCounters\Custom_Fields::get_fields();
     $enabled = (array) get_option( 'cdc_enabled_counters', [] );
     $mapping = [
-        'debt' => [ 'current_liabilities','long_term_liabilities','finance_lease_pfi_liabilities','manual_debt_entry','interest_paid_on_debt','minimum_revenue_provision','total_debt' ],
+        'debt' => [ 'current_liabilities','long_term_liabilities','finance_lease_pfi_liabilities','manual_debt_entry','interest_paid_on_debt','total_debt' ],
         'spending' => [ 'annual_spending' ],
         'income' => [ 'total_income' ],
         'deficit' => [ 'annual_deficit' ],

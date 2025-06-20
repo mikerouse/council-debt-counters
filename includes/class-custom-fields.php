@@ -19,7 +19,6 @@ class Custom_Fields {
         ['name' => 'long_term_liabilities', 'label' => 'Long-Term Liabilities', 'type' => 'money', 'required' => 1],
         ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI or Finance Lease Liabilities', 'type' => 'money', 'required' => 1],
         ['name' => 'interest_paid_on_debt', 'label' => 'Interest Paid on Debt', 'type' => 'money', 'required' => 1],
-        ['name' => 'minimum_revenue_provision', 'label' => 'Minimum Revenue Provision (Debt Repayment)', 'type' => 'money', 'required' => 1],
         ['name' => 'total_debt', 'label' => 'Total Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
         ['name' => 'annual_spending', 'label' => 'Annual Spending', 'type' => 'money', 'required' => 0],

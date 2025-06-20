@@ -38,7 +38,6 @@
         var manualField = document.querySelector('[data-cdc-field="manual_debt_entry"]');
         var adjustmentsField = document.querySelector('[data-cdc-field="debt_adjustments"]');
         var interestField = document.querySelector('[data-cdc-field="interest_paid_on_debt"]');
-        var mrpField = document.querySelector('[data-cdc-field="minimum_revenue_provision"]');
         var totalField = document.querySelector('[data-cdc-field="total_debt"]');
         var ratesOutput = document.createElement('div');
         ratesOutput.id = 'cdc-debt-rates';
@@ -56,7 +55,6 @@
             var manual = parseFloat(manualField ? manualField.value : 0) || 0;
             var adjustments = parseFloat(adjustmentsField ? adjustmentsField.value : 0) || 0;
             var interest = parseFloat(interestField ? interestField.value : 0) || 0;
-            var mrp = parseFloat(mrpField ? mrpField.value : 0) || 0;
             // Total debt is current liabilities + long term liabilities + lease/PFI + manual + adjustments
             var total = shortVal + longVal + leaseVal + manual + adjustments;
             if (totalField) {
@@ -68,14 +66,13 @@
             var perSecond = perHour / 3600;
             ratesOutput.textContent = 'Debt per day: £' + perDay.toFixed(2) + ', per hour: £' + perHour.toFixed(2) + ', per second: £' + perSecond.toFixed(2);
 
-            growthPerSecond = (interest - mrp) / (365 * 24 * 60 * 60);
+            growthPerSecond = interest / (365 * 24 * 60 * 60);
         }
 
         if (shortField) shortField.addEventListener('input', updateAll);
         if (longField) longField.addEventListener('input', updateAll);
         if (leaseField) leaseField.addEventListener('input', updateAll);
         if (interestField) interestField.addEventListener('input', updateAll);
-        if (mrpField) mrpField.addEventListener('input', updateAll);
         updateAll();
         document.querySelectorAll(".cdc-extract-ai").forEach(function(btn){
             btn.addEventListener("click", function(e){
