@@ -25,6 +25,59 @@ class AI_Extractor {
     private static $last_tokens = 0;
 
     /**
+     * Extract paragraphs likely to contain relevant figures.
+     *
+     * @param string $text Raw text from the statement of accounts.
+     * @return string Filtered text.
+     */
+    private static function extract_relevant_sections( string $text ) : string {
+        $patterns = [
+            '/interest(\s+paid)?/i',
+            '/borrowing/i',
+            '/finance\s*lease/i',
+            '/pfi\s*liabilit(?:y|ies)/i',
+            '/long[- ]?term\s*liabilit(?:y|ies)/i',
+            '/current\s*liabilit(?:y|ies)/i',
+            '/gross\s*expenditure/i',
+            '/gross\s*income/i',
+            '/net\s*cost\s*of\s*services/i',
+            '/deficit\s*on\s*provision\s*of\s*services/i',
+            '/comprehensive\s*income/i',
+            '/usable\s*reserves?/i',
+            '/consultanc(?:y|ies)/i',
+            '/external\s*contractors?/i',
+            '/professional\s*fees?/i',
+            '/minimum\s*revenue\s*provision/i',
+            '/financing\s*and\s*investment\s*income/i',
+            '/public\s*works\s*loan\s*board/i',
+        ];
+
+        $paragraphs = preg_split( '/\r?\n\s*\r?\n/', $text );
+        if ( empty( $paragraphs ) ) {
+            $paragraphs = [ $text ];
+        }
+
+        $matches = [];
+        foreach ( $paragraphs as $para ) {
+            foreach ( $patterns as $pattern ) {
+                if ( preg_match( $pattern, $para ) ) {
+                    $matches[] = trim( $para );
+                    break;
+                }
+            }
+        }
+
+        $filtered = implode( "\n\n", $matches );
+        if ( empty( $filtered ) ) {
+            $filtered = $text;
+        }
+
+        Error_Logger::log_debug( 'Prefilter reduced text from ' . strlen( $text ) . ' to ' . strlen( $filtered ) . ' chars using ' . count( $matches ) . ' sections' );
+
+        return $filtered;
+    }
+
+    /**
      * Ask OpenAI to extract key figures from a statement of accounts text.
      * Large documents are automatically split into manageable chunks.
      *
@@ -34,9 +87,11 @@ class AI_Extractor {
     public static function extract_key_figures( string $text ) {
         self::$last_tokens = 0;
 
+        $filtered_text = self::extract_relevant_sections( $text );
+
         $max_chars = self::MAX_TOKENS_PER_REQUEST * self::AVG_TOKEN_CHARS;
-        if ( strlen( $text ) <= $max_chars ) {
-            $chunk = self::process_chunk( $text );
+        if ( strlen( $filtered_text ) <= $max_chars ) {
+            $chunk = self::process_chunk( $filtered_text );
             if ( is_wp_error( $chunk ) ) {
                 return $chunk;
             }
@@ -45,14 +100,15 @@ class AI_Extractor {
         }
 
         $results = [];
-        for ( $offset = 0; $offset < strlen( $text ); $offset += $max_chars ) {
-            $chunk_result = self::process_chunk( substr( $text, $offset, $max_chars ) );
+        $length = strlen( $filtered_text );
+        for ( $offset = 0; $offset < $length; $offset += $max_chars ) {
+            $chunk_result = self::process_chunk( substr( $filtered_text, $offset, $max_chars ) );
             if ( is_wp_error( $chunk_result ) ) {
                 return $chunk_result;
             }
             self::$last_tokens += $chunk_result['tokens'];
             foreach ( $chunk_result['data'] as $field => $value ) {
-                if ( ! empty( $value ) && ! isset( $results[ $field ] ) && floatval( $value ) != 0 ) {
+                if ( ! empty( $value ) && ! isset( $results[ $field ] ) && floatval( $value ) !== 0 ) {
                     $results[ $field ] = $value;
                 }
             }
