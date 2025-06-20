@@ -41,6 +41,26 @@ $types = [
                     <p class="description"><?php esc_html_e( 'Requires an OpenAI API key on the Licences & Addons page.', 'council-debt-counters' ); ?></p>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><label for="cdc_counter_font"><?php esc_html_e( 'Counter Font', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <?php $font = get_option( 'cdc_counter_font', 'Oswald' ); ?>
+                    <select name="cdc_counter_font" id="cdc_counter_font">
+                        <?php
+                        foreach ( \CouncilDebtCounters\Settings_Page::FONT_CHOICES as $f ) {
+                            printf( '<option value="%1$s" %2$s>%1$s</option>', esc_attr( $f ), selected( $font, $f, false ) );
+                        }
+                        ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="cdc_counter_weight"><?php esc_html_e( 'Font Weight', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <?php $weight = get_option( 'cdc_counter_weight', '600' ); ?>
+                    <input type="number" name="cdc_counter_weight" id="cdc_counter_weight" value="<?php echo esc_attr( $weight ); ?>" min="100" max="900" step="100" />
+                </td>
+            </tr>
         </table>
         <?php submit_button(); ?>
     </form>

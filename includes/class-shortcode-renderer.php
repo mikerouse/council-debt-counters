@@ -49,13 +49,16 @@ class Shortcode_Renderer {
 
         wp_enqueue_style( 'bootstrap-5' );
         wp_enqueue_style( 'cdc-counter' );
+        wp_enqueue_style( 'cdc-counter-font' );
         wp_enqueue_script( 'bootstrap-5' );
         wp_enqueue_script( 'cdc-counter-animations' );
 
+        $counter_id = 'cdc-counter-' . $id . '-' . sanitize_html_class( $field );
+        $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
         ob_start();
         ?>
         <div class="cdc-counter-wrapper text-center mb-3">
-            <div class="cdc-counter display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+            <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
                 £<?php echo number_format_i18n( $current, 2 ); ?>
             </div>
         </div>
@@ -91,6 +94,11 @@ class Shortcode_Renderer {
         }
 
         wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', $plugin_file ), [], '0.1.0' );
+        $font      = get_option( 'cdc_counter_font', 'Oswald' );
+        $weight    = get_option( 'cdc_counter_weight', '600' );
+        $font_url  = 'https://fonts.googleapis.com/css2?family=' . rawurlencode( $font ) . ':wght@' . $weight . '&display=swap';
+        wp_register_style( 'cdc-counter-font', $font_url, [], null );
+        wp_add_inline_style( 'cdc-counter-font', ".cdc-counter{font-family:'{$font}',sans-serif;font-weight:{$weight};}" );
         wp_register_script( 'countup', $countup_js, [], '2.6.2', true );
         wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', $plugin_file ), [ 'countup' ], '0.1.0', true );
         wp_register_style( 'bootstrap-5', $bootstrap_css, [], '5.3.1' );
@@ -123,9 +131,7 @@ class Shortcode_Renderer {
             $total = 0;
         }
         $interest = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
-        $mrp = (float) Custom_Fields::get_value( $id, 'minimum_revenue_provision' );
-        $net_growth_per_year = $interest - $mrp;
-        $growth_per_second = $net_growth_per_year / (365 * 24 * 60 * 60);
+        $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
         // Council balance sheets cover the year ending 31 March.
         // Calculations therefore start on 1 April.
@@ -141,13 +147,13 @@ class Shortcode_Renderer {
 
         wp_enqueue_style( 'bootstrap-5' );
         wp_enqueue_style( 'cdc-counter' );
+        wp_enqueue_style( 'cdc-counter-font' );
         wp_enqueue_script( 'bootstrap-5' );
         wp_enqueue_script( 'cdc-counter-animations' );
 
         $details  = [
             'interest'           => $interest,
-            'mrp'                => $mrp,
-            'counter_start_date' => null, // removed
+            'counter_start_date' => null,
         ];
 
         // Get band property counts
@@ -170,7 +176,7 @@ class Shortcode_Renderer {
         ob_start();
         ?>
         <div class="cdc-counter-wrapper text-center mb-3">
-            <div class="cdc-counter display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
+            <div id="<?php echo esc_attr( 'cdc-counter-' . $id . '-debt' ); ?>" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ($growth_per_second * $elapsed_seconds) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                 £<?php echo number_format_i18n( $start_value, 2 ); ?>
             </div>
             <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">

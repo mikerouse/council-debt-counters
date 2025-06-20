@@ -19,6 +19,8 @@ Currently the plugin includes an admin page with instructions for uploading star
 
 The **Troubleshooting** submenu lets you view error logs and choose how much JavaScript debugging information appears in the browser console. Available levels are **Verbose**, **Standard**, and **Quiet**.
 
+You can also pick a Google Font and weight for the counters on the Settings page. The font defaults to **Oswald** with a weight of **600**, but you can select other styles to match your theme.
+
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.
 2. Activate **Council Debt Counters** in the WordPress admin.

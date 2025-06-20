@@ -49,6 +49,11 @@ class Council_Admin_Page {
         wp_enqueue_script( 'bootstrap-5', $bootstrap_js, [], '5.3.1', true );
         // Enqueue counter CSS/JS for real-time counter in admin
         wp_enqueue_style( 'cdc-counter', plugins_url( 'public/css/counter.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        $font   = get_option( 'cdc_counter_font', 'Oswald' );
+        $weight = get_option( 'cdc_counter_weight', '600' );
+        $font_url = 'https://fonts.googleapis.com/css2?family=' . rawurlencode( $font ) . ':wght@' . $weight . '&display=swap';
+        wp_enqueue_style( 'cdc-counter-font', $font_url, [], null );
+        wp_add_inline_style( 'cdc-counter-font', ".cdc-counter{font-family:'{$font}',sans-serif;font-weight:{$weight};}" );
         wp_enqueue_script( 'cdc-counter', plugins_url( 'public/js/counter.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0', true );
         wp_enqueue_script(
             'cdc-council-form',

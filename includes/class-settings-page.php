@@ -10,6 +10,8 @@ use CouncilDebtCounters\Council_Admin_Page;
 
 class Settings_Page {
 
+    const FONT_CHOICES = [ 'Oswald', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro' ];
+
     public static function init() {
         add_action( 'admin_menu', [ __CLASS__, 'add_menu' ] );
         add_action( 'admin_init', [ __CLASS__, 'register_settings' ] );
@@ -91,11 +93,42 @@ class Settings_Page {
                 'sanitize_callback' => [ __CLASS__, 'sanitize_log_level' ],
             ]
         );
+        register_setting(
+            'cdc_settings',
+            'cdc_counter_font',
+            [
+                'type'              => 'string',
+                'default'           => 'Oswald',
+                'sanitize_callback' => [ __CLASS__, 'sanitize_font' ],
+            ]
+        );
+        register_setting(
+            'cdc_settings',
+            'cdc_counter_weight',
+            [
+                'type'              => 'string',
+                'default'           => '600',
+                'sanitize_callback' => [ __CLASS__, 'sanitize_weight' ],
+            ]
+        );
     }
 
     public static function sanitize_log_level( $value ) {
         $value = sanitize_key( $value );
         return in_array( $value, [ 'verbose', 'standard', 'quiet' ], true ) ? $value : 'standard';
+    }
+
+    public static function sanitize_font( $value ) {
+        $value = sanitize_text_field( $value );
+        return in_array( $value, self::FONT_CHOICES, true ) ? $value : 'Oswald';
+    }
+
+    public static function sanitize_weight( $value ) {
+        $value = preg_replace( '/[^0-9]/', '', $value );
+        if ( $value < 100 || $value > 900 ) {
+            return '600';
+        }
+        return $value;
     }
 
     public static function render_page() {
