@@ -12,3 +12,7 @@
     justify-content: center;
 }
 #cdc-ai-overlay p { margin-top: 10px; font-size: 16px; }
+
+#cdc-ai-overlay .progress { width: 80%; height: 8px; margin-top: 8px; }
+#cdc-ai-overlay .progress-bar { transition: width 1s linear; }
+
