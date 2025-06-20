@@ -34,6 +34,9 @@ $types = [
                     <select name="cdc_openai_model" id="cdc_openai_model">
                         <option value="gpt-3.5-turbo" <?php selected( $model, 'gpt-3.5-turbo' ); ?>>gpt-3.5-turbo</option>
                         <option value="gpt-4" <?php selected( $model, 'gpt-4' ); ?>>gpt-4</option>
+                        <option value="o3" <?php selected( $model, 'o3' ); ?>>o3</option>
+                        <option value="o4-mini" <?php selected( $model, 'o4-mini' ); ?>>o4-mini</option>
+                        <option value="gpt-4o" <?php selected( $model, 'gpt-4o' ); ?>>gpt-4o</option>
                     </select>
                     <p class="description"><?php esc_html_e( 'Requires an OpenAI API key on the Licences & Addons page.', 'council-debt-counters' ); ?></p>
                 </td>
