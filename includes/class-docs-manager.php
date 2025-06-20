@@ -272,8 +272,9 @@ class Docs_Manager {
         }
         if ( is_array( $data ) ) {
             self::store_ai_suggestions( $council_id, $data );
-            Error_Logger::log_info( 'AI extraction complete for council ' . $council_id );
-            return $data;
+            $tokens = AI_Extractor::get_last_tokens();
+            Error_Logger::log_info( 'AI extraction complete for council ' . $council_id . ' using ' . $tokens . ' tokens' );
+            return [ 'data' => $data, 'tokens' => $tokens ];
         }
         $error = new \WP_Error( 'invalid_ai_data', __( 'Invalid AI response.', 'council-debt-counters' ) );
         Error_Logger::log_error( 'AI extraction error: unexpected data' );
@@ -380,7 +381,9 @@ class Docs_Manager {
             wp_send_json_error( [ 'message' => sprintf( __( 'Extraction failed: %s', 'council-debt-counters' ), $result->get_error_message() ) ] );
         }
 
-        wp_send_json_success( [ 'message' => __( 'Extraction complete. Review suggestions below.', 'council-debt-counters' ) ] );
+        $msg    = __( 'Extraction complete. Review suggestions below.', 'council-debt-counters' );
+        $tokens = is_array( $result ) && isset( $result['tokens'] ) ? intval( $result['tokens'] ) : 0;
+        wp_send_json_success( [ 'message' => $msg, 'tokens' => $tokens ] );
     }
 
     private static function extract_text( string $file ) {

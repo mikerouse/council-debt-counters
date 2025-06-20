@@ -105,6 +105,10 @@
                     .then(function(res){
                         clearInterval(interval);
                         var msg = (res.data && res.data.message) || res.message;
+                        var tokens = res.data && res.data.tokens ? res.data.tokens : 0;
+                        if (tokens) {
+                            msg += ' (' + tokens + ' tokens)';
+                        }
                         p.textContent = msg || cdcAiMessages.error;
                         setTimeout(function(){location.reload();},1200);
                     })

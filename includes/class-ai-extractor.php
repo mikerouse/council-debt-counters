@@ -15,7 +15,14 @@ class AI_Extractor {
      * Maximum tokens sent to OpenAI in a single request.
      * This leaves headroom for the model's limits and response size.
      */
-    const MAX_TOKENS_PER_REQUEST = 12000;
+    const MAX_TOKENS_PER_REQUEST = 8000;
+
+    /**
+     * Tokens used in the last extraction run.
+     *
+     * @var int
+     */
+    private static $last_tokens = 0;
 
     /**
      * Ask OpenAI to extract key figures from a statement of accounts text.
@@ -25,20 +32,26 @@ class AI_Extractor {
      * @return mixed WP_Error on failure or array of extracted values.
      */
     public static function extract_key_figures( string $text ) {
+        self::$last_tokens = 0;
+
         $max_chars = self::MAX_TOKENS_PER_REQUEST * self::AVG_TOKEN_CHARS;
         if ( strlen( $text ) <= $max_chars ) {
-            $data = self::process_chunk( $text );
-            return self::finalise_data( $data );
+            $chunk = self::process_chunk( $text );
+            if ( is_wp_error( $chunk ) ) {
+                return $chunk;
+            }
+            self::$last_tokens += $chunk['tokens'];
+            return self::finalise_data( $chunk['data'] );
         }
 
         $results = [];
         for ( $offset = 0; $offset < strlen( $text ); $offset += $max_chars ) {
-            $chunk   = substr( $text, $offset, $max_chars );
-            $data    = self::process_chunk( $chunk );
-            if ( is_wp_error( $data ) ) {
-                return $data;
+            $chunk_result = self::process_chunk( substr( $text, $offset, $max_chars ) );
+            if ( is_wp_error( $chunk_result ) ) {
+                return $chunk_result;
             }
-            foreach ( $data as $field => $value ) {
+            self::$last_tokens += $chunk_result['tokens'];
+            foreach ( $chunk_result['data'] as $field => $value ) {
                 if ( ! empty( $value ) && ! isset( $results[ $field ] ) && floatval( $value ) != 0 ) {
                     $results[ $field ] = $value;
                 }
@@ -65,12 +78,15 @@ class AI_Extractor {
             return $response;
         }
 
-        $data = json_decode( $response, true );
+        $content = is_array( $response ) && isset( $response['content'] ) ? $response['content'] : $response;
+        $tokens  = is_array( $response ) && isset( $response['tokens'] ) ? intval( $response['tokens'] ) : 0;
+
+        $data = json_decode( $content, true );
         if ( is_array( $data ) ) {
-            return $data;
+            return [ 'data' => $data, 'tokens' => $tokens ];
         }
 
-        Error_Logger::log( 'AI extraction parse error: ' . $response );
+        Error_Logger::log( 'AI extraction parse error: ' . $content );
         return new \WP_Error( 'invalid_ai_response', __( 'Failed to parse AI response.', 'council-debt-counters' ) );
     }
 
@@ -106,5 +122,12 @@ class AI_Extractor {
         }
 
         return $results;
+    }
+
+    /**
+     * Get total tokens used in the last extraction call.
+     */
+    public static function get_last_tokens() : int {
+        return self::$last_tokens;
     }
 }

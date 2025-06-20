@@ -46,7 +46,10 @@ class OpenAI_Helper {
         $body = wp_remote_retrieve_body( $response );
         $data = json_decode( $body, true );
         if ( isset( $data['choices'][0]['message']['content'] ) ) {
-            return $data['choices'][0]['message']['content'];
+            return [
+                'content' => $data['choices'][0]['message']['content'],
+                'tokens'  => $data['usage']['total_tokens'] ?? 0,
+            ];
         }
 
         Error_Logger::log( 'OpenAI API unexpected response: ' . $body );
