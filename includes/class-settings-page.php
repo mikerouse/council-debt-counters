@@ -117,41 +117,69 @@ class Settings_Page {
 				'sanitize_callback' => array( __CLASS__, 'sanitize_font' ),
 			)
 		);
-		register_setting(
-			'cdc_settings',
-			'cdc_counter_weight',
-			array(
-				'type'              => 'string',
-				'default'           => '600',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_weight' ),
-			)
-		);
-	}
+                register_setting(
+                        'cdc_settings',
+                        'cdc_counter_weight',
+                        array(
+                                'type'              => 'string',
+                                'default'           => '600',
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_weight' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
+                        'cdc_default_sharing_thumbnail',
+                        array(
+                                'type'              => 'integer',
+                                'default'           => 0,
+                                'sanitize_callback' => 'absint',
+                        )
+                );
+        }
 
-	public static function enqueue_assets( $hook ) {
-		if ( 'debt-counters_page_cdc-import-export' !== $hook ) {
-			return;
-		}
-		$plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
-		wp_enqueue_script(
-			'cdc-import-csv',
-			plugins_url( 'admin/js/import-csv.js', $plugin_file ),
-			array(),
-			'0.1.0',
-			true
-		);
-		wp_enqueue_style( 'cdc-import-progress', plugins_url( 'admin/css/import-progress.css', $plugin_file ), array(), '0.1.0' );
-		wp_localize_script(
-			'cdc-import-csv',
-			'cdcImport',
-			array(
-				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'cdc_import_csv_row' ),
-				'progress' => __( 'Imported %1 of %2 rows…', 'council-debt-counters' ),
-				'done'     => __( 'Import complete', 'council-debt-counters' ),
-			)
-		);
-	}
+        public static function enqueue_assets( $hook ) {
+                $plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
+
+                if ( 'debt-counters_page_cdc-import-export' === $hook ) {
+                        wp_enqueue_script(
+                                'cdc-import-csv',
+                                plugins_url( 'admin/js/import-csv.js', $plugin_file ),
+                                array(),
+                                '0.1.0',
+                                true
+                        );
+                        wp_enqueue_style( 'cdc-import-progress', plugins_url( 'admin/css/import-progress.css', $plugin_file ), array(), '0.1.0' );
+                        wp_localize_script(
+                                'cdc-import-csv',
+                                'cdcImport',
+                                array(
+                                        'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+                                        'nonce'    => wp_create_nonce( 'cdc_import_csv_row' ),
+                                        'progress' => __( 'Imported %1 of %2 rows…', 'council-debt-counters' ),
+                                        'done'     => __( 'Import complete', 'council-debt-counters' ),
+                                )
+                        );
+                }
+
+                if ( 'debt-counters_page_cdc-settings' === $hook ) {
+                        wp_enqueue_media();
+                        wp_enqueue_script(
+                                'cdc-media-select',
+                                plugins_url( 'admin/js/media-select.js', $plugin_file ),
+                                array(),
+                                '0.1.0',
+                                true
+                        );
+                        wp_localize_script(
+                                'cdc-media-select',
+                                'CDC_MEDIA_SELECT',
+                                array(
+                                        'title'  => __( 'Select Image', 'council-debt-counters' ),
+                                        'button' => __( 'Use this image', 'council-debt-counters' ),
+                                )
+                        );
+                }
+        }
 
 	public static function sanitize_log_level( $value ) {
 		$value = sanitize_key( $value );
