@@ -38,6 +38,10 @@ class Shortcode_Renderer {
                        }
                }
 
+               if ( 0 === $id && is_singular( 'council' ) ) {
+                       $id = get_the_ID();
+               }
+
                return $id;
        }
 
@@ -122,6 +126,7 @@ class Shortcode_Renderer {
                 add_shortcode( 'total_custom_counter', array( __CLASS__, 'render_total_custom_counter' ) );
                 add_shortcode( 'cdc_leaderboard', array( __CLASS__, 'render_leaderboard' ) );
                 add_shortcode( 'cdc_share_buttons', array( __CLASS__, 'render_share_buttons' ) );
+                add_shortcode( 'council_status', array( __CLASS__, 'render_status_message' ) );
                 add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
                 add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
                 add_action( 'wp_ajax_cdc_log_js', array( __CLASS__, 'ajax_log_js' ) );
@@ -394,6 +399,33 @@ endforeach;
                 </div>
                 <?php
                 return ob_get_clean();
+        }
+
+        public static function render_status_message( $atts ) {
+                $id = self::get_council_id_from_atts( $atts );
+                if ( 0 === $id ) {
+                        return '';
+                }
+
+                $message = Custom_Fields::get_value( $id, 'status_message' );
+                $type    = Custom_Fields::get_value( $id, 'status_message_type' );
+
+                if ( '' === $message ) {
+                        $status = get_post_status( $id );
+                        if ( 'draft' === $status ) {
+                                $message = __( 'This council entry is in draft.', 'council-debt-counters' );
+                                $type    = 'warning';
+                        } elseif ( 'under_review' === $status ) {
+                                $message = __( 'This council entry is pending review.', 'council-debt-counters' );
+                                $type    = 'info';
+                        } else {
+                                return '';
+                        }
+                }
+
+                $type = in_array( $type, array( 'info', 'warning', 'danger' ), true ) ? $type : 'info';
+
+                return sprintf( '<div class="alert alert-%1$s" role="status">%2$s</div>', esc_attr( $type ), esc_html( $message ) );
         }
 
         private static function render_total_annual_counter( string $field, string $type = '' ) {
