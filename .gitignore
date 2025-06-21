@@ -15,6 +15,7 @@ yarn-error.log
 # Log files
 *.log
 troubleshooting.log
+.phpunit.result.cache
 
 # OS-generated files
 .DS_Store
