@@ -38,6 +38,12 @@ if ( 'edit' === $req_action ) {
                 echo '</select>';
                 if ( $council_id ) {
                         echo '<span class="badge bg-info me-2">' . esc_html__( 'Reports:', 'council-debt-counters' ) . ' ' . intval( $reports ) . '</span>';
+                        $view_link = get_permalink( $council_id );
+                        echo '<a href="' . esc_url( $view_link ) . '" class="btn btn-sm btn-primary me-2" target="_blank" rel="noopener noreferrer">' . esc_html__( 'View Live Page', 'council-debt-counters' ) . '</a>';
+                        if ( defined( 'ELEMENTOR_VERSION' ) ) {
+                                $edit_link = admin_url( 'post.php?post=' . $council_id . '&action=elementor' );
+                                echo '<a href="' . esc_url( $edit_link ) . '" class="btn btn-sm btn-secondary me-2">' . esc_html__( 'Edit with Elementor', 'council-debt-counters' ) . '</a>';
+                        }
                         $del = wp_nonce_url( admin_url( 'admin.php?page=cdc-manage-councils&action=delete&post=' . $council_id ), 'cdc_delete_council_' . $council_id );
                         echo '<a href="' . esc_url( $del ) . '" class="btn btn-sm btn-danger" onclick="return confirm(\'' . esc_js( __( 'Delete this council?', 'council-debt-counters' ) ) . '\');">' . esc_html__( 'Trash Council', 'council-debt-counters' ) . '</a>';
                 }

@@ -26,13 +26,16 @@ class Council_Post_Type {
                 'name'          => __( 'Councils', 'council-debt-counters' ),
                 'singular_name' => __( 'Council', 'council-debt-counters' ),
             ],
-            'public'             => false,
+            'public'             => true,
             'show_ui'            => true,
             'show_in_menu'       => false,
             'show_in_admin_bar'  => false,
             'capability_type'    => 'post',
             'supports'           => [ 'title' ],
-            'publicly_queryable' => false,
+            'publicly_queryable' => true,
+            'show_in_rest'       => true,
+            'has_archive'        => true,
+            'rewrite'            => [ 'slug' => 'council' ],
         ] );
 
         register_post_status( 'under_review', [
