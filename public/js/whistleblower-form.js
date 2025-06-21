@@ -4,6 +4,10 @@
     if(!form)return;
     form.addEventListener('submit',e=>{
       e.preventDefault();
+      const button=form.querySelector('button[type="submit"]');
+      const original=button.innerHTML;
+      button.disabled=true;
+      button.innerHTML='<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>'+cdcWhistle.submitting;
       const handle=token=>{
         const data=new FormData(form);
         if(token){data.set('g-recaptcha-response',token);}
@@ -25,6 +29,10 @@
             const box=form.nextElementSibling;
             box.className='alert alert-danger cdc-response mt-3';
             box.textContent=cdcWhistle.failure;
+          })
+          .finally(()=>{
+            button.disabled=false;
+            button.innerHTML=original;
           });
       };
       if(cdcWhistle.siteKey){
