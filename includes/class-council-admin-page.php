@@ -93,10 +93,15 @@ class Council_Admin_Page {
             }
         }
 
+        $status = sanitize_key( $_POST['post_status'] ?? 'publish' );
+        if ( ! in_array( $status, [ 'publish', 'draft', 'under_review' ], true ) ) {
+            $status = 'publish';
+        }
+
         if ( $post_id ) {
-            wp_update_post( [ 'ID' => $post_id, 'post_title' => $title ] );
+            wp_update_post( [ 'ID' => $post_id, 'post_title' => $title, 'post_status' => $status ] );
         } else {
-            $post_id = wp_insert_post( [ 'post_type' => 'council', 'post_status' => 'publish', 'post_title' => $title ] );
+            $post_id = wp_insert_post( [ 'post_type' => 'council', 'post_status' => $status, 'post_title' => $title ] );
         }
 
         foreach ( $fields as $field ) {

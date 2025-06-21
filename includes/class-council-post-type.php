@@ -34,6 +34,15 @@ class Council_Post_Type {
             'supports'           => [ 'title' ],
             'publicly_queryable' => false,
         ] );
+
+        register_post_status( 'under_review', [
+            'label'                     => _x( 'Under Review', 'post', 'council-debt-counters' ),
+            'public'                    => false,
+            'internal'                  => false,
+            'show_in_admin_all_list'    => true,
+            'show_in_admin_status_list' => true,
+            'label_count'               => _n_noop( 'Under Review (%s)', 'Under Review (%s)', 'council-debt-counters' ),
+        ] );
     }
 
     /**

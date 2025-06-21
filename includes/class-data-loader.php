@@ -66,7 +66,7 @@ class Data_Loader {
                 $post_id = wp_insert_post( [
                     'post_title'  => $name,
                     'post_type'   => 'council',
-                    'post_status' => 'publish',
+                    'post_status' => 'draft',
                 ] );
                 if ( is_wp_error( $post_id ) ) {
                     Error_Logger::log( 'Failed to insert council: ' . $name );
