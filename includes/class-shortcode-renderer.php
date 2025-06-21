@@ -613,9 +613,9 @@ endforeach;
                                 case 'debt_per_resident':
                                         $value = ( $population > 0 ) ? $debt / $population : null;
                                         break;
-                                case 'debt_to_reserves_ratio':
-                                        $value = ( $reserves > 0 ) ? $debt / $reserves : null;
-                                        break;
+                               case 'reserves_to_debt_ratio':
+                                       $value = ( $debt > 0 ) ? $reserves / $debt : null;
+                                       break;
                                 case 'biggest_deficit':
                                         $value = $deficit !== 0 ? $deficit : ( $spending - $income );
                                         break;
@@ -643,10 +643,10 @@ endforeach;
                         );
                 }
 
-                $desc = true;
-                if ( 'lowest_reserves' === $type ) {
-                        $desc = false;
-                }
+               $desc = true;
+               if ( in_array( $type, array( 'lowest_reserves', 'reserves_to_debt_ratio' ), true ) ) {
+                       $desc = false;
+               }
 
                 usort(
                         $rows,
@@ -671,7 +671,7 @@ endforeach;
                 if ( 'list' === $format ) {
                         echo '<ul class="list-group">';
                         foreach ( $rows as $row ) {
-                                $label = ( in_array( $type, array( 'debt_to_reserves_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
+                               $label = ( in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
                                 echo '<li class="list-group-item d-flex justify-content-between align-items-center">';
                                 echo esc_html( $row['name'] );
                                 echo '<span class="badge bg-secondary">' . esc_html( $label ) . '</span>';
@@ -689,7 +689,7 @@ endforeach;
                         }
                         echo '</tr></thead><tbody>';
                         foreach ( $rows as $row ) {
-                                $label = ( in_array( $type, array( 'debt_to_reserves_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
+                               $label = ( in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
                                 echo '<tr><td>' . esc_html( $row['name'] ) . '</td><td>' . esc_html( $label ) . '</td>';
                                 if ( $with_link ) {
                                         echo '<td><a href="' . esc_url( get_permalink( $row['id'] ) ) . '">' . esc_html__( 'View details', 'council-debt-counters' ) . '</a></td>';
