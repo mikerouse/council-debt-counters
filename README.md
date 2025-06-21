@@ -36,6 +36,27 @@ These counters animate just like the per‑council versions but sum the selected
 
 The total debt counter also displays how many councils are included in the calculation.
 
+### Leaderboards
+
+Display ranked tables or lists of councils with `[cdc_leaderboard]`. Example:
+
+```
+[cdc_leaderboard type="debt_per_resident" limit="5" format="table" link="1"]
+```
+
+Available `type` options include `highest_debt`, `debt_per_resident`,
+`debt_to_reserves_ratio`, `biggest_deficit`, `lowest_reserves`,
+`highest_spending_per_resident` and `highest_interest_paid`. The `limit`
+parameter controls how many rows are shown, `format` can be `table` or `list`,
+and setting `link="1"` adds a View details link for each council.
+
+### Social sharing
+
+Add `[cdc_share_buttons]` on a single council page to show buttons for sharing
+that council’s stats on X, WhatsApp or Facebook. The shortcode automatically
+uses the selected council’s name, relevant figure and permalink so each share
+promotes that specific page rather than the site in general.
+
 
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.

@@ -344,7 +344,7 @@ endforeach;
                 $name     = get_the_title( $id );
                 $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
                 $debt      = (float) Custom_Fields::get_value( $id, 'total_debt' );
-                $permalink = get_permalink();
+                $permalink = get_permalink( $id );
 
                 if ( $interest > 0 ) {
                         $message = sprintf( __( '%1$s spends £%2$s a year on debt interest. Find out more:', 'council-debt-counters' ), $name, number_format_i18n( $interest, 1 ) );
