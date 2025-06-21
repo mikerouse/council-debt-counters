@@ -22,12 +22,15 @@ if ( 'edit' === $req_action ) {
                 } else {
                         echo '<h1>' . esc_html__( 'Add Council', 'council-debt-counters' ) . '</h1>';
                 }
-                $assigned = $council_id ? intval( get_post_meta( $council_id, 'assigned_user', true ) ) : 0;
-                $users = get_users( [ 'fields' => [ 'ID', 'display_name' ] ] );
-                $reports = $council_id ? count( get_posts( [ 'post_type' => \CouncilDebtCounters\Whistleblower_Form::CPT, 'numberposts' => -1, 'post_status' => 'private', 'meta_key' => 'council_id', 'meta_value' => $council_id ] ) ) : 0;
+                $assigned       = $council_id ? intval( get_post_meta( $council_id, 'assigned_user', true ) ) : 0;
+                $current_status = $council_id ? get_post_status( $council_id ) : 'draft';
+                $users          = get_users( [ 'fields' => [ 'ID', 'display_name' ] ] );
+                $reports        = $council_id ? count( get_posts( [ 'post_type' => \CouncilDebtCounters\Whistleblower_Form::CPT, 'numberposts' => -1, 'post_status' => 'private', 'meta_key' => 'council_id', 'meta_value' => $council_id ] ) ) : 0;
                 echo '<div id="cdc-toolbar" class="mb-3 d-flex justify-content-between align-items-center">';
-                echo '<div id="cdc-status-msg"></div>';
-                echo '<div class="d-flex align-items-center">';
+                $msg = isset( $_GET['updated'] ) ? '<div class="alert alert-success mb-0">' . esc_html__( 'Update successful.', 'council-debt-counters' ) . '</div>' : '';
+                echo '<div id="cdc-status-msg">' . $msg . '</div>';
+                echo '<div class="d-flex align-items-center flex-nowrap">';
+                echo '<select id="cdc-post-status" class="form-select me-2"><option value="publish"' . selected( $current_status, 'publish', false ) . '>' . esc_html__( 'Active', 'council-debt-counters' ) . '</option><option value="draft"' . selected( $current_status, 'draft', false ) . '>' . esc_html__( 'Draft', 'council-debt-counters' ) . '</option><option value="under_review"' . selected( $current_status, 'under_review', false ) . '>' . esc_html__( 'Under Review', 'council-debt-counters' ) . '</option></select>';
                 echo '<select name="assigned_user" class="form-select me-2"><option value="0">' . esc_html__( 'Unassigned', 'council-debt-counters' ) . '</option>';
                 foreach ( $users as $u ) {
                         printf( '<option value="%d"%s>%s</option>', $u->ID, selected( $assigned, $u->ID, false ), esc_html( $u->display_name ) );
@@ -148,17 +151,6 @@ if ( 'edit' === $req_action ) {
 						</td>
 					</tr>
 				<?php endforeach; ?>
-				<tr>
-					<th scope="row"><label for="cdc-post-status"><?php esc_html_e( 'Status', 'council-debt-counters' ); ?></label></th>
-					<td>
-												<?php $current_status = $council_id ? get_post_status( $council_id ) : 'draft'; ?>
-						<select id="cdc-post-status" name="post_status">
-							<option value="publish" <?php selected( $current_status, 'publish' ); ?>><?php esc_html_e( 'Active', 'council-debt-counters' ); ?></option>
-							<option value="draft" <?php selected( $current_status, 'draft' ); ?>><?php esc_html_e( 'Draft', 'council-debt-counters' ); ?></option>
-							<option value="under_review" <?php selected( $current_status, 'under_review' ); ?>><?php esc_html_e( 'Under Review', 'council-debt-counters' ); ?></option>
-						</select>
-					</td>
-				</tr>
 				</table>
 			</div>
 			<?php
@@ -240,19 +232,20 @@ if ( 'edit' === $req_action ) {
 							<?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
 							<?php if ( ! empty( $orphans ) ) : ?>
 								<p class="description mt-2"><?php esc_html_e( 'Or attach an existing document', 'council-debt-counters' ); ?></p>
-								<select name="statement_of_accounts_existing">
+                                                                <select name="statement_of_accounts_existing">
 									<option value=""><?php esc_html_e( 'Select document', 'council-debt-counters' ); ?></option>
 									<?php foreach ( $orphans as $doc ) : ?>
 										<option value="<?php echo esc_attr( $doc->filename ); ?>"><?php echo esc_html( $doc->filename ); ?></option>
 									<?php endforeach; ?>
-								</select>
-							<?php endif; ?>
-						</td>
-					</tr>
-				</table>
+                                                                </select>
+                                                                <button type="button" id="cdc-upload-doc" class="button button-secondary mt-2"><?php esc_html_e( 'Add Document', 'council-debt-counters' ); ?></button>
+                                                        <?php endif; ?>
+                                                </td>
+                                        </tr>
+                                </table>
 				<?php if ( ! empty( $docs ) ) : ?>
 				<h2><?php esc_html_e( 'Existing Documents', 'council-debt-counters' ); ?></h2>
-				<table class="widefat">
+                                <table id="cdc-docs-table" class="widefat">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'File', 'council-debt-counters' ); ?></th>

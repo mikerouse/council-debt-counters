@@ -22,6 +22,65 @@
         var form = actionInput.closest('form');
         if (!form) return;
 
+        var statusSelect = document.getElementById('cdc-post-status');
+        var assignee = document.querySelector('select[name="assigned_user"]');
+        var uploadBtn = document.getElementById('cdc-upload-doc');
+        var msgArea = document.getElementById('cdc-status-msg');
+        function flash(msg){
+            if(!msgArea) return;
+            msgArea.innerHTML = '<div class="alert alert-success mb-0">'+msg+'</div>';
+            setTimeout(function(){ msgArea.innerHTML = ''; },3000);
+        }
+        function sendToolbar(data){
+            data.append('action','cdc_update_toolbar');
+            data.append('post_id', cdcToolbarData.id);
+            data.append('nonce', cdcToolbarData.nonce);
+            fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                .then(function(r){return r.json();})
+                .then(function(res){ if(res.success && res.data && res.data.message){ flash(res.data.message); } });
+        }
+        if(statusSelect){
+            statusSelect.addEventListener('change', function(){
+                var d=new FormData(); d.append('post_status', statusSelect.value); sendToolbar(d);
+            });
+        }
+        if(assignee){
+            assignee.addEventListener('change', function(){
+                var d=new FormData(); d.append('assigned_user', assignee.value); sendToolbar(d);
+            });
+        }
+        if(uploadBtn){
+            uploadBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                var file=document.getElementById('cdc-soa');
+                var url=form.querySelector('input[name="statement_of_accounts_url"]');
+                var year=document.getElementById('cdc-soa-year');
+                var existing=form.querySelector('select[name="statement_of_accounts_existing"]');
+                var d=new FormData();
+                d.append('action','cdc_upload_doc');
+                d.append('nonce', cdcToolbarData.nonce);
+                d.append('council_id', cdcToolbarData.id);
+                if(year) d.append('year', year.value);
+                if(file && file.files.length){ d.append('file', file.files[0]); }
+                if(url && url.value){ d.append('url', url.value); }
+                if(existing && existing.value){ d.append('existing', existing.value); }
+                fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:d})
+                    .then(function(r){return r.json();})
+                    .then(function(res){
+                        if(res.success && res.data && res.data.html){
+                            var table=document.getElementById('cdc-docs-table');
+                            if(table){
+                                var tbody=table.querySelector('tbody');
+                                tbody.insertAdjacentHTML('beforeend', res.data.html);
+                            }
+                            flash(res.data.message || 'Document added.');
+                        } else if(res.data && res.data.message){
+                            alert(res.data.message);
+                        }
+                    });
+            });
+        }
+
         function validateField(field){
             if(!field.required) return;
             if(field.value.trim()===''){ field.classList.add('is-invalid'); }
@@ -108,10 +167,11 @@
                 document.body.appendChild(overlay);
             }
         });
-        document.querySelectorAll(".cdc-extract-ai").forEach(function(btn){
-            btn.addEventListener("click", function(e){
-                e.preventDefault();
-                var docId = btn.value;
+        document.addEventListener('click', function(e){
+            var target = e.target.closest('.cdc-extract-ai');
+            if(!target) return;
+            e.preventDefault();
+            var docId = target.value;
                 var overlay = document.createElement("div");
                 overlay.id = "cdc-ai-overlay";
                 overlay.innerHTML = "<span class=\"spinner is-active\"></span><div class=\"progress w-75 mt-2\" style=\"height:8px\"><div class=\"progress-bar\" style=\"width:0%\"></div></div><p></p>";
