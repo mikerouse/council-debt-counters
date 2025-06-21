@@ -171,19 +171,19 @@ class Shortcode_Renderer {
 		);
 	}
 
-	public static function render_counter( $atts ) {
-		$atts = shortcode_atts(
-			array(
-				'id'   => 0,
-				'type' => 'debt',
-			),
-			$atts
-		);
-		$id   = intval( $atts['id'] );
-		$type = sanitize_key( $atts['type'] );
-		if ( 0 === $id ) {
-			return '';
-		}
+       public static function render_counter( $atts ) {
+               $atts = shortcode_atts(
+                       array(
+                               'id'   => 0,
+                               'type' => 'debt',
+                       ),
+                       $atts
+               );
+               $id   = self::get_council_id_from_atts( $atts );
+               $type = sanitize_key( $atts['type'] );
+               if ( 0 === $id ) {
+                       return '';
+               }
 		if ( '' !== $type && 'debt' !== $type ) {
 			// Delegate to the custom counter handler for non-debt types
 			return self::render_custom_counter( $atts );
@@ -410,17 +410,8 @@ endforeach;
                 $message = Custom_Fields::get_value( $id, 'status_message' );
                 $type    = Custom_Fields::get_value( $id, 'status_message_type' );
 
-                if ( '' === $message ) {
-                        $status = get_post_status( $id );
-                        if ( 'draft' === $status ) {
-                                $message = __( 'This council entry is in draft.', 'council-debt-counters' );
-                                $type    = 'warning';
-                        } elseif ( 'under_review' === $status ) {
-                                $message = __( 'This council entry is pending review.', 'council-debt-counters' );
-                                $type    = 'info';
-                        } else {
-                                return '';
-                        }
+                if ( ! is_string( $message ) || '' === trim( $message ) ) {
+                        return '';
                 }
 
                 $type = in_array( $type, array( 'info', 'warning', 'danger' ), true ) ? $type : 'info';
