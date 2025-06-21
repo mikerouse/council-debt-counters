@@ -45,6 +45,7 @@ class OpenAI_Helper {
     public static function init() {
         add_action( 'wp_ajax_cdc_check_openai_key', [ __CLASS__, 'ajax_check_key' ] );
         add_action( 'wp_ajax_cdc_ai_field', [ __CLASS__, 'ajax_ai_field' ] );
+        add_action( 'wp_ajax_cdc_ai_clarify_field', [ __CLASS__, 'ajax_clarify_field' ] );
     }
 
     public static function query( string $prompt, string $model = '' ) {
@@ -157,13 +158,28 @@ class OpenAI_Helper {
         wp_send_json_error( [ 'message' => $msg ] );
     }
 
-    private static function ask_field_value( string $council, string $field ) {
-        Error_Logger::log_info( 'AI field request: ' . $field . ' for ' . $council );
+    private static function clarify_field_prompt( string $council, string $field ) {
         $prompt = sprintf(
-            "Provide the latest figure for %s for %s council in pounds. Respond only with JSON: {\"value\":number,\"source\":\"URL\"}",
+            'We want to retrieve a single numeric figure for "%s" relating to %s council. Suggest a short question to ask an AI so it returns a number and a source URL. Reply only with the question.',
             $field,
             $council
         );
+        $response = self::query( $prompt );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+        return trim( is_array( $response ) ? $response['content'] : $response );
+    }
+
+    private static function ask_field_value( string $council, string $field, string $prompt = '' ) {
+        Error_Logger::log_info( 'AI field request: ' . $field . ' for ' . $council );
+        if ( empty( $prompt ) ) {
+            $prompt = sprintf(
+                'What is the most recent figure for %s for %s council in pounds? Respond only with JSON: {"value":number,"source":"URL"}. Prefer sources from .gov.uk domains.',
+                $field,
+                $council
+            );
+        }
         $response = self::query( $prompt );
         if ( is_wp_error( $response ) ) {
             Error_Logger::log_error( 'AI field error: ' . $response->get_error_message() );
@@ -179,6 +195,31 @@ class OpenAI_Helper {
 
         Error_Logger::log_error( 'AI field parse error: ' . $content );
         return new \WP_Error( 'invalid_ai', __( 'Unexpected AI response.', 'council-debt-counters' ) );
+    }
+
+    public static function ajax_clarify_field() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'council-debt-counters' ) ], 403 );
+        }
+        $field = sanitize_text_field( $_POST['field'] ?? '' );
+        $cid   = intval( $_POST['council_id'] ?? 0 );
+        $name  = sanitize_text_field( $_POST['council_name'] ?? '' );
+        if ( ! $name && $cid ) {
+            $name = get_the_title( $cid );
+        }
+        if ( ! $name || ! $field ) {
+            wp_send_json_error( [ 'message' => __( 'Missing data.', 'council-debt-counters' ) ] );
+        }
+        $label = $field;
+        $f = Custom_Fields::get_field_by_name( $field );
+        if ( $f ) {
+            $label = $f->label;
+        }
+        $prompt = self::clarify_field_prompt( $name, $label );
+        if ( is_wp_error( $prompt ) ) {
+            wp_send_json_error( [ 'message' => $prompt->get_error_message() ] );
+        }
+        wp_send_json_success( [ 'prompt' => $prompt ] );
     }
 
     public static function ajax_ai_field() {
@@ -202,7 +243,8 @@ class OpenAI_Helper {
         if ( $f ) {
             $label = $f->label;
         }
-        $result = self::ask_field_value( $name, $label );
+        $user_prompt = sanitize_text_field( $_POST['prompt'] ?? '' );
+        $result = self::ask_field_value( $name, $label, $user_prompt );
         if ( is_wp_error( $result ) ) {
             wp_send_json_error( [ 'message' => $result->get_error_message() ] );
         }

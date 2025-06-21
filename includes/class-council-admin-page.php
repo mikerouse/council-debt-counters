@@ -72,7 +72,7 @@ class Council_Admin_Page {
             'cdc-council-form',
             plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
             [],
-            '0.1.1',
+            '0.1.2',
             true
         );
         wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
@@ -88,6 +88,7 @@ class Council_Admin_Page {
             ],
             'error' => __( 'Extraction failed', 'council-debt-counters' ),
             'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
+            'editPrompt' => __( 'Edit the question to send to AI', 'council-debt-counters' ),
         ] );
         $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
         wp_localize_script( 'cdc-council-form', 'cdcToolbarData', [

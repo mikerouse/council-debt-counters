@@ -234,26 +234,42 @@
         function removeOverlay(ov){ if(ov&&ov.parentNode){ ov.parentNode.removeChild(ov); } }
 
         async function askField(field){
-            var overlay=aiOverlay('Asking AI…');
             var name=document.querySelector('[data-cdc-field="council_name"]');
             var data=new FormData();
-            data.append('action','cdc_ai_field');
+            data.append('action','cdc_ai_clarify_field');
             data.append('field',field);
             data.append('council_id', cdcToolbarData.id);
             data.append('council_name', name?name.value:'');
-            var res=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data}).then(function(r){return r.json();});
+            var overlay=aiOverlay('Preparing prompt…');
+            var res=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data}).then(r=>r.json());
             removeOverlay(overlay);
-            if(res.success && res.data){
+            if(!res.success||!res.data||!res.data.prompt){
+                alert(res.data&&res.data.message?res.data.message:cdcAiMessages.error);
+                return;
+            }
+            var userPrompt=window.prompt(cdcAiMessages.editPrompt,res.data.prompt);
+            if(userPrompt===null) return;
+
+            var overlay2=aiOverlay('Asking AI…');
+            var data2=new FormData();
+            data2.append('action','cdc_ai_field');
+            data2.append('field',field);
+            data2.append('council_id', cdcToolbarData.id);
+            data2.append('council_name', name?name.value:'');
+            data2.append('prompt', userPrompt);
+            var res2=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data2}).then(r=>r.json());
+            removeOverlay(overlay2);
+            if(res2.success && res2.data){
                 var input=document.querySelector('[data-cdc-field="'+field+'"]');
                 if(input){
-                    input.value=res.data.value || '';
+                    input.value=res2.data.value || '';
                     input.dispatchEvent(new Event('input'));
                     var info=input.parentElement.querySelector('.cdc-ai-source');
                     if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
-                    info.innerHTML=res.data.source ? 'Source: <a href="'+res.data.source+'" target="_blank" rel="noopener">'+res.data.source+'</a>' : '';
+                    info.innerHTML=res2.data.source ? 'Source: <a href="'+res2.data.source+'" target="_blank" rel="noopener">'+res2.data.source+'</a>' : '';
                 }
-            }else if(res.data && res.data.message){
-                alert(res.data.message);
+            }else if(res2.data && res2.data.message){
+                alert(res2.data.message);
             }
         }
 
