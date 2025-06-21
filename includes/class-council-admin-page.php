@@ -65,6 +65,7 @@ class Council_Admin_Page {
         );
         wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
         wp_enqueue_style( 'cdc-upload-progress', plugins_url( 'admin/css/upload-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_enqueue_style( 'cdc-toolbar', plugins_url( 'admin/css/toolbar.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
         wp_localize_script( 'cdc-council-form', 'cdcAiMessages', [
             'steps' => [
                 __( 'Checking OpenAI API key…', 'council-debt-counters' ),

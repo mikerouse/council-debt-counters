@@ -37,6 +37,7 @@ if ( 'edit' === $req_action ) {
                 }
                 echo '</select>';
                 if ( $council_id ) {
+                        echo '<span class="badge bg-secondary me-2">ID: ' . intval( $council_id ) . '</span>';
                         echo '<span class="badge bg-info me-2">' . esc_html__( 'Reports:', 'council-debt-counters' ) . ' ' . intval( $reports ) . '</span>';
                         $view_link = get_permalink( $council_id );
                         echo '<a href="' . esc_url( $view_link ) . '" class="btn btn-sm btn-primary me-2" target="_blank" rel="noopener noreferrer">' . esc_html__( 'View Live Page', 'council-debt-counters' ) . '</a>';

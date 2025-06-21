@@ -171,19 +171,19 @@ class Shortcode_Renderer {
 		);
 	}
 
-	public static function render_counter( $atts ) {
-		$atts = shortcode_atts(
-			array(
-				'id'   => 0,
-				'type' => 'debt',
-			),
-			$atts
-		);
-		$id   = intval( $atts['id'] );
-		$type = sanitize_key( $atts['type'] );
-		if ( 0 === $id ) {
-			return '';
-		}
+       public static function render_counter( $atts ) {
+               $atts = shortcode_atts(
+                       array(
+                               'id'   => 0,
+                               'type' => 'debt',
+                       ),
+                       $atts
+               );
+               $id   = self::get_council_id_from_atts( $atts );
+               $type = sanitize_key( $atts['type'] );
+               if ( 0 === $id ) {
+                       return '';
+               }
 		if ( '' !== $type && 'debt' !== $type ) {
 			// Delegate to the custom counter handler for non-debt types
 			return self::render_custom_counter( $atts );
