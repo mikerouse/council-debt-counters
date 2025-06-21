@@ -3,6 +3,8 @@
 
     const LOG_LEVELS = { quiet: 0, standard: 1, verbose: 2 };
 
+    debugLog('counter-animations script loaded', null, 'verbose');
+
     function getCurrentLogLevel() {
         if (window.CDC_LOGGER && window.CDC_LOGGER.logLevel) {
             return window.CDC_LOGGER.logLevel;
@@ -52,8 +54,20 @@
     }
 
     function init(el){
+        if (el.dataset.cdcCountupInitialised) {
+            debugLog('Skipping already-initialised counter', {id: el.id}, 'verbose');
+            return;
+        }
+        el.dataset.cdcCountupInitialised = '1';
+        el.style.visibility = 'hidden';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+
         const CountUpClass = getCountUpClass();
-        if (!CountUpClass) return;
+        if (!CountUpClass) {
+            debugLog('CountUp not available', null, 'standard');
+            return;
+        }
 
         const target  = parseFloat(el.dataset.target) || 0;
         let start     = parseFloat(el.dataset.start)  || 0;
@@ -66,7 +80,8 @@
         const counter = new CountUpClass(el, target, {
             startVal: start,
             decimalPlaces: decimals,
-            prefix: prefix
+            prefix: prefix,
+            duration: 2
         });
 
         if (counter.error) {
@@ -74,20 +89,60 @@
             return;
         }
 
+        el.style.visibility = 'visible';
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        });
+
         counter.start(() => {
-            debugLog('Counter started', {target});
-            if (growth !== 0) {
-                setInterval(() => {
-                    start += growth;
-                    counter.update(start);
-                    debugLog('Counter tick', {value: start}, 'verbose');
-                }, 1000);
+            debugLog('Counter animation complete', {target}, 'verbose');
+        });
+
+        if (growth !== 0) {
+            setInterval(() => {
+                start += growth;
+                counter.update(start);
+                debugLog('Counter tick', {value: start}, 'verbose');
+            }, 1000);
+        }
+    }
+
+    function observeCounters(context){
+        context.querySelectorAll('.cdc-counter').forEach(el => {
+            if (!el.dataset.cdcCountupInitialised){
+                intersection.observe(el);
             }
         });
     }
 
+    const intersection = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting){
+                debugLog('Counter visible', {id: entry.target.id}, 'verbose');
+                init(entry.target);
+                intersection.unobserve(entry.target);
+            }
+        });
+    });
+
+    const mutation = new MutationObserver(mutations => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType === 1){
+                    if (node.classList && node.classList.contains('cdc-counter')){
+                        observeCounters(node.parentNode || document);
+                    }
+                    const nested = node.querySelectorAll ? node.querySelectorAll('.cdc-counter') : [];
+                    nested.forEach(el => observeCounters(el.parentNode || document));
+                }
+            });
+        });
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
-        debugLog('DOM loaded - launching counters');
-        document.querySelectorAll('.cdc-counter').forEach(init);
+        debugLog('DOM loaded - setting up observers');
+        observeCounters(document);
+        mutation.observe(document.body, {childList: true, subtree: true});
     });
 })();

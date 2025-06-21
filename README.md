@@ -17,7 +17,7 @@ Councils can be added, edited, and deleted from the **Debt Counters → Councils
 
 Currently the plugin includes an admin page with instructions for uploading starting debt figures via CSV. Additional functionality such as data uploading and counter rendering will be added in future versions.
 
-The **Troubleshooting** submenu lets you view error logs and choose how much JavaScript debugging information appears in the browser console. Available levels are **Verbose**, **Standard**, and **Quiet**.
+The **Troubleshooting** submenu lets you view error logs and choose how much JavaScript debugging information appears in the browser console. Available levels are **Verbose**, **Standard**, and **Quiet**. Counters now log more details when set to Verbose, which can help diagnose issues with animation or data loading. Counters only initialise once when they become visible thanks to an `IntersectionObserver`, preventing duplicate animations if page builders reinsert the HTML.
 
 You can also pick a Google Font and weight for the counters on the Settings page. The font defaults to **Oswald** with a weight of **600**, but you can select other styles to match your theme.
 
@@ -33,6 +33,9 @@ Use `[council_counter]` to display figures for a specific council. For overall f
 - `[total_custom_counter type="reserves|spending|income|deficit|interest|consultancy"]`
 
 These counters animate just like the per‑council versions but sum the selected field for all councils.
+
+The total debt counter also displays how many councils are included in the calculation.
+
 
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.

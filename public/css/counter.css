@@ -1,2 +1,9 @@
 .cdc-counter-wrapper { text-align:center; margin-bottom:1rem; }
-.cdc-counter { letter-spacing:2px; font-size:1em; }
+.cdc-counter {
+    letter-spacing: 2px;
+    font-size: 1em;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
