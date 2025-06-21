@@ -466,6 +466,22 @@ class Docs_Manager {
         $ext = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
         Error_Logger::log_debug( 'extract_text extension ' . $ext );
         if ( $ext === 'pdf' ) {
+            // Use the system pdftotext binary if available as it tends to be
+            // more reliable with a wide range of PDF files.
+            if ( function_exists( 'shell_exec' ) ) {
+                $bin_check = shell_exec( 'command -v pdftotext' );
+                if ( ! empty( $bin_check ) ) {
+                    $cmd    = 'pdftotext ' . escapeshellarg( $file ) . ' -';
+                    $output = shell_exec( $cmd );
+                    if ( ! empty( $output ) ) {
+                        Error_Logger::log_debug( 'pdftotext used for extraction' );
+                        return $output;
+                    }
+                    Error_Logger::log_error( 'pdftotext returned no output for ' . $file );
+                }
+            }
+
+            // Fallback to the PHP parser if pdftotext is unavailable or failed.
             if ( class_exists( '\\Smalot\\PdfParser\\Parser' ) ) {
                 try {
                     $parser = new \Smalot\PdfParser\Parser();
@@ -475,19 +491,7 @@ class Docs_Manager {
                     Error_Logger::log_error( 'PDF parse error: ' . $e->getMessage() );
                 }
             }
-            // Fallback to pdftotext if available.
-            if ( function_exists( 'shell_exec' ) ) {
-                $bin_check = shell_exec( 'command -v pdftotext' );
-                if ( ! empty( $bin_check ) ) {
-                    $cmd    = 'pdftotext ' . escapeshellarg( $file ) . ' -';
-                $output = shell_exec( $cmd );
-                if ( ! empty( $output ) ) {
-                    Error_Logger::log_debug( 'pdftotext used for extraction' );
-                    return $output;
-                }
-                Error_Logger::log_error( 'pdftotext returned no output for ' . $file );
-                }
-            }
+
             return '';
         }
         if ( $ext === 'csv' || $ext === 'txt' ) {
