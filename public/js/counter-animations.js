@@ -89,19 +89,23 @@
             return;
         }
 
-        counter.start(() => {
-            debugLog('Counter started', {target});
-            el.style.visibility = 'visible';
+        el.style.visibility = 'visible';
+        requestAnimationFrame(() => {
             el.style.opacity = '1';
             el.style.transform = 'translateY(0)';
-            if (growth !== 0) {
-                setInterval(() => {
-                    start += growth;
-                    counter.update(start);
-                    debugLog('Counter tick', {value: start}, 'verbose');
-                }, 1000);
-            }
         });
+
+        counter.start(() => {
+            debugLog('Counter animation complete', {target}, 'verbose');
+        });
+
+        if (growth !== 0) {
+            setInterval(() => {
+                start += growth;
+                counter.update(start);
+                debugLog('Counter tick', {value: start}, 'verbose');
+            }, 1000);
+        }
     }
 
     function observeCounters(context){
