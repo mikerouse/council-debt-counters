@@ -21,6 +21,19 @@ The **Troubleshooting** submenu lets you view error logs and choose how much Jav
 
 You can also pick a Google Font and weight for the counters on the Settings page. The font defaults to **Oswald** with a weight of **600**, but you can select other styles to match your theme.
 
+## Shortcodes
+
+Use `[council_counter]` to display figures for a specific council. For overall figures across every council in the database you can use the following shortcodes:
+
+- `[total_debt_counter]`
+- `[total_spending_counter]`
+- `[total_deficit_counter]`
+- `[total_interest_counter]`
+- `[total_revenue_counter]`
+- `[total_custom_counter type="reserves|spending|income|deficit|interest|consultancy"]`
+
+These counters animate just like the per‑council versions but sum the selected field for all councils.
+
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.
 2. Activate **Council Debt Counters** in the WordPress admin.
