@@ -45,7 +45,7 @@ Display ranked tables or lists of councils with `[cdc_leaderboard]`. Example:
 ```
 
 Available `type` options include `highest_debt`, `debt_per_resident`,
-`debt_to_reserves_ratio`, `biggest_deficit`, `lowest_reserves`,
+`reserves_to_debt_ratio`, `biggest_deficit`, `lowest_reserves`,
 `highest_spending_per_resident` and `highest_interest_paid`. The `limit`
 parameter controls how many rows are shown, `format` can be `table` or `list`,
 and setting `link="1"` adds a View details link for each council.
