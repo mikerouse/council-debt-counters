@@ -82,15 +82,19 @@ class Data_Loader {
 				}
 			}
 
-			foreach ( $data as $field => $value ) {
-				if ( 'council_name' === $field ) {
-					continue;
-				}
-				if ( '' === $value ) {
-					continue;
-				}
-				\CouncilDebtCounters\Custom_Fields::update_value( $post_id, $field, $value );
-			}
+                        foreach ( $data as $field => $value ) {
+                                if ( 'council_name' === $field ) {
+                                        continue;
+                                }
+                                if ( '' === $value ) {
+                                        continue;
+                                }
+                                $info = \CouncilDebtCounters\Custom_Fields::get_field_by_name( $field );
+                                if ( $info && in_array( $info->type, array( 'number', 'money' ), true ) ) {
+                                        $value = str_replace( ',', '', $value );
+                                }
+                                \CouncilDebtCounters\Custom_Fields::update_value( $post_id, $field, $value );
+                        }
 
 			if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
 				Council_Post_Type::calculate_total_debt( $post_id );
@@ -378,12 +382,16 @@ class Data_Loader {
 			}
 		}
 
-		foreach ( $row as $field => $value ) {
-			if ( 'council_name' === $field || $value === '' ) {
-				continue;
-			}
-			Custom_Fields::update_value( $post_id, $field, $value );
-		}
+                foreach ( $row as $field => $value ) {
+                        if ( 'council_name' === $field || $value === '' ) {
+                                continue;
+                        }
+                        $info = Custom_Fields::get_field_by_name( $field );
+                        if ( $info && in_array( $info->type, array( 'number', 'money' ), true ) ) {
+                                $value = str_replace( ',', '', $value );
+                        }
+                        Custom_Fields::update_value( $post_id, $field, $value );
+                }
 
 		if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
 			Council_Post_Type::calculate_total_debt( $post_id );

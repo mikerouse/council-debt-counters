@@ -59,10 +59,11 @@ class Council_Admin_Page {
             'cdc-council-form',
             plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
             [],
-            '0.1.0',
+            '0.1.1',
             true
         );
         wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_enqueue_style( 'cdc-upload-progress', plugins_url( 'admin/css/upload-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
         wp_localize_script( 'cdc-council-form', 'cdcAiMessages', [
             'steps' => [
                 __( 'Checking OpenAI API key…', 'council-debt-counters' ),
@@ -134,6 +135,10 @@ class Council_Admin_Page {
 
         if ( $soa_value ) {
             Custom_Fields::update_value( $post_id, 'statement_of_accounts', $soa_value );
+        }
+
+        if ( isset( $_POST['assigned_user'] ) ) {
+            update_post_meta( $post_id, 'assigned_user', intval( $_POST['assigned_user'] ) );
         }
 
         // Document edits or deletions from the Documents tab
