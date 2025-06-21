@@ -72,7 +72,7 @@ class Shortcode_Renderer {
 		?>
 		<div class="cdc-counter-wrapper text-center mb-3">
 			<div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
-				£<?php echo esc_html( number_format_i18n( $current, 2 ) ); ?>
+                                &hellip;
 			</div>
 			<?php if ( $with_details ) : ?>
 			<button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
@@ -221,7 +221,7 @@ class Shortcode_Renderer {
 		?>
 		<div class="cdc-counter-wrapper text-center mb-3">
 			<div id="<?php echo esc_attr( 'cdc-counter-' . $id . '-debt' ); ?>" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
-					£<?php echo esc_html( number_format_i18n( $start_value, 2 ) ); ?>
+                                &hellip;
 			</div>
 			<button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
 				<?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
@@ -346,7 +346,7 @@ endforeach;
                 ?>
                 <div class="cdc-counter-wrapper text-center mb-3">
                         <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
-                                £<?php echo esc_html( number_format_i18n( $current, 2 ) ); ?>
+                                &hellip;
                         </div>
                         <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                                 <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
@@ -440,7 +440,7 @@ endforeach;
                 ?>
                 <div class="cdc-counter-wrapper text-center mb-3">
                         <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
-                                £<?php echo esc_html( number_format_i18n( $start_value, 2 ) ); ?>
+                                &hellip;
                         </div>
                         <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                                 <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>

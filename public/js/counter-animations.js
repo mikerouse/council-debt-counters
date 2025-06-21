@@ -59,6 +59,7 @@
             return;
         }
         el.dataset.cdcCountupInitialised = '1';
+        el.style.visibility = 'hidden';
 
         const CountUpClass = getCountUpClass();
         if (!CountUpClass) {
@@ -77,7 +78,8 @@
         const counter = new CountUpClass(el, target, {
             startVal: start,
             decimalPlaces: decimals,
-            prefix: prefix
+            prefix: prefix,
+            duration: 2
         });
 
         if (counter.error) {
@@ -87,6 +89,7 @@
 
         counter.start(() => {
             debugLog('Counter started', {target});
+            el.style.visibility = 'visible';
             if (growth !== 0) {
                 setInterval(() => {
                     start += growth;
