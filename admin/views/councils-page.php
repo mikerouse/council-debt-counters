@@ -174,9 +174,23 @@ if ( 'edit' === $req_action ) {
 							<?php endif; ?>
 						</td>
 					</tr>
-				<?php endforeach; ?>
-				</table>
-			</div>
+                                <?php endforeach; ?>
+                                <tr>
+                                        <th scope="row"><?php esc_html_e( 'Sharing Image', 'council-debt-counters' ); ?></th>
+                                        <td>
+                                                <?php $share = $council_id ? absint( get_post_meta( $council_id, 'cdc_sharing_image', true ) ) : 0; ?>
+                                                <div id="cdc-sharing-image-preview">
+                                                        <?php if ( $share ) : ?>
+                                                                <?php echo wp_get_attachment_image( $share, array( 150, 150 ) ); ?>
+                                                        <?php endif; ?>
+                                                </div>
+                                                <input type="hidden" id="cdc-sharing-image" name="cdc_sharing_image" value="<?php echo esc_attr( $share ); ?>" data-url="<?php echo esc_url( $share ? wp_get_attachment_url( $share ) : '' ); ?>" />
+                                                <button type="button" class="button" id="cdc-sharing-image-button"><?php esc_html_e( 'Select Image', 'council-debt-counters' ); ?></button>
+                                                <button type="button" class="button" id="cdc-sharing-image-remove" <?php if ( ! $share ) echo 'style="display:none"'; ?>><?php esc_html_e( 'Remove', 'council-debt-counters' ); ?></button>
+                                        </td>
+                                </tr>
+                                </table>
+                        </div>
 			<?php
 			foreach ( $enabled as $tab_key ) :
 				if ( empty( $groups[ $tab_key ] ) ) {

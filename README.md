@@ -59,6 +59,10 @@ promotes that specific page rather than the site in general. When used outside
 of a council post you can pass an `id` (or `council_id`) attribute to specify
 which council’s data should be used.
 
+The social preview image defaults to the **Default Sharing Thumbnail** set on the
+plugin Settings page. You can override this per council by selecting a
+**Sharing Image** when editing a council.
+
 ### Status messages
 
 Use `[council_status]` to display any status message you have recorded for a council. The shortcode falls back to the post status (Draft or Under Review) if no custom message is set and outputs a Bootstrap alert with the chosen style.

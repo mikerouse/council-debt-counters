@@ -56,6 +56,18 @@ class Council_Admin_Page {
         wp_enqueue_style( 'cdc-counter-font', $font_url, [], null );
         wp_add_inline_style( 'cdc-counter-font', ".cdc-counter{font-family:'{$font}',sans-serif;font-weight:{$weight};}" );
         wp_enqueue_script( 'cdc-counter-animations' );
+        wp_enqueue_media();
+        wp_enqueue_script(
+            'cdc-media-select',
+            plugins_url( 'admin/js/media-select.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
+            [],
+            '0.1.0',
+            true
+        );
+        wp_localize_script( 'cdc-media-select', 'CDC_MEDIA_SELECT', [
+            'title'  => __( 'Select Image', 'council-debt-counters' ),
+            'button' => __( 'Use this image', 'council-debt-counters' ),
+        ] );
         wp_enqueue_script(
             'cdc-council-form',
             plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
@@ -145,6 +157,15 @@ class Council_Admin_Page {
 
         if ( isset( $_POST['assigned_user'] ) ) {
             update_post_meta( $post_id, 'assigned_user', intval( $_POST['assigned_user'] ) );
+        }
+
+        if ( isset( $_POST['cdc_sharing_image'] ) ) {
+            $img = absint( $_POST['cdc_sharing_image'] );
+            if ( $img ) {
+                update_post_meta( $post_id, 'cdc_sharing_image', $img );
+            } else {
+                delete_post_meta( $post_id, 'cdc_sharing_image' );
+            }
         }
 
         // Document edits or deletions from the Documents tab
