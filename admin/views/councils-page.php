@@ -232,19 +232,20 @@ if ( 'edit' === $req_action ) {
 							<?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
 							<?php if ( ! empty( $orphans ) ) : ?>
 								<p class="description mt-2"><?php esc_html_e( 'Or attach an existing document', 'council-debt-counters' ); ?></p>
-								<select name="statement_of_accounts_existing">
+                                                                <select name="statement_of_accounts_existing">
 									<option value=""><?php esc_html_e( 'Select document', 'council-debt-counters' ); ?></option>
 									<?php foreach ( $orphans as $doc ) : ?>
 										<option value="<?php echo esc_attr( $doc->filename ); ?>"><?php echo esc_html( $doc->filename ); ?></option>
 									<?php endforeach; ?>
-								</select>
-							<?php endif; ?>
-						</td>
-					</tr>
-				</table>
+                                                                </select>
+                                                                <button type="button" id="cdc-upload-doc" class="button button-secondary mt-2"><?php esc_html_e( 'Add Document', 'council-debt-counters' ); ?></button>
+                                                        <?php endif; ?>
+                                                </td>
+                                        </tr>
+                                </table>
 				<?php if ( ! empty( $docs ) ) : ?>
 				<h2><?php esc_html_e( 'Existing Documents', 'council-debt-counters' ); ?></h2>
-				<table class="widefat">
+                                <table id="cdc-docs-table" class="widefat">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'File', 'council-debt-counters' ); ?></th>
