@@ -78,7 +78,7 @@ class Whistleblower_Form {
                }
 
                $ip         = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
-               $limit_key   = 'cdc_waste_limit_' . md5( $ip );
+              $limit_key   = 'cdc_waste_limit_' . md5( $ip );
               $last_submit = get_transient( $limit_key );
               $cooldown    = MINUTE_IN_SECONDS * 5;
               Error_Logger::log_debug( 'Processing whistleblower submission from ' . $ip );
