@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Council Debt Counters
  * Description: Animated counters visualising council debt figures.
- * Version: 0.2.3
+ * Version: 0.2.4
  * Author: Mike Rouse using OpenAI Codex
  * Author URI: https://www.mikerouse.co.uk
  * Text Domain: council-debt-counters

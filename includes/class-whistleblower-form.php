@@ -40,15 +40,25 @@ class Whistleblower_Form {
 		 */
        private static function get_council_id_from_atts( array $atts ): int {
                $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+
                if ( 0 === $id && isset( $atts['council_id'] ) ) {
                        $id = intval( $atts['council_id'] );
                }
-               if ( ! $id && ! empty( $atts['council'] ) ) {
+
+               if ( 0 === $id && ! empty( $atts['council'] ) ) {
                        $post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
+                       if ( ! $post ) {
+                               $post = get_page_by_path( sanitize_title( $atts['council'] ), OBJECT, 'council' );
+                       }
                        if ( $post ) {
                                $id = $post->ID;
                        }
                }
+
+               if ( 0 === $id && is_singular( 'council' ) ) {
+                       $id = get_the_ID();
+               }
+
                return $id;
        }
 
