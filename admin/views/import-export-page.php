@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     </form>
     <p class="description">
         <?php esc_html_e( 'CSV/JSON must include a "council_name" column plus any custom field names.', 'council-debt-counters' ); ?>
+        <a href="<?php echo esc_url( plugins_url( 'samples/sample-councils.csv', dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" class="button button-small ms-2"><?php esc_html_e( 'Download Sample CSV', 'council-debt-counters' ); ?></a>
     </p>
     <h2><?php esc_html_e( 'Export Councils', 'council-debt-counters' ); ?></h2>
     <form method="post">

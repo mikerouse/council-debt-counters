@@ -13,6 +13,7 @@ class Custom_Fields {
     const DEFAULT_FIELDS = [
         ['name' => 'council_name', 'label' => 'Council Name', 'type' => 'text', 'required' => 1],
         ['name' => 'council_type', 'label' => 'Council Type', 'type' => 'text', 'required' => 0],
+        ['name' => 'council_location', 'label' => 'Council Location', 'type' => 'text', 'required' => 0],
         ['name' => 'population', 'label' => 'Population', 'type' => 'number', 'required' => 0],
         ['name' => 'households', 'label' => 'Households', 'type' => 'number', 'required' => 0],
         ['name' => 'current_liabilities', 'label' => 'Current Liabilities', 'type' => 'money', 'required' => 1],
