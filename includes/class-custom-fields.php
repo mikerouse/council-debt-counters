@@ -31,6 +31,9 @@ class Custom_Fields {
         ['name' => 'consultancy_spend', 'label' => 'Consultancy Spend', 'type' => 'money', 'required' => 0],
         ['name' => 'waste_report_count', 'label' => 'Waste Report Count', 'type' => 'number', 'required' => 0],
         ['name' => 'statement_of_accounts', 'label' => 'Statement of Accounts (PDF)', 'type' => 'text', 'required' => 0],
+        ['name' => 'financial_data_source_url', 'label' => 'Financial Data Source URL', 'type' => 'text', 'required' => 0],
+        ['name' => 'status_message', 'label' => 'Status Message', 'type' => 'text', 'required' => 0],
+        ['name' => 'status_message_type', 'label' => 'Status Message Type', 'type' => 'text', 'required' => 0],
     ];
 
     /**
@@ -118,7 +121,9 @@ class Custom_Fields {
      * Register custom meta keys for REST and sanitisation.
      */
     public static function register_meta_fields() {
-        foreach ( self::DEFAULT_FIELDS as $field ) {
+        $fields = self::get_fields();
+        foreach ( $fields as $field ) {
+            $field = (array) $field;
             register_meta( 'post', $field['name'], [
                 'object_subtype' => 'council',
                 'type'           => in_array( $field['type'], [ 'number', 'money' ], true ) ? 'number' : 'string',

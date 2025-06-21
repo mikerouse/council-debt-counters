@@ -11,7 +11,7 @@ The plugin will automatically create the necessary database tables on activation
 If you provide an OpenAI API key you can let the plugin attempt to pull key figures from uploaded Statement of Accounts documents. Select the desired model under **Debt Counters → Settings**; this option is ignored unless an API key has been entered on the **Licences & Addons** page. Models like **o3**, **o4-mini** and **gpt‑4o** are available alongside gpt‑3.5 and gpt‑4. The AI’s suggestions are shown in the admin area so you can review and confirm them before the values are stored for that council. Large PDFs are automatically split into smaller chunks so each OpenAI request stays within the model’s token limits. Requests are throttled to each model’s tokens-per-minute allowance (for example 200k TPM for o4-mini and 30k TPM for gpt‑4o). The progress overlay now displays how many tokens were used and shows a countdown bar so you know how long to wait. Requests allow up to 60 seconds by default; filter `cdc_openai_timeout` to change this.
 If the accounts indicate figures are in thousands of pounds (e.g. using "£000s" headings) the AI multiplies numbers by 1,000 so stored values are the full amounts.
 
-By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**. These mandatory fields cannot be removed, though you may edit their labels. A **Total Debt** field is calculated automatically from the others and is visible as a read-only value. Additional custom fields can be added, edited or removed from the admin screen and you can change whether they are required as well as their field type (text, number or monetary).
+By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**, and a **Financial Data Source URL** so visitors can view the statement used. These mandatory fields cannot be removed, though you may edit their labels. A **Total Debt** field is calculated automatically from the others and is visible as a read-only value. Additional custom fields &ndash; including a **Status Message** and **Status Message Type** &ndash; can be added, edited or removed from the admin screen and you can change whether they are required as well as their field type (text, number or monetary).
 
 Councils can be added, edited, and deleted from the **Debt Counters → Councils** page which uses a clean Bootstrap design. All custom fields are displayed on this screen so you can capture relevant information before uploading finance documents.
 
@@ -58,6 +58,10 @@ uses the selected council’s name, relevant figure and permalink so each share
 promotes that specific page rather than the site in general. When used outside
 of a council post you can pass an `id` (or `council_id`) attribute to specify
 which council’s data should be used.
+
+### Status messages
+
+Use `[council_status]` to display any status message you have recorded for a council. The shortcode falls back to the post status (Draft or Under Review) if no custom message is set and outputs a Bootstrap alert with the chosen style.
 
 
 ## Installation

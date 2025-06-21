@@ -131,7 +131,7 @@ if ( 'edit' === $req_action ) {
                                                                 <?php if ( $is_required ) : ?>
                                                                         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
                                                                 <?php endif; ?>
-														<?php elseif ( 'council_location' === $field->name ) : ?>
+<?php elseif ( 'council_location' === $field->name ) : ?>
                                                                        <select id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" class="form-select" <?php echo $is_required ? 'required' : ''; ?> <?php echo $readonly ? 'disabled' : ''; ?>>
 															<?php foreach ( $council_locations as $t ) : ?>
 										<option value="<?php echo esc_attr( $t ); ?>" <?php selected( $val, $t ); ?>><?php echo esc_html( $t ); ?></option>
@@ -140,7 +140,25 @@ if ( 'edit' === $req_action ) {
                                                                 <?php if ( $is_required ) : ?>
                                                                         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
                                                                 <?php endif; ?>
-														<?php elseif ( 'money' === $field->type ) : ?>
+<?php elseif ( 'financial_data_source_url' === $field->name ) : ?>
+<input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="url" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?> placeholder="https://example.com/statement.pdf">
+<p class="description mt-1"><?php esc_html_e( 'Link to the published statement this data comes from.', 'council-debt-counters' ); ?></p>
+<?php elseif ( 'status_message_type' === $field->name ) : ?>
+<select id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" class="form-select" <?php echo $is_required ? 'required' : ''; ?> <?php echo $readonly ? 'disabled' : ''; ?>>
+<?php foreach ( array( 'info', 'warning', 'danger' ) as $t ) : ?>
+<option value="<?php echo esc_attr( $t ); ?>" <?php selected( $val, $t ); ?>><?php echo esc_html( ucfirst( $t ) ); ?></option>
+<?php endforeach; ?>
+</select>
+<?php elseif ( 'financial_data_source_url' === $field->name ) : ?>
+<input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="url" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?> placeholder="https://example.com/statement.pdf">
+<p class="description mt-1"><?php esc_html_e( 'Link to the published statement this data comes from.', 'council-debt-counters' ); ?></p>
+<?php elseif ( 'status_message_type' === $field->name ) : ?>
+<select id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" <?php echo $is_required ? 'required' : ''; ?> <?php echo $readonly ? 'disabled' : ''; ?>>
+<?php foreach ( array( 'info', 'warning', 'danger' ) as $t ) : ?>
+<option value="<?php echo esc_attr( $t ); ?>" <?php selected( $val, $t ); ?>><?php echo esc_html( ucfirst( $t ) ); ?></option>
+<?php endforeach; ?>
+</select>
+<?php elseif ( 'money' === $field->type ) : ?>
                                                                 <div class="input-group">
                                                                         <span class="input-group-text">&pound;</span>
                                                                         <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="number" step="0.01" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
