@@ -21,12 +21,14 @@ class Whistleblower_Form {
 		/**
 		 * Register hooks and shortcodes.
 		 */
-	public static function init() {
-		add_action( 'init', array( __CLASS__, 'register_cpt' ) );
-		add_action( 'init', array( __CLASS__, 'maybe_handle_submission' ) );
-		add_shortcode( 'report_waste_form', array( __CLASS__, 'render_form' ) );
-		add_shortcode( 'whistleblower_form', array( __CLASS__, 'render_form' ) );
-	}
+        public static function init() {
+                add_action( 'init', array( __CLASS__, 'register_cpt' ) );
+                add_action( 'init', array( __CLASS__, 'maybe_handle_submission' ) );
+                add_action( 'wp_ajax_cdc_report_waste', array( __CLASS__, 'ajax_submission' ) );
+                add_action( 'wp_ajax_nopriv_cdc_report_waste', array( __CLASS__, 'ajax_submission' ) );
+                add_shortcode( 'report_waste_form', array( __CLASS__, 'render_form' ) );
+                add_shortcode( 'whistleblower_form', array( __CLASS__, 'render_form' ) );
+        }
 
 		/**
 		 * Resolve a council ID from shortcode attributes.
@@ -63,110 +65,148 @@ class Whistleblower_Form {
 		);
 	}
 
-		/**
-		 * Process form submissions and save reports.
-		 */
-	public static function maybe_handle_submission() {
-		if ( empty( $_POST['cdc_waste_nonce'] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			return;
-		}
-		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['cdc_waste_nonce'] ) ), 'cdc_waste' ) ) {
-			return;
-		}
+       /**
+        * Process a waste report submission.
+        *
+        * @return int|\WP_Error Post ID on success or error object.
+        */
+       private static function process_submission() {
+               if ( empty( $_POST['cdc_waste_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['cdc_waste_nonce'] ) ), 'cdc_waste' ) ) {
+                       return new \WP_Error( 'invalid', __( 'Security check failed.', 'council-debt-counters' ) );
+               }
 
-		$council_id = isset( $_POST['cdc_council_id'] ) ? intval( wp_unslash( $_POST['cdc_council_id'] ) ) : 0;
+               $ip         = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+               $limit_key   = 'cdc_waste_limit_' . md5( $ip );
+               $last_submit = get_transient( $limit_key );
+               if ( $last_submit ) {
+                       return new \WP_Error( 'rate_limited', __( "Whoa there! You're blowing that whistle a bit too quickly for the system to believe you're a human. Grab a drink and take a few minutes to relax before trying again.", 'council-debt-counters' ) );
+               }
 
-		$site_key   = get_option( 'cdc_recaptcha_site_key', '' );
-		$secret_key = get_option( 'cdc_recaptcha_secret_key', '' );
-		if ( $site_key && $secret_key ) {
-				$token = sanitize_text_field( wp_unslash( $_POST['g-recaptcha-response'] ?? '' ) );
-			if ( empty( $token ) ) {
-				wp_die( esc_html__( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
-			}
-					$verify = wp_remote_post(
-						'https://www.google.com/recaptcha/api/siteverify',
-						array(
-							'body'    => array(
-								'secret'   => $secret_key,
-								'response' => $token,
-								'remoteip' => sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) ),
-							),
-							'timeout' => 15,
-						)
-					);
-			$body           = json_decode( wp_remote_retrieve_body( $verify ), true );
-			if ( empty( $body['success'] ) ) {
-				wp_die( esc_html__( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
-			}
-		}
+               $council_id = isset( $_POST['cdc_council_id'] ) ? intval( wp_unslash( $_POST['cdc_council_id'] ) ) : 0;
 
-		$desc          = sanitize_textarea_field( wp_unslash( $_POST['cdc_description'] ?? '' ) );
-		$email         = sanitize_email( wp_unslash( $_POST['cdc_email'] ?? '' ) );
-		$attachment_id = 0;
-		if ( ! empty( $_FILES['cdc_file']['name'] ) && ! empty( $_FILES['cdc_file']['tmp_name'] ) ) {
-			$max_size     = 5 * MB_IN_BYTES; // Limit file size to 5MB.
-			$allowed_mime = array(
-				'pdf'  => 'application/pdf',
-				'jpg'  => 'image/jpeg',
-				'jpeg' => 'image/jpeg',
-				'jpe'  => 'image/jpeg',
-				'png'  => 'image/png',
-				'gif'  => 'image/gif',
-			);
+               $site_key   = get_option( 'cdc_recaptcha_site_key', '' );
+               $secret_key = get_option( 'cdc_recaptcha_secret_key', '' );
+               if ( $site_key && $secret_key ) {
+                       $token = sanitize_text_field( wp_unslash( $_POST['g-recaptcha-response'] ?? '' ) );
+                       if ( empty( $token ) ) {
+                               return new \WP_Error( 'recaptcha', __( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
+                       }
+                       $verify = wp_remote_post(
+                               'https://www.google.com/recaptcha/api/siteverify',
+                               array(
+                                       'body'    => array(
+                                               'secret'   => $secret_key,
+                                               'response' => $token,
+                                               'remoteip' => $ip,
+                                       ),
+                                       'timeout' => 15,
+                               )
+                       );
+                       $body = json_decode( wp_remote_retrieve_body( $verify ), true );
+                       if ( empty( $body['success'] ) ) {
+                               return new \WP_Error( 'recaptcha', __( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
+                       }
+               }
 
-			if ( isset( $_FILES['cdc_file']['size'] ) && $_FILES['cdc_file']['size'] > $max_size ) {
-					wp_die( esc_html__( 'File exceeds maximum size of 5MB.', 'council-debt-counters' ) );
-			}
+               $desc          = sanitize_textarea_field( wp_unslash( $_POST['cdc_description'] ?? '' ) );
+               $email         = sanitize_email( wp_unslash( $_POST['cdc_email'] ?? '' ) );
+               $attachment_id = 0;
+               if ( ! empty( $_FILES['cdc_file']['name'] ) && ! empty( $_FILES['cdc_file']['tmp_name'] ) ) {
+                       $max_size     = 5 * MB_IN_BYTES; // Limit file size to 5MB.
+                       $allowed_mime = array(
+                               'pdf'  => 'application/pdf',
+                               'jpg'  => 'image/jpeg',
+                               'jpeg' => 'image/jpeg',
+                               'jpe'  => 'image/jpeg',
+                               'png'  => 'image/png',
+                               'gif'  => 'image/gif',
+                       );
 
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-			$uploaded = wp_handle_upload(
-				$_FILES['cdc_file'],
-				array(
-					'test_form' => false,
-					'mimes'     => $allowed_mime,
-				)
-			);
+                       if ( isset( $_FILES['cdc_file']['size'] ) && $_FILES['cdc_file']['size'] > $max_size ) {
+                               return new \WP_Error( 'file_size', __( 'File exceeds maximum size of 5MB.', 'council-debt-counters' ) );
+                       }
 
-			if ( ! empty( $uploaded['file'] ) ) {
-				$filetype = wp_check_filetype( $uploaded['file'] );
-				if ( ! in_array( $filetype['type'], $allowed_mime, true ) ) {
-					@unlink( $uploaded['file'] );
-					wp_die( esc_html__( 'Invalid file type.', 'council-debt-counters' ) );
-				}
-				$attachment_id = wp_insert_attachment(
-					array(
-						'post_title'     => basename( $uploaded['file'] ),
-						'post_type'      => 'attachment',
-						'post_mime_type' => $filetype['type'],
-					),
-					$uploaded['file']
-				);
-			}
-		}
+                       require_once ABSPATH . 'wp-admin/includes/file.php';
+                       $uploaded = wp_handle_upload(
+                               $_FILES['cdc_file'],
+                               array(
+                                       'test_form' => false,
+                                       'mimes'     => $allowed_mime,
+                               )
+                       );
 
-		$post_id = wp_insert_post(
-			array(
-				'post_type'    => self::CPT,
-				'post_status'  => 'private',
-				'post_title'   => wp_trim_words( $desc, 6, '...' ),
-				'post_content' => $desc,
-			)
-		);
-		if ( $council_id ) {
-			update_post_meta( $post_id, 'council_id', $council_id );
-		}
-		if ( $attachment_id ) {
-			update_post_meta( $post_id, 'attachment_id', $attachment_id );
-		}
-		if ( $email ) {
-			update_post_meta( $post_id, 'contact_email', $email );
-		}
-		$count = (int) get_option( 'cdc_waste_report_count', 0 );
-		update_option( 'cdc_waste_report_count', $count + 1 );
+                       if ( ! empty( $uploaded['file'] ) ) {
+                               $filetype = wp_check_filetype( $uploaded['file'] );
+                               if ( ! in_array( $filetype['type'], $allowed_mime, true ) ) {
+                                       @unlink( $uploaded['file'] );
+                                       return new \WP_Error( 'file_type', __( 'Invalid file type.', 'council-debt-counters' ) );
+                               }
+                               $attachment_id = wp_insert_attachment(
+                                       array(
+                                               'post_title'     => basename( $uploaded['file'] ),
+                                               'post_type'      => 'attachment',
+                                               'post_mime_type' => $filetype['type'],
+                                       ),
+                                       $uploaded['file']
+                               );
+                       }
+               }
 
-		wp_safe_redirect( add_query_arg( 'report', 'thanks', wp_get_referer() ) );
-		exit;
-	}
+               $post_id = wp_insert_post(
+                       array(
+                               'post_type'    => self::CPT,
+                               'post_status'  => 'private',
+                               'post_title'   => wp_trim_words( $desc, 6, '...' ),
+                               'post_content' => $desc,
+                       )
+               );
+               if ( is_wp_error( $post_id ) ) {
+                       return $post_id;
+               }
+               if ( $council_id ) {
+                       update_post_meta( $post_id, 'council_id', $council_id );
+               }
+               if ( $attachment_id ) {
+                       update_post_meta( $post_id, 'attachment_id', $attachment_id );
+               }
+               if ( $email ) {
+                       update_post_meta( $post_id, 'contact_email', $email );
+               }
+               update_post_meta( $post_id, 'ip_address', $ip );
+               $count = (int) get_option( 'cdc_waste_report_count', 0 );
+               update_option( 'cdc_waste_report_count', $count + 1 );
+               set_transient( $limit_key, time(), MINUTE_IN_SECONDS * 5 );
+               return $post_id;
+       }
+
+       /**
+        * Handle standard (non-AJAX) submission.
+        */
+       public static function maybe_handle_submission() {
+               if ( empty( $_POST['cdc_waste_nonce'] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+                       return;
+               }
+
+               $result = self::process_submission();
+               if ( is_wp_error( $result ) ) {
+                       wp_die( esc_html( $result->get_error_message() ) );
+               }
+
+               wp_safe_redirect( add_query_arg( 'report', 'thanks', wp_get_referer() ) );
+               exit;
+       }
+
+       /**
+        * Handle AJAX submissions.
+        */
+       public static function ajax_submission() {
+               $result = self::process_submission();
+               if ( is_wp_error( $result ) ) {
+                       wp_send_json_error( $result->get_error_message() );
+               }
+
+               wp_send_json_success( __( 'Thank you for your report.', 'council-debt-counters' ) );
+       }
 
 		/**
 		 * Render the whistleblower form for a specific council.
@@ -188,12 +228,21 @@ class Whistleblower_Form {
                if ( $site_key ) {
                        wp_enqueue_script( 'google-recaptcha', 'https://www.google.com/recaptcha/enterprise.js?render=' . $site_key, array(), null, true );
                }
+               wp_enqueue_script( 'cdc-whistleblower-form', plugins_url( 'public/js/whistleblower-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), array(), '0.1.0', true );
+               wp_localize_script( 'cdc-whistleblower-form', 'cdcWhistle', array(
+                       'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+                       'siteKey'  => $site_key,
+                       'success'  => __( 'Thank you for your report.', 'council-debt-counters' ),
+                       'failure'  => __( 'Submission failed. Please try again.', 'council-debt-counters' ),
+                       'delayMsg' => __( "Whoa there! You're blowing that whistle a bit too quickly for the system to believe you're a human. Grab a drink and take a few minutes to relax before trying again.", 'council-debt-counters' ),
+               ) );
 
 		ob_start();
 		?>
-		<form method="post" enctype="multipart/form-data" class="cdc-waste-form">
-		<?php wp_nonce_field( 'cdc_waste', 'cdc_waste_nonce' ); ?>
-			<input type="hidden" name="cdc_council_id" value="<?php echo esc_attr( $council_id ); ?>">
+               <form method="post" enctype="multipart/form-data" class="cdc-waste-form">
+               <?php wp_nonce_field( 'cdc_waste', 'cdc_waste_nonce' ); ?>
+                       <input type="hidden" name="cdc_council_id" value="<?php echo esc_attr( $council_id ); ?>">
+                       <input type="hidden" name="cdc_ip" value="<?php echo esc_attr( $_SERVER['REMOTE_ADDR'] ?? '' ); ?>">
 			<div class="mb-3">
 				<label for="cdc-description" class="form-label"><?php esc_html_e( 'Description of concern', 'council-debt-counters' ); ?></label>
 				<textarea class="form-control" id="cdc-description" name="cdc_description" required></textarea>
@@ -211,20 +260,7 @@ class Whistleblower_Form {
                        <?php endif; ?>
                        <button type="submit" class="btn btn-primary"><?php esc_html_e( 'Submit Report', 'council-debt-counters' ); ?></button>
                </form>
-               <?php if ( $site_key ) : ?>
-               <script>
-                       document.querySelector('.cdc-waste-form').addEventListener('submit', function(e) {
-                               e.preventDefault();
-                               const form = this;
-                               grecaptcha.enterprise.ready(() => {
-                                       grecaptcha.enterprise.execute('<?php echo esc_js( $site_key ); ?>', {action: 'report'}).then(token => {
-                                               document.querySelector('input[name="g-recaptcha-response"]').value = token;
-                                               form.submit();
-                                       });
-                               });
-                       });
-               </script>
-               <?php endif; ?>
+               <div class="cdc-response mt-3"></div>
                <?php
                return ob_get_clean();
        }
