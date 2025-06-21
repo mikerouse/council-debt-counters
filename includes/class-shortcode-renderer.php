@@ -9,24 +9,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Shortcode_Renderer {
 
-	private static function get_council_id_from_atts( array $atts ) {
-			$id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+       /**
+        * Get the URL for an icon asset.
+        *
+        * @param string $name Icon filename without extension.
+        * @return string Icon URL.
+        */
+       private static function icon_url( string $name ): string {
+               $plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
+               return plugins_url( 'public/icons/' . $name . '.svg', $plugin_file );
+       }
 
-		if ( 0 === $id && ! empty( $atts['council'] ) ) {
-				$name = sanitize_text_field( $atts['council'] );
-				$post = get_page_by_title( $name, OBJECT, 'council' );
+       private static function get_council_id_from_atts( array $atts ) {
+               $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
 
-			if ( ! $post ) {
-					$post = get_page_by_path( sanitize_title( $name ), OBJECT, 'council' );
-			}
+               if ( 0 === $id && isset( $atts['council_id'] ) ) {
+                       $id = intval( $atts['council_id'] );
+               }
 
-			if ( $post ) {
-						$id = $post->ID;
-			}
-		}
+               if ( 0 === $id && ! empty( $atts['council'] ) ) {
+                       $name = sanitize_text_field( $atts['council'] );
+                       $post = get_page_by_title( $name, OBJECT, 'council' );
+                       if ( ! $post ) {
+                               $post = get_page_by_path( sanitize_title( $name ), OBJECT, 'council' );
+                       }
+                       if ( $post ) {
+                               $id = $post->ID;
+                       }
+               }
 
-			return $id;
-	}
+               return $id;
+       }
 
 	private static function render_annual_counter( int $id, string $field, string $type = '', bool $with_details = true ) {
 		$enabled = (array) get_option( 'cdc_enabled_counters', array() );
@@ -366,14 +379,17 @@ endforeach;
                 ?>
                 <div class="cdc-share-buttons mt-3">
                         <div class="fw-bold mb-1"><?php esc_html_e( 'Share this', 'council-debt-counters' ); ?></div>
-                        <a class="btn btn-outline-primary btn-sm me-2 cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="twitter" target="_blank" rel="noopener noreferrer" href="https://x.com/intent/tweet?text=<?php echo esc_attr( $encoded ); ?>">
-                                X
+                        <a class="btn btn-outline-primary btn-sm me-2 d-inline-flex align-items-center cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="twitter" target="_blank" rel="noopener noreferrer" href="https://x.com/intent/tweet?text=<?php echo esc_attr( $encoded ); ?>">
+                                <img src="<?php echo esc_url( self::icon_url( 'twitter-x' ) ); ?>" alt="" width="16" height="16" class="me-1">
+                                <span><?php esc_html_e( 'X', 'council-debt-counters' ); ?></span>
                         </a>
-                        <a class="btn btn-outline-success btn-sm me-2 cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="whatsapp" target="_blank" rel="noopener noreferrer" href="https://wa.me/?text=<?php echo esc_attr( $encoded ); ?>">
-                                WhatsApp
+                        <a class="btn btn-outline-success btn-sm me-2 d-inline-flex align-items-center cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="whatsapp" target="_blank" rel="noopener noreferrer" href="https://wa.me/?text=<?php echo esc_attr( $encoded ); ?>">
+                                <img src="<?php echo esc_url( self::icon_url( 'whatsapp' ) ); ?>" alt="" width="16" height="16" class="me-1">
+                                <span><?php esc_html_e( 'WhatsApp', 'council-debt-counters' ); ?></span>
                         </a>
-                        <a class="btn btn-outline-primary btn-sm cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="facebook" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo esc_attr( rawurlencode( $permalink ) ); ?>">
-                                Facebook
+                        <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="facebook" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo esc_attr( rawurlencode( $permalink ) ); ?>">
+                                <img src="<?php echo esc_url( self::icon_url( 'facebook' ) ); ?>" alt="" width="16" height="16" class="me-1">
+                                <span><?php esc_html_e( 'Facebook', 'council-debt-counters' ); ?></span>
                         </a>
                 </div>
                 <?php

@@ -55,7 +55,9 @@ and setting `link="1"` adds a View details link for each council.
 Add `[cdc_share_buttons]` on a single council page to show buttons for sharing
 that council’s stats on X, WhatsApp or Facebook. The shortcode automatically
 uses the selected council’s name, relevant figure and permalink so each share
-promotes that specific page rather than the site in general.
+promotes that specific page rather than the site in general. When used outside
+of a council post you can pass an `id` (or `council_id`) attribute to specify
+which council’s data should be used.
 
 
 ## Installation
