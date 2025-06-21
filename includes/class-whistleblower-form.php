@@ -78,13 +78,14 @@ class Whistleblower_Form {
                }
 
                $ip         = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
-               $limit_key   = 'cdc_waste_limit_' . md5( $ip );
-               $last_submit = get_transient( $limit_key );
-               Error_Logger::log_debug( 'Processing whistleblower submission from ' . $ip );
-               if ( $last_submit ) {
-                       Error_Logger::log_info( 'Rate limit triggered for IP ' . $ip );
-                       return new \WP_Error( 'rate_limited', __( "Whoa there! You're blowing that whistle a bit too quickly for the system to believe you're a human. Grab a drink and take a few minutes to relax before trying again.", 'council-debt-counters' ) );
-               }
+              $limit_key   = 'cdc_waste_limit_' . md5( $ip );
+              $last_submit = get_transient( $limit_key );
+              $cooldown    = MINUTE_IN_SECONDS * 5;
+              Error_Logger::log_debug( 'Processing whistleblower submission from ' . $ip );
+              if ( $last_submit && ( time() - (int) $last_submit ) < $cooldown ) {
+                      Error_Logger::log_info( 'Rate limit triggered for IP ' . $ip );
+                      return new \WP_Error( 'rate_limited', __( "Whoa there! You're blowing that whistle a bit too quickly for the system to believe you're a human. Grab a drink and take a few minutes to relax before trying again.", 'council-debt-counters' ) );
+              }
 
                $council_id = isset( $_POST['cdc_council_id'] ) ? intval( wp_unslash( $_POST['cdc_council_id'] ) ) : 0;
 
@@ -256,6 +257,7 @@ class Whistleblower_Form {
                        'success'  => __( 'Thank you for your report.', 'council-debt-counters' ),
                        'failure'  => __( 'Submission failed. Please try again.', 'council-debt-counters' ),
                        'delayMsg' => __( "Whoa there! You're blowing that whistle a bit too quickly for the system to believe you're a human. Grab a drink and take a few minutes to relax before trying again.", 'council-debt-counters' ),
+                       'submitting' => __( 'Submitting', 'council-debt-counters' ),
                ) );
 
 		ob_start();

@@ -37,6 +37,7 @@ if ( $report_id ) {
 $reports = get_posts([
     'post_type'   => Whistleblower_Form::CPT,
     'numberposts' => -1,
+    'post_status' => 'private', // Reports are saved as private
 ]);
 ?>
 <div class="wrap">
