@@ -46,7 +46,8 @@ if ( 'edit' === $req_action ) {
                                 echo '<a href="' . esc_url( $edit_link ) . '" class="btn btn-sm btn-secondary me-2">' . esc_html__( 'Edit with Elementor', 'council-debt-counters' ) . '</a>';
                         }
                         $del = wp_nonce_url( admin_url( 'admin.php?page=cdc-manage-councils&action=delete&post=' . $council_id ), 'cdc_delete_council_' . $council_id );
-                        echo '<a href="' . esc_url( $del ) . '" class="btn btn-sm btn-danger" onclick="return confirm(\'' . esc_js( __( 'Delete this council?', 'council-debt-counters' ) ) . '\');">' . esc_html__( 'Trash Council', 'council-debt-counters' ) . '</a>';
+                        echo '<a href="' . esc_url( $del ) . '" class="btn btn-sm btn-danger me-2" onclick="return confirm(\'' . esc_js( __( 'Delete this council?', 'council-debt-counters' ) ) . '\');">' . esc_html__( 'Trash Council', 'council-debt-counters' ) . '</a>';
+                        echo '<button type="button" class="btn btn-sm btn-info me-2" id="cdc-ask-ai-all"><span class="dashicons dashicons-lightbulb"></span> ' . esc_html__( 'Ask AI for All', 'council-debt-counters' ) . '</button>';
                 }
                 echo '</div></div>';
 	$fields  = \CouncilDebtCounters\Custom_Fields::get_fields();
@@ -172,8 +173,10 @@ if ( 'edit' === $req_action ) {
                                                                         <?php if ( $is_required ) : ?>
                                                                                 <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
                                                                         <?php endif; ?>
-							<?php endif; ?>
-						</td>
+<?php endif; ?>
+                                                        <button type="button" class="button cdc-ask-ai mt-1" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
+                                                        <div class="cdc-ai-source mt-1"></div>
+                                                </td>
 					</tr>
                                 <?php endforeach; ?>
                                 <tr>
@@ -240,8 +243,10 @@ if ( 'edit' === $req_action ) {
                                                                         <?php if ( $is_required ) : ?>
                                                                                 <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
                                                                         <?php endif; ?>
-							<?php endif; ?>
-						</td>
+<?php endif; ?>
+                                                        <button type="button" class="button cdc-ask-ai mt-1" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
+                                                        <div class="cdc-ai-source mt-1"></div>
+                                                </td>
 					</tr>
 				<?php endforeach; ?>
 				</table>

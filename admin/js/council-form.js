@@ -219,6 +219,59 @@
                         p.textContent = cdcAiMessages.error;
                     });
             });
+
         });
+
+        function aiOverlay(msg){
+            var ov=document.createElement('div');
+            ov.id='cdc-ai-overlay';
+            ov.innerHTML='<span class="spinner is-active"></span><p>'+msg+'</p>';
+            document.body.appendChild(ov);
+            return ov;
+        }
+        function removeOverlay(ov){ if(ov&&ov.parentNode){ ov.parentNode.removeChild(ov); } }
+
+        async function askField(field){
+            var overlay=aiOverlay('Asking AI…');
+            var name=document.querySelector('[data-cdc-field="council_name"]');
+            var data=new FormData();
+            data.append('action','cdc_ai_field');
+            data.append('field',field);
+            data.append('council_id', cdcToolbarData.id);
+            data.append('council_name', name?name.value:'');
+            var res=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data}).then(function(r){return r.json();});
+            removeOverlay(overlay);
+            if(res.success && res.data){
+                var input=document.querySelector('[data-cdc-field="'+field+'"]');
+                if(input){
+                    input.value=res.data.value || '';
+                    input.dispatchEvent(new Event('input'));
+                    var info=input.parentElement.querySelector('.cdc-ai-source');
+                    if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
+                    info.innerHTML=res.data.source ? 'Source: <a href="'+res.data.source+'" target="_blank" rel="noopener">'+res.data.source+'</a>' : '';
+                }
+            }else if(res.data && res.data.message){
+                alert(res.data.message);
+            }
+        }
+
+        document.addEventListener('click',function(ev){
+            var b=ev.target.closest('.cdc-ask-ai');
+            if(b){
+                ev.preventDefault();
+                askField(b.dataset.field);
+            }
+        });
+
+        var askAll=document.getElementById('cdc-ask-ai-all');
+        if(askAll){
+            askAll.addEventListener('click',async function(ev){
+                ev.preventDefault();
+                var buttons=document.querySelectorAll('.cdc-ask-ai');
+                for(var i=0;i<buttons.length;i++){
+                    await askField(buttons[i].dataset.field);
+                }
+            });
+        }
     });
 })();
