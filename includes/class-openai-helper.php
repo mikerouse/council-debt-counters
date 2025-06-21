@@ -158,6 +158,7 @@ class OpenAI_Helper {
     }
 
     private static function ask_field_value( string $council, string $field ) {
+        Error_Logger::log_info( 'AI field request: ' . $field . ' for ' . $council );
         $prompt = sprintf(
             "Provide the latest figure for %s for %s council in pounds. Respond only with JSON: {\"value\":number,\"source\":\"URL\"}",
             $field,
@@ -165,12 +166,14 @@ class OpenAI_Helper {
         );
         $response = self::query( $prompt );
         if ( is_wp_error( $response ) ) {
+            Error_Logger::log_error( 'AI field error: ' . $response->get_error_message() );
             return $response;
         }
         $content = is_array( $response ) ? $response['content'] : $response;
         $tokens  = is_array( $response ) && isset( $response['tokens'] ) ? intval( $response['tokens'] ) : 0;
         $data    = json_decode( $content, true );
         if ( is_array( $data ) && isset( $data['value'] ) ) {
+            Error_Logger::log_info( 'AI field result: ' . $field . ' = ' . $data['value'] . ' tokens ' . $tokens );
             return [ 'value' => $data['value'], 'source' => $data['source'] ?? '', 'tokens' => $tokens ];
         }
 
@@ -191,6 +194,8 @@ class OpenAI_Helper {
         if ( ! $name || ! $field ) {
             wp_send_json_error( [ 'message' => __( 'Missing data.', 'council-debt-counters' ) ] );
         }
+
+        Error_Logger::log_debug( 'AJAX ask field "' . $field . '" for ' . $name . ' (ID ' . $cid . ')' );
 
         $label = $field;
         $f = Custom_Fields::get_field_by_name( $field );

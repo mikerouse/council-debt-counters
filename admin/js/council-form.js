@@ -1,4 +1,8 @@
 (function() {
+    function ready(fn){
+        if(document.readyState !== 'loading') { fn(); }
+        else { document.addEventListener('DOMContentLoaded', fn); }
+    }
     function formatCurrency(val) {
         if (isNaN(val)) return '';
         return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 }).format(val);
@@ -16,7 +20,7 @@
         update();
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    ready(function() {
         var actionInput = document.querySelector('input[name="action"][value="cdc_save_council"]');
         if (!actionInput) return; // only on edit/add page
         var form = actionInput.closest('form');
