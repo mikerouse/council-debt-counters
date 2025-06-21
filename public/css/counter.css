@@ -11,3 +11,8 @@
 .cdc-share-buttons {
     text-align: center;
 }
+
+/* Hide reCAPTCHA badge while retaining compliance via inline notice */
+.grecaptcha-badge {
+    visibility: hidden;
+}

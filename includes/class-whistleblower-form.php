@@ -281,12 +281,15 @@ class Whistleblower_Form {
 				<label for="cdc-email" class="form-label"><?php esc_html_e( 'Contact email (optional)', 'council-debt-counters' ); ?></label>
 				<input type="email" class="form-control" id="cdc-email" name="cdc_email" />
 			</div>
-               <?php if ( $site_key ) : ?>
+                       <?php if ( $site_key ) : ?>
                                <input type="hidden" name="g-recaptcha-response" />
                        <?php endif; ?>
                        <button type="submit" class="btn btn-primary"><?php esc_html_e( 'Submit Report', 'council-debt-counters' ); ?></button>
                </form>
                <div class="cdc-response mt-3"></div>
+               <p class="small text-muted mt-2">
+                       <?php esc_html_e( 'This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.', 'council-debt-counters' ); ?>
+               </p>
                <?php
                return ob_get_clean();
        }
