@@ -1,7 +1,7 @@
 (function() {
     function animate(el) {
-        if (el.dataset.cdcInitialised) return;
-        el.dataset.cdcInitialised = '1';
+        if (el.dataset.cdcCountupInitialised) return;
+        el.dataset.cdcCountupInitialised = '1';
 
         var target = parseFloat(el.dataset.target);
         if (isNaN(target)) return;
@@ -37,9 +37,39 @@
         }, 50);
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.cdc-counter').forEach(function(el) {
-            animate(el);
+    function observeCounters(context){
+        context.querySelectorAll('.cdc-counter').forEach(function(el){
+            if (!el.dataset.cdcCountupInitialised){
+                observer.observe(el);
+            }
         });
+    }
+
+    var observer = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+            if (entry.isIntersecting){
+                animate(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+
+    var mutation = new MutationObserver(function(mutations){
+        mutations.forEach(function(m){
+            m.addedNodes.forEach(function(node){
+                if (node.nodeType === 1){
+                    if (node.classList && node.classList.contains('cdc-counter')){
+                        observeCounters(node.parentNode || document);
+                    }
+                    var nested = node.querySelectorAll ? node.querySelectorAll('.cdc-counter') : [];
+                    nested.forEach(function(el){ observeCounters(el.parentNode || document); });
+                }
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function(){
+        observeCounters(document);
+        mutation.observe(document.body, {childList: true, subtree: true});
     });
 })();

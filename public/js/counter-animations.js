@@ -54,11 +54,11 @@
     }
 
     function init(el){
-        if (el.dataset.cdcInitialised) {
+        if (el.dataset.cdcCountupInitialised) {
             debugLog('Skipping already-initialised counter', {id: el.id}, 'verbose');
             return;
         }
-        el.dataset.cdcInitialised = '1';
+        el.dataset.cdcCountupInitialised = '1';
 
         const CountUpClass = getCountUpClass();
         if (!CountUpClass) {
@@ -97,8 +97,41 @@
         });
     }
 
+    function observeCounters(context){
+        context.querySelectorAll('.cdc-counter').forEach(el => {
+            if (!el.dataset.cdcCountupInitialised){
+                intersection.observe(el);
+            }
+        });
+    }
+
+    const intersection = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting){
+                debugLog('Counter visible', {id: entry.target.id}, 'verbose');
+                init(entry.target);
+                intersection.unobserve(entry.target);
+            }
+        });
+    });
+
+    const mutation = new MutationObserver(mutations => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType === 1){
+                    if (node.classList && node.classList.contains('cdc-counter')){
+                        observeCounters(node.parentNode || document);
+                    }
+                    const nested = node.querySelectorAll ? node.querySelectorAll('.cdc-counter') : [];
+                    nested.forEach(el => observeCounters(el.parentNode || document));
+                }
+            });
+        });
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
-        debugLog('DOM loaded - launching counters');
-        document.querySelectorAll('.cdc-counter').forEach(init);
+        debugLog('DOM loaded - setting up observers');
+        observeCounters(document);
+        mutation.observe(document.body, {childList: true, subtree: true});
     });
 })();
