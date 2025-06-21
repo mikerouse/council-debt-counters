@@ -22,6 +22,33 @@
         var form = actionInput.closest('form');
         if (!form) return;
 
+        var statusSelect = document.getElementById('cdc-post-status');
+        var assignee = document.querySelector('select[name="assigned_user"]');
+        var msgArea = document.getElementById('cdc-status-msg');
+        function flash(msg){
+            if(!msgArea) return;
+            msgArea.innerHTML = '<div class="alert alert-success mb-0">'+msg+'</div>';
+            setTimeout(function(){ msgArea.innerHTML = ''; },3000);
+        }
+        function sendToolbar(data){
+            data.append('action','cdc_update_toolbar');
+            data.append('post_id', cdcToolbarData.id);
+            data.append('nonce', cdcToolbarData.nonce);
+            fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                .then(function(r){return r.json();})
+                .then(function(res){ if(res.success && res.data && res.data.message){ flash(res.data.message); } });
+        }
+        if(statusSelect){
+            statusSelect.addEventListener('change', function(){
+                var d=new FormData(); d.append('post_status', statusSelect.value); sendToolbar(d);
+            });
+        }
+        if(assignee){
+            assignee.addEventListener('change', function(){
+                var d=new FormData(); d.append('assigned_user', assignee.value); sendToolbar(d);
+            });
+        }
+
         function validateField(field){
             if(!field.required) return;
             if(field.value.trim()===''){ field.classList.add('is-invalid'); }

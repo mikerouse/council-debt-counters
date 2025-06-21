@@ -408,14 +408,17 @@ class Docs_Manager {
                 }
             }
             // Fallback to pdftotext if available.
-            if ( function_exists( 'shell_exec' ) && trim( shell_exec( 'command -v pdftotext' ) ) ) {
-                $cmd    = 'pdftotext ' . escapeshellarg( $file ) . ' -';
+            if ( function_exists( 'shell_exec' ) ) {
+                $bin_check = shell_exec( 'command -v pdftotext' );
+                if ( ! empty( $bin_check ) ) {
+                    $cmd    = 'pdftotext ' . escapeshellarg( $file ) . ' -';
                 $output = shell_exec( $cmd );
                 if ( ! empty( $output ) ) {
                     Error_Logger::log_debug( 'pdftotext used for extraction' );
                     return $output;
                 }
                 Error_Logger::log_error( 'pdftotext returned no output for ' . $file );
+                }
             }
             return '';
         }

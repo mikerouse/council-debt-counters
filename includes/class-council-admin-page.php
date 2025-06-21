@@ -16,6 +16,7 @@ class Council_Admin_Page {
         add_action( 'admin_menu', [ __CLASS__, 'add_page' ], 11 );
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
         add_action( 'admin_post_cdc_save_council', [ __CLASS__, 'handle_save' ] );
+        add_action( 'wp_ajax_cdc_update_toolbar', [ __CLASS__, 'ajax_update_toolbar' ] );
     }
 
     public static function add_page() {
@@ -74,6 +75,11 @@ class Council_Admin_Page {
             ],
             'error' => __( 'Extraction failed', 'council-debt-counters' ),
             'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
+        ] );
+        $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
+        wp_localize_script( 'cdc-council-form', 'cdcToolbarData', [
+            'id'    => $council_id,
+            'nonce' => wp_create_nonce( 'cdc_save_council' ),
         ] );
     }
 
@@ -159,8 +165,38 @@ class Council_Admin_Page {
             }
         }
 
-        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&action=edit&post=' . $post_id . '&updated=1' ) );
         exit;
+    }
+
+    public static function ajax_update_toolbar() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+        }
+        check_ajax_referer( 'cdc_save_council', 'nonce' );
+
+        $post_id = intval( $_POST['post_id'] ?? 0 );
+        if ( ! $post_id ) {
+            wp_send_json_error( __( 'Invalid council.', 'council-debt-counters' ) );
+        }
+
+        $message_parts = [];
+
+        if ( isset( $_POST['assigned_user'] ) ) {
+            update_post_meta( $post_id, 'assigned_user', intval( $_POST['assigned_user'] ) );
+            $message_parts[] = __( 'Assignee updated.', 'council-debt-counters' );
+        }
+
+        if ( isset( $_POST['post_status'] ) ) {
+            $status = sanitize_key( $_POST['post_status'] );
+            if ( ! in_array( $status, [ 'publish', 'draft', 'under_review' ], true ) ) {
+                $status = 'publish';
+            }
+            wp_update_post( [ 'ID' => $post_id, 'post_status' => $status ] );
+            $message_parts[] = __( 'Status updated.', 'council-debt-counters' );
+        }
+
+        wp_send_json_success( [ 'message' => implode( ' ', $message_parts ) ] );
     }
 
     public static function render_page() {
