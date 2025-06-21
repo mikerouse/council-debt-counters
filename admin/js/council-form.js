@@ -22,6 +22,29 @@
         var form = actionInput.closest('form');
         if (!form) return;
 
+        function validateField(field){
+            if(!field.required) return;
+            if(field.value.trim()===''){ field.classList.add('is-invalid'); }
+            else{ field.classList.remove('is-invalid'); }
+        }
+
+        form.querySelectorAll('[required]').forEach(function(f){
+            validateField(f);
+            f.addEventListener('input', function(){
+                validateField(f); updateTabState();
+            });
+        });
+
+        function updateTabState(){
+            document.querySelectorAll('.tab-pane').forEach(function(tab){
+                var link = document.querySelector('[data-bs-target="#'+tab.id+'"]');
+                if(!link) return;
+                if(tab.querySelector('.is-invalid')) link.classList.add('text-danger');
+                else link.classList.remove('text-danger');
+            });
+        }
+        updateTabState();
+
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
             // Only add helper if field represents a monetary value
             var meta = field.getAttribute('data-cdc-field') || '';
@@ -74,6 +97,17 @@
         if (leaseField) leaseField.addEventListener('input', updateAll);
         if (interestField) interestField.addEventListener('input', updateAll);
         updateAll();
+
+        form.addEventListener('submit', function(){
+            var file = document.getElementById('cdc-soa');
+            var url = form.querySelector('input[name="statement_of_accounts_url"]');
+            if((file && file.files.length>0) || (url && url.value.trim()!=='')){
+                var overlay=document.createElement('div');
+                overlay.id='cdc-upload-overlay';
+                overlay.innerHTML='<span class="spinner is-active"></span><p>Uploading…</p>';
+                document.body.appendChild(overlay);
+            }
+        });
         document.querySelectorAll(".cdc-extract-ai").forEach(function(btn){
             btn.addEventListener("click", function(e){
                 e.preventDefault();
