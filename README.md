@@ -33,7 +33,9 @@ Use `[council_counter]` to display figures for a specific council. For overall f
 - `[total_custom_counter type="reserves|spending|income|deficit|interest|consultancy"]`
 
 These counters animate just like the per‑council versions but sum the selected field for all councils.
+
 The total debt counter also displays how many councils are included in the calculation.
+
 
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.

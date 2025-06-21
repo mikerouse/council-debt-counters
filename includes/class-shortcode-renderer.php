@@ -421,6 +421,7 @@ endforeach;
                         $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt' );
                         $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid_on_debt' );
                 }
+          
                 $count = count( $posts );
 
                 $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
