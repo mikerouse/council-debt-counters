@@ -224,8 +224,6 @@
                     });
             });
 
-        });
-
         function aiOverlay(msg){
             var ov=document.createElement('div');
             ov.id='cdc-ai-overlay';
