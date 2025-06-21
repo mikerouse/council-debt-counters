@@ -100,7 +100,13 @@ class Shortcode_Renderer {
 		add_shortcode( 'deficit_counter', array( __CLASS__, 'render_deficit_counter' ) );
 		add_shortcode( 'interest_counter', array( __CLASS__, 'render_interest_counter' ) );
 		add_shortcode( 'revenue_counter', array( __CLASS__, 'render_revenue_counter' ) );
-		add_shortcode( 'custom_counter', array( __CLASS__, 'render_custom_counter' ) );
+                add_shortcode( 'custom_counter', array( __CLASS__, 'render_custom_counter' ) );
+                add_shortcode( 'total_debt_counter', array( __CLASS__, 'render_total_debt_counter' ) );
+                add_shortcode( 'total_spending_counter', array( __CLASS__, 'render_total_spending_counter' ) );
+                add_shortcode( 'total_deficit_counter', array( __CLASS__, 'render_total_deficit_counter' ) );
+                add_shortcode( 'total_interest_counter', array( __CLASS__, 'render_total_interest_counter' ) );
+                add_shortcode( 'total_revenue_counter', array( __CLASS__, 'render_total_revenue_counter' ) );
+                add_shortcode( 'total_custom_counter', array( __CLASS__, 'render_total_custom_counter' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
 		add_action( 'wp_ajax_cdc_log_js', array( __CLASS__, 'ajax_log_js' ) );
@@ -294,8 +300,8 @@ endforeach;
 		return self::render_annual_counter( $id, 'total_income', 'income' );
 	}
 
-	public static function render_custom_counter( $atts ) {
-		$id   = self::get_council_id_from_atts( $atts );
+        public static function render_custom_counter( $atts ) {
+                $id   = self::get_council_id_from_atts( $atts );
 		$type = sanitize_key( $atts['type'] ?? '' );
 		if ( 0 === $id || '' === $type ) {
 			return '';
@@ -311,8 +317,146 @@ endforeach;
 		if ( ! isset( $map[ $type ] ) ) {
 			return '';
 		}
-		return self::render_annual_counter( $id, $map[ $type ], $type );
-	}
+                return self::render_annual_counter( $id, $map[ $type ], $type );
+        }
+
+        private static function render_total_annual_counter( string $field, string $type = '' ) {
+                $enabled = (array) get_option( 'cdc_enabled_counters', array() );
+                if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
+                        return '';
+                }
+
+                $annual  = Custom_Fields::get_total_value( $field );
+                $rate    = Counter_Manager::per_second_rate( $annual );
+                $current = $rate * Counter_Manager::seconds_since_fy_start();
+
+                wp_enqueue_style( 'bootstrap-5' );
+                wp_enqueue_style( 'cdc-counter' );
+                wp_enqueue_style( 'cdc-counter-font' );
+                wp_enqueue_script( 'bootstrap-5' );
+                wp_enqueue_script( 'cdc-counter-animations' );
+
+                $counter_id    = 'cdc-counter-total-' . sanitize_html_class( $field );
+                $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
+                $obj           = Custom_Fields::get_field_by_name( $field );
+                $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
+                $collapse_id   = 'cdc-detail-total-' . sanitize_html_class( $field );
+
+                ob_start();
+                ?>
+                <div class="cdc-counter-wrapper text-center mb-3">
+                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+                                £<?php echo esc_html( number_format_i18n( $current, 2 ) ); ?>
+                        </div>
+                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
+                        </button>
+                        <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
+                                <ul class="mt-2 list-unstyled">
+                                        <?php // translators: %s: Field label ?>
+                                        <li><?php echo esc_html( sprintf( __( 'Annual %s:', 'council-debt-counters' ), $label ) ); ?> £<?php echo esc_html( number_format_i18n( $annual, 2 ) ); ?></li>
+                                        <li><?php esc_html_e( 'Increase per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $rate, 6 ) ); ?></li>
+                                </ul>
+                                <div class="alert alert-warning mt-2">
+                                        <?php esc_html_e( 'This counter assumes the annual figure is spread evenly from 1 April.', 'council-debt-counters' ); ?>
+                                </div>
+                        </div>
+                </div>
+                <?php
+                return ob_get_clean();
+        }
+
+        public static function render_total_spending_counter() {
+                return self::render_total_annual_counter( 'annual_spending', 'spending' );
+        }
+
+        public static function render_total_deficit_counter() {
+                return self::render_total_annual_counter( 'annual_deficit', 'deficit' );
+        }
+
+        public static function render_total_interest_counter() {
+                return self::render_total_annual_counter( 'interest_paid', 'interest' );
+        }
+
+        public static function render_total_revenue_counter() {
+                return self::render_total_annual_counter( 'total_income', 'income' );
+        }
+
+        public static function render_total_custom_counter( $atts ) {
+                $type = sanitize_key( $atts['type'] ?? '' );
+                $map = array(
+                        'reserves'    => 'usable_reserves',
+                        'spending'    => 'annual_spending',
+                        'income'      => 'total_income',
+                        'deficit'     => 'annual_deficit',
+                        'interest'    => 'interest_paid',
+                        'consultancy' => 'consultancy_spend',
+                );
+                if ( ! isset( $map[ $type ] ) ) {
+                        return '';
+                }
+                return self::render_total_annual_counter( $map[ $type ], $type );
+        }
+
+        public static function render_total_debt_counter() {
+                $enabled = (array) get_option( 'cdc_enabled_counters', array() );
+                if ( ! in_array( 'debt', $enabled, true ) ) {
+                        return '';
+                }
+
+                $posts = get_posts([
+                        'post_type'   => 'council',
+                        'numberposts' => -1,
+                        'fields'      => 'ids',
+                ]);
+                $total    = 0.0;
+                $interest = 0.0;
+                foreach ( $posts as $id ) {
+                        $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt' );
+                        $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid_on_debt' );
+                }
+
+                $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
+
+                $year     = gmdate( 'Y' );
+                $now      = time();
+                $fy_start = strtotime( "$year-04-01" );
+                if ( $now < $fy_start ) {
+                        $fy_start = strtotime( ( $year - 1 ) . '-04-01' );
+                }
+                $elapsed_seconds = max( 0, $now - $fy_start );
+                $start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
+
+                wp_enqueue_style( 'bootstrap-5' );
+                wp_enqueue_style( 'cdc-counter' );
+                wp_enqueue_style( 'cdc-counter-font' );
+                wp_enqueue_script( 'bootstrap-5' );
+                wp_enqueue_script( 'cdc-counter-animations' );
+
+                $collapse_id = 'cdc-detail-total-debt';
+
+                ob_start();
+                ?>
+                <div class="cdc-counter-wrapper text-center mb-3">
+                        <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
+                                £<?php echo esc_html( number_format_i18n( $start_value, 2 ) ); ?>
+                        </div>
+                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
+                        </button>
+                        <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
+                                <ul class="mt-2 list-unstyled">
+                                        <li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $interest, 2 ) ); ?></li>
+                                        <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
+                                </ul>
+                                <div class="alert alert-warning mt-2">
+                                        <?php esc_html_e( 'Total debt = Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments. Growth is estimated using the latest annual interest figure spread evenly across the year.', 'council-debt-counters' ); ?>
+                                </div>
+                        </div>
+                </div>
+                <?php
+                return ob_get_clean();
+        }
 
 	public static function ajax_log_js() {
 		check_ajax_referer( 'cdc_log_js', 'nonce' );
