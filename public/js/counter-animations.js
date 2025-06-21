@@ -60,6 +60,8 @@
         }
         el.dataset.cdcCountupInitialised = '1';
         el.style.visibility = 'hidden';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
 
         const CountUpClass = getCountUpClass();
         if (!CountUpClass) {
@@ -90,6 +92,8 @@
         counter.start(() => {
             debugLog('Counter started', {target});
             el.style.visibility = 'visible';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
             if (growth !== 0) {
                 setInterval(() => {
                     start += growth;

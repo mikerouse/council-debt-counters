@@ -349,7 +349,7 @@ endforeach;
                                 &hellip;
                         </div>
                         <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
+                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
                         <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
                                 <ul class="mt-2 list-unstyled">
@@ -443,7 +443,7 @@ endforeach;
                                 &hellip;
                         </div>
                         <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
+                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
                         <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
                                 <ul class="mt-2 list-unstyled">
