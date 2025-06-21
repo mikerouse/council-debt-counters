@@ -415,6 +415,7 @@ endforeach;
                         $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt' );
                         $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid_on_debt' );
                 }
+                $count = count( $posts );
 
                 $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
@@ -449,8 +450,14 @@ endforeach;
                                         <li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $interest, 2 ) ); ?></li>
                                         <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
                                 </ul>
-                                <div class="alert alert-warning mt-2">
-                                        <?php esc_html_e( 'Total debt = Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments. Growth is estimated using the latest annual interest figure spread evenly across the year.', 'council-debt-counters' ); ?>
+                                <div class="text-muted">
+                                        <?php
+                                        printf(
+                                                /* translators: %s: number of councils */
+                                                esc_html__( 'Based on %s', 'council-debt-counters' ),
+                                                esc_html( sprintf( _n( '%d council', '%d councils', $count, 'council-debt-counters' ), $count ) )
+                                        );
+                                        ?>
                                 </div>
                         </div>
                 </div>
