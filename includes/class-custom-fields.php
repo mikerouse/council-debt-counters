@@ -248,6 +248,29 @@ class Custom_Fields {
     }
 
     /**
+     * Get the summed value of a field across all councils.
+     */
+    public static function get_total_value( string $name ) : float {
+        $field = self::get_field_by_name( $name );
+        if ( ! $field ) {
+            return 0.0;
+        }
+        $posts = get_posts([
+            'post_type'   => 'council',
+            'numberposts' => -1,
+            'fields'      => 'ids',
+        ]);
+        $total = 0.0;
+        foreach ( $posts as $id ) {
+            $val = self::get_value( (int) $id, $name );
+            if ( is_numeric( $val ) ) {
+                $total += (float) $val;
+            }
+        }
+        return $total;
+    }
+
+    /**
      * Migrate legacy ACF post meta values into the custom field tables.
      */
     public static function migrate_from_meta() {

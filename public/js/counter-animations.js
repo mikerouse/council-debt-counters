@@ -3,6 +3,8 @@
 
     const LOG_LEVELS = { quiet: 0, standard: 1, verbose: 2 };
 
+    debugLog('counter-animations script loaded', null, 'verbose');
+
     function getCurrentLogLevel() {
         if (window.CDC_LOGGER && window.CDC_LOGGER.logLevel) {
             return window.CDC_LOGGER.logLevel;
@@ -52,8 +54,17 @@
     }
 
     function init(el){
+        if (el.dataset.cdcInitialised) {
+            debugLog('Skipping already-initialised counter', {id: el.id}, 'verbose');
+            return;
+        }
+        el.dataset.cdcInitialised = '1';
+
         const CountUpClass = getCountUpClass();
-        if (!CountUpClass) return;
+        if (!CountUpClass) {
+            debugLog('CountUp not available', null, 'standard');
+            return;
+        }
 
         const target  = parseFloat(el.dataset.target) || 0;
         let start     = parseFloat(el.dataset.start)  || 0;

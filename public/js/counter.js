@@ -1,5 +1,8 @@
 (function() {
     function animate(el) {
+        if (el.dataset.cdcInitialised) return;
+        el.dataset.cdcInitialised = '1';
+
         var target = parseFloat(el.dataset.target);
         if (isNaN(target)) return;
         var growth = parseFloat(el.dataset.growth) || 0;
