@@ -61,7 +61,7 @@ which council’s data should be used.
 
 ### Status messages
 
-Use `[council_status]` to display any status message you have recorded for a council. The shortcode falls back to the post status (Draft or Under Review) if no custom message is set and outputs a Bootstrap alert with the chosen style.
+Use `[council_status]` to display any status message you have recorded for a council. If the field is empty then nothing is shown.
 
 
 ## Installation

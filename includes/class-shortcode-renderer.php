@@ -410,17 +410,8 @@ endforeach;
                 $message = Custom_Fields::get_value( $id, 'status_message' );
                 $type    = Custom_Fields::get_value( $id, 'status_message_type' );
 
-                if ( '' === $message ) {
-                        $status = get_post_status( $id );
-                        if ( 'draft' === $status ) {
-                                $message = __( 'This council entry is in draft.', 'council-debt-counters' );
-                                $type    = 'warning';
-                        } elseif ( 'under_review' === $status ) {
-                                $message = __( 'This council entry is pending review.', 'council-debt-counters' );
-                                $type    = 'info';
-                        } else {
-                                return '';
-                        }
+                if ( ! is_string( $message ) || '' === trim( $message ) ) {
+                        return '';
                 }
 
                 $type = in_array( $type, array( 'info', 'warning', 'danger' ), true ) ? $type : 'info';
