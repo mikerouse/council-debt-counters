@@ -75,9 +75,9 @@ class Shortcode_Renderer {
                                 &hellip;
 			</div>
 			<?php if ( $with_details ) : ?>
-			<button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-				<?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
-			</button>
+                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        </button>
 			<div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
 				<ul class="mt-2 list-unstyled">
 					<?php // translators: %s: Field label ?>
@@ -226,9 +226,9 @@ class Shortcode_Renderer {
                         <noscript>
                                 <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
                         </noscript>
-			<button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-				<?php esc_html_e( 'View details', 'council-debt-counters' ); ?>
-			</button>
+                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        </button>
 			<div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
 				<ul class="mt-2 list-unstyled">
 						<li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( (float) $details['interest'], 2 ) ); ?></li>
