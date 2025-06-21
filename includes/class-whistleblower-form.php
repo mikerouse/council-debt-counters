@@ -38,16 +38,19 @@ class Whistleblower_Form {
 		 * @param array $atts Shortcode attributes.
 		 * @return int Council post ID.
 		 */
-	private static function get_council_id_from_atts( array $atts ): int {
-		$id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
-		if ( ! $id && ! empty( $atts['council'] ) ) {
-			$post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
-			if ( $post ) {
-				$id = $post->ID;
-			}
-		}
-		return $id;
-	}
+       private static function get_council_id_from_atts( array $atts ): int {
+               $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+               if ( 0 === $id && isset( $atts['council_id'] ) ) {
+                       $id = intval( $atts['council_id'] );
+               }
+               if ( ! $id && ! empty( $atts['council'] ) ) {
+                       $post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
+                       if ( $post ) {
+                               $id = $post->ID;
+                       }
+               }
+               return $id;
+       }
 
 		/**
 		 * Register the custom post type used to store reports.
