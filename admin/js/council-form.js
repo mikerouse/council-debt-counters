@@ -233,6 +233,42 @@
         }
         function removeOverlay(ov){ if(ov&&ov.parentNode){ ov.parentNode.removeChild(ov); } }
 
+        function ensurePromptModal(){
+            var m=document.getElementById('cdc-ai-prompt-modal');
+            if(m) return m;
+            var html='<div class="modal fade" id="cdc-ai-prompt-modal" tabindex="-1" aria-hidden="true">'+
+                '<div class="modal-dialog"><div class="modal-content">'+
+                '<div class="modal-header"><h5 class="modal-title">'+cdcAiMessages.editPrompt+'</h5>'+
+                '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'+
+                '<div class="modal-body"><textarea id="cdc-ai-prompt" class="form-control" rows="3"></textarea></div>'+
+                '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">'+cdcAiMessages.cancel+'</button>'+
+                '<button type="button" class="btn btn-primary" id="cdc-ai-send-btn">'+cdcAiMessages.ask+'</button></div>'+
+                '</div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+            return document.getElementById('cdc-ai-prompt-modal');
+        }
+
+        function showPromptModal(prompt){
+            var modalEl=ensurePromptModal();
+            var textarea=modalEl.querySelector('#cdc-ai-prompt');
+            textarea.value=prompt;
+            var modal=bootstrap.Modal.getOrCreateInstance(modalEl);
+            return new Promise(function(resolve){
+                var done=false;
+                function cleanup(){
+                    done=true;
+                    modalEl.removeEventListener('hidden.bs.modal', onHide);
+                    sendBtn.removeEventListener('click', onSend);
+                }
+                function onHide(){ if(!done){ cleanup(); resolve(null); } }
+                function onSend(){ if(!done){ var val=textarea.value; cleanup(); modal.hide(); resolve(val); } }
+                var sendBtn=modalEl.querySelector('#cdc-ai-send-btn');
+                modalEl.addEventListener('hidden.bs.modal', onHide, {once:true});
+                sendBtn.addEventListener('click', onSend);
+                modal.show();
+            });
+        }
+
         async function askField(field){
             var name=document.querySelector('[data-cdc-field="council_name"]');
             var data=new FormData();
@@ -247,7 +283,7 @@
                 alert(res.data&&res.data.message?res.data.message:cdcAiMessages.error);
                 return;
             }
-            var userPrompt=window.prompt(cdcAiMessages.editPrompt,res.data.prompt);
+            var userPrompt=await showPromptModal(res.data.prompt);
             if(userPrompt===null) return;
 
             var overlay2=aiOverlay('Asking AI…');

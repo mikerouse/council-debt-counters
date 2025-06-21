@@ -193,6 +193,16 @@ class OpenAI_Helper {
             return [ 'value' => $data['value'], 'source' => $data['source'] ?? '', 'tokens' => $tokens ];
         }
 
+        if ( preg_match( '/([0-9][0-9,\.]*)/', $content, $m ) ) {
+            $value = floatval( str_replace( ',', '', $m[1] ) );
+            $source = '';
+            if ( preg_match( '#https?://\S+#', $content, $s ) ) {
+                $source = rtrim( $s[0], ".,'\"" );
+            }
+            Error_Logger::log_info( 'AI field parsed text: ' . $field . ' = ' . $value . ' tokens ' . $tokens );
+            return [ 'value' => $value, 'source' => $source, 'tokens' => $tokens ];
+        }
+
         Error_Logger::log_error( 'AI field parse error: ' . $content );
         return new \WP_Error( 'invalid_ai', __( 'Unexpected AI response.', 'council-debt-counters' ) );
     }
