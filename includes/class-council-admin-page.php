@@ -240,6 +240,7 @@ class Council_Admin_Page {
             }
         }
 
+        Error_Logger::log_info( 'Council saved: ' . $post_id );
         wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&action=edit&post=' . $post_id . '&updated=1' ) );
         exit;
     }
@@ -270,6 +271,8 @@ class Council_Admin_Page {
             wp_update_post( [ 'ID' => $post_id, 'post_status' => $status ] );
             $message_parts[] = __( 'Status updated.', 'council-debt-counters' );
         }
+
+        Error_Logger::log_info( 'Toolbar updated for council ' . $post_id );
 
         wp_send_json_success( [ 'message' => implode( ' ', $message_parts ) ] );
     }
