@@ -66,7 +66,8 @@ class Councils_Table extends \WP_List_Table {
 
     public function get_bulk_actions() {
         return [
-            'repair' => __( 'Repair', 'council-debt-counters' ),
+            'repair'     => __( 'Repair', 'council-debt-counters' ),
+            'publish_na' => __( 'Publish as N/A', 'council-debt-counters' ),
         ];
     }
 
@@ -83,6 +84,26 @@ class Councils_Table extends \WP_List_Table {
                 }
             }
             add_settings_error( 'cdc_messages', 'cdc_repair', __( 'Repair completed.', 'council-debt-counters' ), 'updated' );
+        }
+
+        if ( 'publish_na' === $this->current_action() && ! empty( $_POST['council'] ) ) {
+            $ids     = array_map( 'intval', (array) $_POST['council'] );
+            $fields  = Custom_Fields::get_fields();
+            $enabled = (array) get_option( 'cdc_enabled_counters', array() );
+
+            foreach ( $ids as $id ) {
+                wp_update_post( [ 'ID' => $id, 'post_status' => 'publish' ] );
+
+                foreach ( $enabled as $tab ) {
+                    update_post_meta( $id, 'cdc_na_tab_' . $tab, '1' );
+                }
+
+                foreach ( $fields as $field ) {
+                    update_post_meta( $id, 'cdc_na_' . $field->name, '1' );
+                }
+            }
+
+            add_settings_error( 'cdc_messages', 'cdc_publish_na', __( 'Councils published as N/A.', 'council-debt-counters' ), 'updated' );
         }
     }
 
