@@ -134,12 +134,30 @@ class Council_Admin_Page {
             $post_id = wp_insert_post( [ 'post_type' => 'council', 'post_status' => $status, 'post_title' => $title ] );
         }
 
+        $na_flags = $_POST['cdc_na'] ?? array();
         foreach ( $fields as $field ) {
             if ( $field->name === 'total_debt' || $field->name === 'statement_of_accounts' ) {
                 continue;
             }
             $value = $_POST['cdc_fields'][ $field->id ] ?? '';
             Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ) );
+            $meta_key = 'cdc_na_' . $field->name;
+            if ( isset( $na_flags[ $field->name ] ) ) {
+                update_post_meta( $post_id, $meta_key, '1' );
+            } else {
+                delete_post_meta( $post_id, $meta_key );
+            }
+        }
+
+        $na_tabs = $_POST['cdc_na_tab'] ?? array();
+        $enabled = (array) get_option( 'cdc_enabled_counters', array() );
+        foreach ( $enabled as $tab_key ) {
+            $meta_key = 'cdc_na_tab_' . $tab_key;
+            if ( isset( $na_tabs[ $tab_key ] ) ) {
+                update_post_meta( $post_id, $meta_key, '1' );
+            } else {
+                delete_post_meta( $post_id, $meta_key );
+            }
         }
 
         $soa_value = Custom_Fields::get_value( $post_id, 'statement_of_accounts' );
