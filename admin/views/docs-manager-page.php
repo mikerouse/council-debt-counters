@@ -15,7 +15,7 @@ if ( isset( $_POST['cdc_assign_doc'], $_POST['cdc_doc_name'], $_POST['cdc_counci
     $type = sanitize_key( $_POST['cdc_doc_type'] );
     $year = sanitize_text_field( $_POST['cdc_doc_year'] );
     Docs_Manager::assign_document( $file, $council, $type, $year );
-    if ( $type === 'statement_of_accounts' ) {
+    if ( in_array( $type, [ 'draft_statement_of_accounts', 'audited_statement_of_accounts' ], true ) ) {
         \CouncilDebtCounters\Custom_Fields::update_value( $council, 'statement_of_accounts', $file );
     }
     echo '<div class="notice notice-success"><p>' . esc_html__( 'Document assigned.', 'council-debt-counters' ) . '</p></div>';
@@ -79,7 +79,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
                         <?php echo $doc->council_id ? esc_html( get_the_title( $doc->council_id ) ) : esc_html__( 'Unassigned', 'council-debt-counters' ); ?>
                     </td>
                     <td><?php echo esc_html( $doc->financial_year ); ?></td>
-                    <td><?php echo esc_html( $doc->doc_type ); ?></td>
+                    <td><?php echo esc_html( Docs_Manager::doc_type_labels()[ $doc->doc_type ] ?? $doc->doc_type ); ?></td>
                     <td>
                         <form method="post" style="display:inline;">
                             <input type="hidden" name="cdc_doc_name" value="<?php echo esc_attr( $doc->filename ); ?>" />
@@ -97,7 +97,8 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
                                     <?php endforeach; ?>
                                 </select>
                                 <select name="cdc_doc_type">
-                                    <option value="statement_of_accounts"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></option>
+                                    <option value="draft_statement_of_accounts"><?php esc_html_e( 'Draft Statement', 'council-debt-counters' ); ?></option>
+                                    <option value="audited_statement_of_accounts"><?php esc_html_e( 'Audited Statement', 'council-debt-counters' ); ?></option>
                                 </select>
                                 <select name="cdc_doc_year">
                                     <?php foreach ( Docs_Manager::financial_years() as $y ) : ?>

@@ -11,7 +11,20 @@ class Docs_Manager {
     const FREE_LIMIT = 10;
 
     const TABLE = 'cdc_documents';
-    const DOC_TYPES = ['statement_of_accounts'];
+    const DOC_TYPES = [
+        'draft_statement_of_accounts',
+        'audited_statement_of_accounts',
+    ];
+
+    /**
+     * Get human readable labels for doc types.
+     */
+    public static function doc_type_labels() {
+        return [
+            'draft_statement_of_accounts'   => __( 'Draft Statement', 'council-debt-counters' ),
+            'audited_statement_of_accounts' => __( 'Audited Statement', 'council-debt-counters' ),
+        ];
+    }
 
     /**
      * Return a list of financial years including the current year and
@@ -116,7 +129,7 @@ class Docs_Manager {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
             Error_Logger::log_info( 'Document uploaded: ' . $filename );
 
-            if ( $doc_type === 'statement_of_accounts' && $council_id > 0 ) {
+            if ( in_array( $doc_type, self::DOC_TYPES, true ) && $council_id > 0 ) {
                 self::maybe_extract_figures( $target, $council_id );
             }
 
@@ -219,7 +232,7 @@ class Docs_Manager {
         }
         Error_Logger::log_info( 'Document assigned: ' . $filename . ' to council ' . $council_id );
 
-        if ( $doc_type === 'statement_of_accounts' && $council_id > 0 ) {
+        if ( in_array( $doc_type, self::DOC_TYPES, true ) && $council_id > 0 ) {
             $path = self::get_docs_path() . $filename;
             self::maybe_extract_figures( $path, $council_id );
         }
@@ -370,7 +383,7 @@ class Docs_Manager {
             wp_send_json_error( [ 'message' => __( 'Document not found.', 'council-debt-counters' ) ] );
         }
 
-        if ( $doc->doc_type !== 'statement_of_accounts' || $doc->council_id <= 0 ) {
+        if ( ! in_array( $doc->doc_type, self::DOC_TYPES, true ) || $doc->council_id <= 0 ) {
             Error_Logger::log_error( 'AI extraction failed: invalid document #' . $doc_id );
             wp_send_json_error( [ 'message' => __( 'Invalid document.', 'council-debt-counters' ) ] );
         }
@@ -397,19 +410,23 @@ class Docs_Manager {
         if ( ! $cid ) {
             wp_send_json_error( [ 'message' => __( 'Invalid council.', 'council-debt-counters' ) ] );
         }
-        $year = sanitize_text_field( $_POST['year'] ?? self::current_financial_year() );
+        $year     = sanitize_text_field( $_POST['year'] ?? self::current_financial_year() );
+        $doc_type = sanitize_key( $_POST['doc_type'] ?? 'draft_statement_of_accounts' );
+        if ( ! in_array( $doc_type, self::DOC_TYPES, true ) ) {
+            $doc_type = 'draft_statement_of_accounts';
+        }
         $filename = '';
         $result = null;
         if ( ! empty( $_FILES['file']['name'] ) ) {
             $filename = basename( $_FILES['file']['name'] );
-            $result   = self::upload_document( $_FILES['file'], 'statement_of_accounts', $cid, $year );
+            $result   = self::upload_document( $_FILES['file'], $doc_type, $cid, $year );
         } elseif ( ! empty( $_POST['url'] ) ) {
             $url      = esc_url_raw( $_POST['url'] );
             $filename = basename( parse_url( $url, PHP_URL_PATH ) );
-            $result   = self::import_from_url( $url, 'statement_of_accounts', $cid, $year );
+            $result   = self::import_from_url( $url, $doc_type, $cid, $year );
         } elseif ( ! empty( $_POST['existing'] ) ) {
             $filename = sanitize_file_name( $_POST['existing'] );
-            self::assign_document( $filename, $cid, 'statement_of_accounts', $year );
+            self::assign_document( $filename, $cid, $doc_type, $year );
             $result = true;
         } else {
             wp_send_json_error( [ 'message' => __( 'No document specified.', 'council-debt-counters' ) ] );
@@ -441,7 +458,9 @@ class Docs_Manager {
             </td>
             <td>
                 <select name="docs[<?php echo esc_attr( $doc->id ); ?>][doc_type]">
-                    <option value="statement_of_accounts" <?php selected( $doc->doc_type, 'statement_of_accounts' ); ?>><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></option>
+                    <?php foreach ( self::doc_type_labels() as $key => $label ) : ?>
+                        <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $doc->doc_type, $key ); ?>><?php echo esc_html( $label ); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </td>
             <td>
