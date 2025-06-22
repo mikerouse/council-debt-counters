@@ -16,7 +16,5 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     </div>
 </div>
 <?php
-if ( isset( $_GET['cdc_limit'] ) ) {
-    echo '<div class="notice notice-warning"><p>' . esc_html__( 'The free version is limited to two councils. Enter a license key to add more.', 'council-debt-counters' ) . '</p></div>';
-}
+// Limit notices are currently disabled while the plugin is free to use.
 ?>

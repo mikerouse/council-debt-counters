@@ -91,6 +91,13 @@ class Council_Admin_Page {
             'editPrompt' => __( 'Edit the question to send to AI', 'council-debt-counters' ),
             'ask'    => __( 'Ask AI', 'council-debt-counters' ),
             'cancel' => __( 'Cancel', 'council-debt-counters' ),
+            'typeLabel' => __( 'Expected answer', 'council-debt-counters' ),
+            'typeMoney' => __( 'Monetary figure', 'council-debt-counters' ),
+            'typeInteger' => __( 'Integer number', 'council-debt-counters' ),
+            'typeWord' => __( 'Single word', 'council-debt-counters' ),
+            'typeSentence' => __( 'Short sentence', 'council-debt-counters' ),
+            'responseLabel' => __( 'AI response', 'council-debt-counters' ),
+            'accept' => __( 'Accept and Insert', 'council-debt-counters' ),
         ] );
         $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
         wp_localize_script( 'cdc-council-form', 'cdcToolbarData', [

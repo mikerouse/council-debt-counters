@@ -10,6 +10,33 @@ class Custom_Fields {
     const TABLE_VALUES = 'cdc_field_values';
     const PAGE_SLUG = 'cdc-custom-fields';
 
+    const TAB_OPTIONS = [
+        'general',
+        'debt',
+        'spending',
+        'income',
+        'deficit',
+        'interest',
+        'reserves',
+        'consultancy',
+    ];
+
+    const DEFAULT_FIELD_TABS = [
+        'current_liabilities'           => 'debt',
+        'long_term_liabilities'         => 'debt',
+        'finance_lease_pfi_liabilities' => 'debt',
+        'manual_debt_entry'             => 'debt',
+        'interest_paid_on_debt'         => 'debt',
+        'minimum_revenue_provision'     => 'debt',
+        'total_debt'                    => 'debt',
+        'annual_spending'               => 'spending',
+        'total_income'                  => 'income',
+        'annual_deficit'                => 'deficit',
+        'interest_paid'                 => 'interest',
+        'usable_reserves'               => 'reserves',
+        'consultancy_spend'             => 'consultancy',
+    ];
+
     const DEFAULT_FIELDS = [
         ['name' => 'council_name', 'label' => 'Council Name', 'type' => 'text', 'required' => 1],
         ['name' => 'council_type', 'label' => 'Council Type', 'type' => 'text', 'required' => 0],
@@ -20,6 +47,7 @@ class Custom_Fields {
         ['name' => 'long_term_liabilities', 'label' => 'Long-Term Liabilities', 'type' => 'money', 'required' => 1],
         ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI or Finance Lease Liabilities', 'type' => 'money', 'required' => 1],
         ['name' => 'interest_paid_on_debt', 'label' => 'Interest Paid on Debt', 'type' => 'money', 'required' => 1],
+        ['name' => 'minimum_revenue_provision', 'label' => 'Minimum Revenue Provision', 'type' => 'money', 'required' => 0],
         ['name' => 'total_debt', 'label' => 'Total Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
         ['name' => 'annual_spending', 'label' => 'Annual Spending', 'type' => 'money', 'required' => 0],
@@ -93,6 +121,7 @@ class Custom_Fields {
         dbDelta( $sql_values );
 
         self::ensure_default_fields();
+        self::ensure_default_tabs();
     }
 
     /**
@@ -115,6 +144,7 @@ class Custom_Fields {
         }
 
         self::ensure_default_fields();
+        self::ensure_default_tabs();
     }
 
     /**
@@ -165,6 +195,20 @@ class Custom_Fields {
         }
     }
 
+    private static function ensure_default_tabs() {
+        $map     = get_option( 'cdc_field_tabs', array() );
+        $changed = false;
+        foreach ( self::DEFAULT_FIELD_TABS as $name => $tab ) {
+            if ( ! isset( $map[ $name ] ) ) {
+                $map[ $name ] = $tab;
+                $changed      = true;
+            }
+        }
+        if ( $changed ) {
+            update_option( 'cdc_field_tabs', $map );
+        }
+    }
+
     public static function get_fields() {
         global $wpdb;
         return $wpdb->get_results( 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_FIELDS . ' ORDER BY id' );
@@ -188,6 +232,7 @@ class Custom_Fields {
             'type'     => $type,
             'required' => $required,
         ], [ '%s', '%s', '%s', '%d' ] );
+        self::set_field_tab( $name, self::DEFAULT_FIELD_TABS[ $name ] ?? 'general' );
     }
 
     public static function update_field( int $id, array $data ) {
@@ -208,6 +253,9 @@ class Custom_Fields {
         if ( ! empty( $update ) ) {
             $wpdb->update( $wpdb->prefix . self::TABLE_FIELDS, $update, [ 'id' => $id ], $formats, [ '%d' ] );
         }
+        if ( isset( $data['name'] ) && $data['name'] !== $field->name ) {
+            self::rename_field_tab( $field->name, $data['name'] );
+        }
     }
 
     public static function delete_field( int $id ) {
@@ -221,6 +269,36 @@ class Custom_Fields {
         }
         $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $id ], [ '%d' ] );
         $wpdb->delete( $wpdb->prefix . self::TABLE_VALUES, [ 'field_id' => $id ], [ '%d' ] );
+        $map = get_option( 'cdc_field_tabs', array() );
+        unset( $map[ $field->name ] );
+        update_option( 'cdc_field_tabs', $map );
+    }
+
+    public static function get_field_tab( string $name ) : string {
+        $map = get_option( 'cdc_field_tabs', array() );
+        $tab = isset( $map[ $name ] ) ? sanitize_key( $map[ $name ] ) : '';
+        if ( ! in_array( $tab, self::TAB_OPTIONS, true ) ) {
+            $tab = self::DEFAULT_FIELD_TABS[ $name ] ?? 'general';
+        }
+        return $tab;
+    }
+
+    public static function set_field_tab( string $name, string $tab ) {
+        if ( ! in_array( $tab, self::TAB_OPTIONS, true ) ) {
+            $tab = 'general';
+        }
+        $map         = get_option( 'cdc_field_tabs', array() );
+        $map[ $name ] = $tab;
+        update_option( 'cdc_field_tabs', $map );
+    }
+
+    public static function rename_field_tab( string $old, string $new ) {
+        $map = get_option( 'cdc_field_tabs', array() );
+        if ( isset( $map[ $old ] ) ) {
+            $map[ $new ] = $map[ $old ];
+            unset( $map[ $old ] );
+            update_option( 'cdc_field_tabs', $map );
+        }
     }
 
     public static function get_value( int $council_id, string $name ) {
@@ -323,7 +401,9 @@ class Custom_Fields {
             $label    = sanitize_text_field( $_POST['label'] );
             $type     = sanitize_key( $_POST['type'] );
             $required = isset( $_POST['required'] ) ? 1 : 0;
+            $tab      = sanitize_key( $_POST['tab'] ?? 'general' );
             self::add_field( $name, $label, $type, $required );
+            self::set_field_tab( $name, $tab );
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Field added.', 'council-debt-counters' ) . '</p></div>';
         }
 
@@ -337,7 +417,9 @@ class Custom_Fields {
                     $data['type']     = sanitize_key( $_POST['type'] );
                     $data['required'] = isset( $_POST['required'] ) ? 1 : 0;
                 }
+                $tab = sanitize_key( $_POST['tab'] ?? self::get_field_tab( $field->name ) );
                 self::update_field( $id, $data );
+                self::set_field_tab( $data['name'] ?? $field->name, $tab );
                 echo '<div class="notice notice-success"><p>' . esc_html__( 'Field updated.', 'council-debt-counters' ) . '</p></div>';
             }
         }
@@ -352,6 +434,7 @@ class Custom_Fields {
                         <th><?php esc_html_e( 'Label', 'council-debt-counters' ); ?></th>
                         <th><?php esc_html_e( 'Name', 'council-debt-counters' ); ?></th>
                         <th><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></th>
+                        <th><?php esc_html_e( 'Tab', 'council-debt-counters' ); ?></th>
                         <th><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></th>
                         <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
                     </tr>
@@ -363,6 +446,7 @@ class Custom_Fields {
                         <td><?php echo esc_html( $field->label ); ?></td>
                         <td><?php echo esc_html( $field->name ); ?></td>
                         <td><?php echo esc_html( $field->type ); ?></td>
+                        <td><?php echo esc_html( ucfirst( self::get_field_tab( $field->name ) ) ); ?></td>
                         <td><?php echo $field->required ? esc_html__( 'Yes', 'council-debt-counters' ) : esc_html__( 'No', 'council-debt-counters' ); ?></td>
                         <td>
                             <?php if ( ! $readonly ) : ?>
@@ -406,6 +490,16 @@ class Custom_Fields {
                             </td>
                         </tr>
                         <tr>
+                            <th scope="row"><label for="cdc-edit-tab"><?php esc_html_e( 'Tab', 'council-debt-counters' ); ?></label></th>
+                            <td>
+                                <select name="tab" id="cdc-edit-tab">
+                                    <?php foreach ( self::TAB_OPTIONS as $tab ) : ?>
+                                        <option value="<?php echo esc_attr( $tab ); ?>" <?php selected( self::get_field_tab( $edit_field->name ), $tab ); ?>><?php echo esc_html( ucfirst( $tab ) ); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
                             <th scope="row"><label for="cdc-edit-required"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></label></th>
                             <td><input type="checkbox" id="cdc-edit-required" name="required" value="1" <?php checked( $edit_field->required, 1 ); ?>></td>
                         </tr>
@@ -438,6 +532,16 @@ class Custom_Fields {
                                 <option value="text"><?php esc_html_e( 'Text', 'council-debt-counters' ); ?></option>
                                 <option value="number"><?php esc_html_e( 'Number', 'council-debt-counters' ); ?></option>
                                 <option value="money"><?php esc_html_e( 'Monetary', 'council-debt-counters' ); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="cdc-field-tab"><?php esc_html_e( 'Tab', 'council-debt-counters' ); ?></label></th>
+                        <td>
+                            <select name="tab" id="cdc-field-tab">
+                                <?php foreach ( self::TAB_OPTIONS as $tab ) : ?>
+                                    <option value="<?php echo esc_attr( $tab ); ?>"><?php echo esc_html( ucfirst( $tab ) ); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </td>
                     </tr>
