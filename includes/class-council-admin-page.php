@@ -183,6 +183,20 @@ class Council_Admin_Page {
             }
         }
 
+        if ( isset( $_POST['cdc_confirm_takeover'], $_POST['cdc_parent_council'] ) ) {
+            $parent = intval( $_POST['cdc_parent_council'] );
+            if ( $parent ) {
+                update_post_meta( $post_id, 'cdc_parent_council', $parent );
+                $name = get_the_title( $parent );
+                $link = get_permalink( $parent );
+                $msg  = sprintf( __( 'This council is now part of <a href="%s">%s</a>', 'council-debt-counters' ), esc_url( $link ), $name );
+                Custom_Fields::update_value( $post_id, 'status_message', $msg );
+                Custom_Fields::update_value( $post_id, 'status_message_type', 'info' );
+            } else {
+                delete_post_meta( $post_id, 'cdc_parent_council' );
+            }
+        }
+
         // Document edits or deletions from the Documents tab
         if ( isset( $_POST['update_doc'] ) && isset( $_POST['docs'][ $_POST['update_doc'] ] ) ) {
             $doc_id = intval( $_POST['update_doc'] );

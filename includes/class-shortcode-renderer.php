@@ -50,26 +50,33 @@ class Shortcode_Renderer {
 		if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
 			return '';
 		}
-		$raw_value = Custom_Fields::get_value( $id, $field );
-		if ( '' === $raw_value || null === $raw_value ) {
-			$label = $field;
-			$obj   = Custom_Fields::get_field_by_name( $field );
-			if ( $obj && ! empty( $obj->label ) ) {
-				$label = $obj->label;
-			} else {
-				$label = ucwords( str_replace( '_', ' ', $label ) );
-			}
-			return sprintf(
-				'<div class="alert alert-danger">%s</div>',
-				esc_html(
-					sprintf(
-					/* translators: %s: Field label */
-						__( 'No %s figure found for this council. Please set this value in the admin area.', 'council-debt-counters' ),
-						$label
-					)
-				)
-			);
-		}
+               $raw_value = Custom_Fields::get_value( $id, $field );
+               $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
+               if ( '' === $raw_value || null === $raw_value ) {
+                       if ( $parent ) {
+                               return '<div class="alert alert-warning">' . esc_html__( 'No longer applicable', 'council-debt-counters' ) . '</div>';
+                       }
+                       $label = $field;
+                       $obj   = Custom_Fields::get_field_by_name( $field );
+                       if ( $obj && ! empty( $obj->label ) ) {
+                               $label = $obj->label;
+                       } else {
+                               $label = ucwords( str_replace( '_', ' ', $label ) );
+                       }
+                       return sprintf(
+                               '<div class="alert alert-danger">%s</div>',
+                               esc_html(
+                                       sprintf(
+                                       /* translators: %s: Field label */
+                                               __( 'No %s figure found for this council. Please set this value in the admin area.', 'council-debt-counters' ),
+                                               $label
+                                       )
+                               )
+                       );
+               }
+               if ( $parent ) {
+                       return '<div class="cdc-counter-static fw-bold">£' . esc_html( number_format_i18n( (float) $raw_value, 2 ) ) . '</div>';
+               }
 		$annual  = (float) $raw_value;
 		$rate    = Counter_Manager::per_second_rate( $annual );
 		$current = $rate * Counter_Manager::seconds_since_fy_start();
@@ -193,10 +200,11 @@ class Shortcode_Renderer {
 			return '';
 		}
 
-		$total = Custom_Fields::get_value( $id, 'total_debt' );
-		if ( ! $total ) {
-			$total = 0;
-		}
+               $total  = Custom_Fields::get_value( $id, 'total_debt' );
+               if ( ! $total ) {
+                       $total = 0;
+               }
+               $parent = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
 		$interest          = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
 		$growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
@@ -209,8 +217,15 @@ class Shortcode_Renderer {
 			// If before 1 April, use previous year
 			$fy_start = strtotime( ( $year - 1 ) . '-04-01' );
 		}
-		$elapsed_seconds = max( 0, $now - $fy_start );
-		$start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
+               $elapsed_seconds = max( 0, $now - $fy_start );
+               $start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
+
+               if ( $parent ) {
+                       wp_enqueue_style( 'bootstrap-5' );
+                       wp_enqueue_style( 'cdc-counter' );
+                       wp_enqueue_style( 'cdc-counter-font' );
+                       return '<div class="cdc-counter-static display-4 fw-bold">£' . esc_html( number_format_i18n( (float) $total, 2 ) ) . '</div>';
+               }
 
 		wp_enqueue_style( 'bootstrap-5' );
 		wp_enqueue_style( 'cdc-counter' );
@@ -416,8 +431,8 @@ endforeach;
 
                 $type = in_array( $type, array( 'info', 'warning', 'danger' ), true ) ? $type : 'info';
 
-                return sprintf( '<div class="alert alert-%1$s" role="status">%2$s</div>', esc_attr( $type ), esc_html( $message ) );
-        }
+               return sprintf( '<div class="alert alert-%1$s" role="status">%2$s</div>', esc_attr( $type ), wp_kses_post( $message ) );
+       }
 
         private static function render_total_annual_counter( string $field, string $type = '' ) {
                 $enabled = (array) get_option( 'cdc_enabled_counters', array() );
@@ -514,11 +529,16 @@ endforeach;
                 $total    = 0.0;
                 $interest = 0.0;
                 foreach ( $posts as $id ) {
+                        if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
+                                continue;
+                        }
                         $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt' );
                         $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid_on_debt' );
                 }
           
-                $count = count( $posts );
+                $count = count( array_filter( $posts, function( $cid ) {
+                        return ! get_post_meta( (int) $cid, 'cdc_parent_council', true );
+                } ) );
 
                 $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
@@ -597,6 +617,9 @@ endforeach;
 
                 $rows = array();
                 foreach ( $posts as $id ) {
+                        if ( get_post_meta( $id, 'cdc_parent_council', true ) ) {
+                                continue;
+                        }
                         $data = array();
                         $debt      = (float) Custom_Fields::get_value( $id, 'total_debt' );
                         $population = (float) Custom_Fields::get_value( $id, 'population' );
