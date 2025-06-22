@@ -9,6 +9,7 @@ class Stats_Page {
     const PAGE_SLUG = 'cdc-stats';
     const OPTION_KEY = 'cdc_search_stats';
     const SHARE_KEY = 'cdc_share_stats';
+    const MAX_ENTRIES = 1000;
 
     public static function init() {
         add_action( 'admin_menu', [ __CLASS__, 'add_menu' ] );
@@ -61,6 +62,9 @@ class Stats_Page {
             $stats[ $term ] = 0;
         }
         $stats[ $term ]++;
+        if ( count( $stats ) > self::MAX_ENTRIES ) {
+            $stats = array_slice( $stats, -self::MAX_ENTRIES, null, true );
+        }
         update_option( self::OPTION_KEY, $stats, false );
     }
 
@@ -70,6 +74,9 @@ class Stats_Page {
             $shares[ $id ] = 0;
         }
         $shares[ $id ]++;
+        if ( count( $shares ) > self::MAX_ENTRIES ) {
+            $shares = array_slice( $shares, -self::MAX_ENTRIES, null, true );
+        }
         update_option( self::SHARE_KEY, $shares, false );
     }
 }
