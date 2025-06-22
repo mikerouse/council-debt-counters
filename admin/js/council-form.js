@@ -60,6 +60,7 @@
                 var url=form.querySelector('input[name="statement_of_accounts_url"]');
                 var year=document.getElementById('cdc-soa-year');
                 var existing=form.querySelector('select[name="statement_of_accounts_existing"]');
+                var typeSel=form.querySelector('select[name="statement_of_accounts_type"]');
                 var d=new FormData();
                 d.append('action','cdc_upload_doc');
                 d.append('nonce', cdcToolbarData.nonce);
@@ -68,20 +69,40 @@
                 if(file && file.files.length){ d.append('file', file.files[0]); }
                 if(url && url.value){ d.append('url', url.value); }
                 if(existing && existing.value){ d.append('existing', existing.value); }
-                fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:d})
-                    .then(function(r){return r.json();})
-                    .then(function(res){
-                        if(res.success && res.data && res.data.html){
-                            var table=document.getElementById('cdc-docs-table');
-                            if(table){
-                                var tbody=table.querySelector('tbody');
-                                tbody.insertAdjacentHTML('beforeend', res.data.html);
-                            }
-                            flash(res.data.message || 'Document added.');
-                        } else if(res.data && res.data.message){
-                            alert(res.data.message);
-                        }
-                    });
+                if(typeSel){ d.append('doc_type', typeSel.value); }
+
+                var overlay=document.createElement('div');
+                overlay.id='cdc-upload-overlay';
+                overlay.innerHTML='<span class="spinner is-active"></span><div class="progress w-75 mt-2" style="height:8px"><div class="progress-bar"></div></div><p>Uploading…</p>';
+                document.body.appendChild(overlay);
+                var bar=overlay.querySelector('.progress-bar');
+                var msg=overlay.querySelector('p');
+                var xhr=new XMLHttpRequest();
+                xhr.open('POST', ajaxurl);
+                xhr.withCredentials=true;
+                xhr.upload.addEventListener('progress', function(ev){
+                    if(ev.lengthComputable){
+                        var pct=Math.round((ev.loaded/ev.total)*100);
+                        bar.style.width=pct+'%';
+                    }
+                });
+                xhr.onload=function(){
+                    var res=null;
+                    try{ res=JSON.parse(xhr.responseText); }catch(err){}
+                    if(res && res.success){
+                        bar.style.width='100%';
+                        msg.textContent=res.data.message||'Document added.';
+                        setTimeout(function(){ location.reload(); }, 800);
+                    }else{
+                        msg.textContent=res && res.data && res.data.message ? res.data.message : 'Upload failed';
+                        setTimeout(function(){ overlay.remove(); }, 2000);
+                    }
+                };
+                xhr.onerror=function(){
+                    msg.textContent='Upload failed';
+                    setTimeout(function(){ overlay.remove(); }, 2000);
+                };
+                xhr.send(d);
             });
         }
 
@@ -125,12 +146,7 @@
         var adjustmentsField = document.querySelector('[data-cdc-field="debt_adjustments"]');
         var interestField = document.querySelector('[data-cdc-field="interest_paid_on_debt"]');
         var totalField = document.querySelector('[data-cdc-field="total_debt"]');
-        var ratesOutput = document.createElement('div');
-        ratesOutput.id = 'cdc-debt-rates';
-        ratesOutput.className = 'mt-2 alert alert-info';
-        if (shortField) {
-            shortField.parentElement.appendChild(ratesOutput);
-        }
+        var ratesOutput = document.getElementById('cdc-debt-rates');
 
         var growthPerSecond = 0;
 
@@ -240,7 +256,19 @@
                 '<div class="modal-dialog"><div class="modal-content">'+
                 '<div class="modal-header"><h5 class="modal-title">'+cdcAiMessages.editPrompt+'</h5>'+
                 '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'+
-                '<div class="modal-body"><textarea id="cdc-ai-prompt" class="form-control" rows="3"></textarea></div>'+
+                '<div class="modal-body">'+
+                '<div id="cdc-ai-response" class="alert alert-info mb-2" style="display:none">'+
+                '<div id="cdc-ai-response-text" style="white-space:pre-wrap"></div>'+
+                '<button type="button" class="btn btn-success btn-sm mt-2" id="cdc-ai-accept-btn">'+cdcAiMessages.accept+'</button>'+
+                '</div>'+
+                '<label for="cdc-ai-type" class="form-label">'+cdcAiMessages.typeLabel+'</label>'+
+                '<select id="cdc-ai-type" class="form-select mb-2">'+
+                '<option value="money">'+cdcAiMessages.typeMoney+'</option>'+
+                '<option value="integer">'+cdcAiMessages.typeInteger+'</option>'+
+                '<option value="word">'+cdcAiMessages.typeWord+'</option>'+
+                '<option value="sentence">'+cdcAiMessages.typeSentence+'</option>'+
+                '</select>'+
+                '<textarea id="cdc-ai-prompt" class="form-control" rows="3"></textarea></div>'+
                 '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">'+cdcAiMessages.cancel+'</button>'+
                 '<button type="button" class="btn btn-primary" id="cdc-ai-send-btn">'+cdcAiMessages.ask+'</button></div>'+
                 '</div></div></div>';
@@ -248,10 +276,25 @@
             return document.getElementById('cdc-ai-prompt-modal');
         }
 
-        function showPromptModal(prompt){
+        function showPromptModal(prompt,type,responseText){
             var modalEl=ensurePromptModal();
             var textarea=modalEl.querySelector('#cdc-ai-prompt');
+            var select=modalEl.querySelector('#cdc-ai-type');
+            var resp=modalEl.querySelector('#cdc-ai-response');
+            var respText=modalEl.querySelector('#cdc-ai-response-text');
+            var acceptBtn=modalEl.querySelector('#cdc-ai-accept-btn');
             textarea.value=prompt;
+            if(select) select.value=type||'';
+            if(resp){
+                if(responseText){
+                    if(respText) respText.textContent=responseText;
+                    resp.style.display='block';
+                    if(acceptBtn) acceptBtn.style.display='inline-block';
+                }else{
+                    resp.style.display='none';
+                    if(acceptBtn) acceptBtn.style.display='none';
+                }
+            }
             var modal=bootstrap.Modal.getOrCreateInstance(modalEl);
             return new Promise(function(resolve){
                 var done=false;
@@ -259,12 +302,15 @@
                     done=true;
                     modalEl.removeEventListener('hidden.bs.modal', onHide);
                     sendBtn.removeEventListener('click', onSend);
+                    if(acceptBtn) acceptBtn.removeEventListener('click', onAccept);
                 }
                 function onHide(){ if(!done){ cleanup(); resolve(null); } }
-                function onSend(){ if(!done){ var val=textarea.value; cleanup(); modal.hide(); resolve(val); } }
+                function onSend(){ if(!done){ var val=textarea.value; var t=select.value; cleanup(); modal.hide(); resolve({prompt:val,type:t}); } }
+                function onAccept(){ if(!done){ cleanup(); modal.hide(); resolve({insert:responseText}); } }
                 var sendBtn=modalEl.querySelector('#cdc-ai-send-btn');
                 modalEl.addEventListener('hidden.bs.modal', onHide, {once:true});
                 sendBtn.addEventListener('click', onSend);
+                if(acceptBtn && responseText){ acceptBtn.addEventListener('click', onAccept); }
                 modal.show();
             });
         }
@@ -283,29 +329,55 @@
                 alert(res.data&&res.data.message?res.data.message:cdcAiMessages.error);
                 return;
             }
-            var userPrompt=await showPromptModal(res.data.prompt);
-            if(userPrompt===null) return;
+            var promptInfo=await showPromptModal(res.data.prompt,res.data.type||'',null);
+            if(promptInfo===null) return;
+            var userPrompt=promptInfo.prompt;
+            var ansType=promptInfo.type;
 
-            var overlay2=aiOverlay('Asking AI…');
-            var data2=new FormData();
-            data2.append('action','cdc_ai_field');
-            data2.append('field',field);
-            data2.append('council_id', cdcToolbarData.id);
-            data2.append('council_name', name?name.value:'');
-            data2.append('prompt', userPrompt);
-            var res2=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data2}).then(r=>r.json());
-            removeOverlay(overlay2);
-            if(res2.success && res2.data){
-                var input=document.querySelector('[data-cdc-field="'+field+'"]');
-                if(input){
-                    input.value=res2.data.value || '';
-                    input.dispatchEvent(new Event('input'));
-                    var info=input.parentElement.querySelector('.cdc-ai-source');
-                    if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
-                    info.innerHTML=res2.data.source ? 'Source: <a href="'+res2.data.source+'" target="_blank" rel="noopener">'+res2.data.source+'</a>' : '';
+            while(true){
+                var overlay2=aiOverlay('Asking AI…');
+                var data2=new FormData();
+                data2.append('action','cdc_ai_field');
+                data2.append('field',field);
+                data2.append('council_id', cdcToolbarData.id);
+                data2.append('council_name', name?name.value:'');
+                data2.append('prompt', userPrompt);
+                data2.append('format', ansType);
+                var res2=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data2}).then(r=>r.json());
+                removeOverlay(overlay2);
+                if(res2.success && res2.data){
+                    var input=document.querySelector('[data-cdc-field="'+field+'"]');
+                    if(input){
+                        input.value=res2.data.value || '';
+                        input.dispatchEvent(new Event('input'));
+                        var info=input.parentElement.querySelector('.cdc-ai-source');
+                        if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
+                        info.innerHTML=res2.data.source ? 'Source: <a href="'+res2.data.source+'" target="_blank" rel="noopener">'+res2.data.source+'</a>' : '';
+                    }
+                    break;
+                }else if(res2.data && res2.data.response){
+                    promptInfo=await showPromptModal(userPrompt,ansType,res2.data.response);
+                    if(promptInfo===null) break;
+                    if(promptInfo.insert!==undefined){
+                        var input2=document.querySelector('[data-cdc-field="'+field+'"]');
+                        if(input2){
+                            input2.value=promptInfo.insert || '';
+                            input2.dispatchEvent(new Event('input'));
+                            var info2=input2.parentElement.querySelector('.cdc-ai-source');
+                            if(!info2){ info2=document.createElement('div'); info2.className='cdc-ai-source mt-1'; input2.parentElement.appendChild(info2); }
+                            info2.textContent='';
+                        }
+                        break;
+                    }
+                    userPrompt=promptInfo.prompt;
+                    ansType=promptInfo.type;
+                }else if(res2.data && res2.data.message){
+                    alert(res2.data.message);
+                    break;
+                }else{
+                    alert(cdcAiMessages.error);
+                    break;
                 }
-            }else if(res2.data && res2.data.message){
-                alert(res2.data.message);
             }
         }
 
