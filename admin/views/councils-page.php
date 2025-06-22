@@ -351,28 +351,28 @@ $counts = wp_count_posts( 'council' );
 ?>
 <div class="wrap">
 	<h1><?php esc_html_e( 'Councils', 'council-debt-counters' ); ?></h1>
-	<a href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-manage-councils&action=edit' ) ); ?>" class="btn btn-primary mb-3"><?php esc_html_e( 'Add New', 'council-debt-counters' ); ?></a>
-	<ul class="nav nav-tabs mb-3">
+	<a href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-manage-councils&action=edit' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Add New', 'council-debt-counters' ); ?></a>
+	<ul class="subsubsub">
 		<?php
-		$status_labels = array(
+		$statuses = [
 			'publish'      => __( 'Active', 'council-debt-counters' ),
 			'draft'        => __( 'Draft', 'council-debt-counters' ),
 			'under_review' => __( 'Under Review', 'council-debt-counters' ),
-		);
-		foreach ( $status_labels as $s_key => $s_label ) :
-			$count = $counts->$s_key ?? 0;
-			?>
-			<li class="nav-item">
-				<a class="nav-link <?php echo $status_param === $s_key ? 'active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-manage-councils&status=' . $s_key ) ); ?>">
-					<?php echo esc_html( $s_label . ' (' . $count . ')' ); ?>
-				</a>
-			</li>
-				<?php endforeach; ?>
+		];
+		$links = [];
+		foreach ( $statuses as $status => $label ) {
+			$url   = admin_url( 'admin.php?page=cdc-manage-councils&status=' . $status );
+			$count = $counts->$status ?? 0;
+			$class = ( $status_param === $status ) ? 'current' : '';
+			$links[] = sprintf( '<li><a href="%s" class="%s">%s <span class="count">(%d)</span></a></li>', esc_url( $url ), esc_attr( $class ), esc_html( $label ), intval( $count ) );
+		}
+		echo implode( ' | ', $links );
+		?>
 	</ul>
-        <form method="post">
-            <?php
-            settings_errors( 'cdc_messages' );
-            $table->display();
-            ?>
-        </form>
+	<form method="post">
+		<?php
+		$table->search_box( __( 'Search Councils', 'council-debt-counters' ), 'council-search' );
+		$table->display();
+		?>
+	</form>
 </div>
