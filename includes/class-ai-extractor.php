@@ -139,6 +139,9 @@ class AI_Extractor {
         $tokens  = is_array( $response ) && isset( $response['tokens'] ) ? intval( $response['tokens'] ) : 0;
 
         $data = json_decode( $content, true );
+        if ( ! is_array( $data ) && preg_match( '/```(?:json)?\s*(\{.*?\})\s*```/s', $content, $m ) ) {
+            $data = json_decode( $m[1], true );
+        }
         if ( is_array( $data ) ) {
             return [ 'data' => $data, 'tokens' => $tokens ];
         }
