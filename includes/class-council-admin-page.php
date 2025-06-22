@@ -225,6 +225,6 @@ class Council_Admin_Page {
     }
 
     public static function render_page() {
-        include plugin_dir_path( __DIR__ ) . 'admin/views/councils-page.php';
+        include dirname( __DIR__ ) . '/admin/views/councils-page.php';
     }
 }
