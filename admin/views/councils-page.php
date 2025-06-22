@@ -237,9 +237,10 @@ $readonly = true;
                                                                       <input class="form-check-input" type="checkbox" name="cdc_na_tab[<?php echo esc_attr( $tab_key ); ?>]" id="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>" value="1" <?php checked( $tab_na, '1' ); ?> />
                                                                       <label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php echo esc_html( sprintf( __( '%s data not available', 'council-debt-counters' ), ucfirst( $tab_key ) ) ); ?></label>
                                                               </div>
-                                                               <?php if ( 'debt' === $tab_key ) : ?>
-                                                                       <div id="cdc-debt-rates" class="alert alert-info mb-2"></div>
-                                                               <table class="form-table" role="presentation">
+                                                              <?php if ( 'debt' === $tab_key ) : ?>
+                                                                      <div id="cdc-debt-rates" class="alert alert-info mb-2"></div>
+                                                              <?php endif; ?>
+                                                              <table class="form-table" role="presentation">
 								<?php
                                                                 foreach ( $groups[ $tab_key ] as $field ) :
                                                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
@@ -302,7 +303,6 @@ $readonly = true;
 				<?php endforeach; ?>
                                 </table>
                         </div>
-                        <?php endif; ?>
                         <?php endforeach; ?>
 			<?php if ( $docs_field ) : ?>
 			<div class="tab-pane fade" id="tab-docs" role="tabpanel">
