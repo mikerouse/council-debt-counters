@@ -174,8 +174,10 @@ if ( 'edit' === $req_action ) {
                                                                                 <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
                                                                         <?php endif; ?>
 <?php endif; ?>
+                                                        <?php if ( 'council_name' !== $field->name ) : ?>
                                                         <button type="button" class="button cdc-ask-ai mt-1" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
                                                         <div class="cdc-ai-source mt-1"></div>
+                                                        <?php endif; ?>
                                                 </td>
 					</tr>
                                 <?php endforeach; ?>
@@ -244,8 +246,10 @@ if ( 'edit' === $req_action ) {
                                                                                 <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
                                                                         <?php endif; ?>
 <?php endif; ?>
+                                                        <?php if ( 'council_name' !== $field->name ) : ?>
                                                         <button type="button" class="button cdc-ask-ai mt-1" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
                                                         <div class="cdc-ai-source mt-1"></div>
+                                                        <?php endif; ?>
                                                 </td>
 					</tr>
 				<?php endforeach; ?>
