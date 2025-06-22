@@ -107,8 +107,8 @@ class Docs_Manager {
             return __( 'Invalid file type. Only XLSX, CSV, and PDF are allowed.', 'council-debt-counters' );
         }
         if ( ! self::can_upload() ) {
-            Error_Logger::log( 'Document upload blocked - free limit reached' );
-            return __( 'Free version limit reached. Upgrade to Pro for unlimited documents.', 'council-debt-counters' );
+            Error_Logger::log( 'Document upload blocked - limit reached' );
+            return __( 'Upload limit reached.', 'council-debt-counters' );
         }
         $filename = basename( $file['name'] );
         $target   = self::get_docs_path() . $filename;
@@ -153,8 +153,8 @@ class Docs_Manager {
         }
 
         if ( ! self::can_upload() ) {
-            Error_Logger::log( 'Document import blocked - free limit reached' );
-            return __( 'Free version limit reached. Upgrade to Pro for unlimited documents.', 'council-debt-counters' );
+            Error_Logger::log( 'Document import blocked - limit reached' );
+            return __( 'Upload limit reached.', 'council-debt-counters' );
         }
 
         if ( ! function_exists( 'download_url' ) ) {

@@ -42,9 +42,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
 <div class="wrap">
     <h1><?php esc_html_e( 'Manage Documents', 'council-debt-counters' ); ?></h1>
     <p><?php esc_html_e( 'Upload, replace, or delete financial documents. Only XLSX, CSV, and PDF files are allowed for security reasons.', 'council-debt-counters' ); ?></p>
-    <p><?php echo $is_pro
-        ? esc_html__( 'You have unlimited document uploads (Pro version).', 'council-debt-counters' )
-        : esc_html__( 'Free version: Maximum 10 documents allowed.', 'council-debt-counters' ); ?></p>
+    <p><?php esc_html_e( 'Document uploads are unlimited.', 'council-debt-counters' ); ?></p>
     <?php if ( $upload_error ) : ?>
         <div class="notice notice-error"><p><?php echo esc_html( $upload_error ); ?></p></div>
     <?php endif; ?>
@@ -57,7 +55,7 @@ if ( isset( $_FILES['cdc_upload_doc'] ) && $_FILES['cdc_upload_doc']['size'] > 0
         </select>
         <button type="submit" class="button button-primary" <?php if ( ! $can_upload ) echo 'disabled'; ?>><?php esc_html_e( 'Upload', 'council-debt-counters' ); ?></button>
         <?php if ( ! $can_upload ) : ?>
-            <p class="description" style="color:red;"><?php esc_html_e( 'Free version limit reached. Delete a document or upgrade to Pro.', 'council-debt-counters' ); ?></p>
+            <p class="description" style="color:red;"><?php esc_html_e( 'Upload limit reached.', 'council-debt-counters' ); ?></p>
         <?php endif; ?>
     </form>
     <h2><?php esc_html_e( 'Uploaded Documents', 'council-debt-counters' ); ?></h2>
