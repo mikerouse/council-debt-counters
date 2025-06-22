@@ -110,8 +110,11 @@ if ( 'edit' === $req_action ) {
 				<?php
 				$council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
 				$council_locations = array( 'England', 'Wales', 'Scotland', 'Northern Ireland' );
-				foreach ( $groups['general'] as $field ) :
-						$val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                foreach ( $groups['general'] as $field ) :
+                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                                if ( ! $council_id && $field->required && in_array( $field->type, array( 'number', 'money' ), true ) ) {
+                                                        $val = '0';
+                                                }
 						$input_type  = 'text' === $field->type ? 'text' : 'number';
 						$is_required = (bool) $field->required;
 						$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
@@ -204,8 +207,11 @@ if ( 'edit' === $req_action ) {
 								<p class="description"><code>[council_counter id="<?php echo esc_attr( $council_id ); ?>" type="<?php echo esc_attr( $tab_key ); ?>"]</code></p>
 								<table class="form-table" role="presentation">
 								<?php
-								foreach ( $groups[ $tab_key ] as $field ) :
-										$val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                                                foreach ( $groups[ $tab_key ] as $field ) :
+                                                                               $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                                                               if ( ! $council_id && $field->required && in_array( $field->type, array( 'number', 'money' ), true ) ) {
+                                                                                       $val = '0';
+                                                                               }
 										$input_type  = 'text' === $field->type ? 'text' : 'number';
 										$is_required = (bool) $field->required;
 										$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
