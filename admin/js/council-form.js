@@ -60,6 +60,7 @@
                 var url=form.querySelector('input[name="statement_of_accounts_url"]');
                 var year=document.getElementById('cdc-soa-year');
                 var existing=form.querySelector('select[name="statement_of_accounts_existing"]');
+                var typeSel=form.querySelector('select[name="statement_of_accounts_type"]');
                 var d=new FormData();
                 d.append('action','cdc_upload_doc');
                 d.append('nonce', cdcToolbarData.nonce);
@@ -68,6 +69,7 @@
                 if(file && file.files.length){ d.append('file', file.files[0]); }
                 if(url && url.value){ d.append('url', url.value); }
                 if(existing && existing.value){ d.append('existing', existing.value); }
+                if(typeSel){ d.append('doc_type', typeSel.value); }
                 fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:d})
                     .then(function(r){return r.json();})
                     .then(function(res){
@@ -125,12 +127,7 @@
         var adjustmentsField = document.querySelector('[data-cdc-field="debt_adjustments"]');
         var interestField = document.querySelector('[data-cdc-field="interest_paid_on_debt"]');
         var totalField = document.querySelector('[data-cdc-field="total_debt"]');
-        var ratesOutput = document.createElement('div');
-        ratesOutput.id = 'cdc-debt-rates';
-        ratesOutput.className = 'mt-2 alert alert-info';
-        if (shortField) {
-            shortField.parentElement.appendChild(ratesOutput);
-        }
+        var ratesOutput = document.getElementById('cdc-debt-rates');
 
         var growthPerSecond = 0;
 

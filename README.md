@@ -2,7 +2,7 @@
 
 This WordPress plugin provides animated counters to display UK council debt figures. Counters can be embedded using a shortcode and configured through the WordPress admin interface.
 
-The plugin registers a custom **Council** post type where you can store detailed information about each local authority. The post type is hidden from the regular WordPress menu so users cannot manually add councils from the Posts screen. Councils are managed from the plugin's own **Debt Counters → Councils** submenu. The free version allows up to **two councils**; enter a valid license key on the settings page to create more.
+The plugin registers a custom **Council** post type where you can store detailed information about each local authority. The post type is hidden from the regular WordPress menu so users cannot manually add councils from the Posts screen. Councils are managed from the plugin's own **Debt Counters → Councils** submenu. You can optionally enter a licence key on the settings page, though all features are currently free.
 
 Version 0.2 replaces the dependency on Advanced Custom Fields with a built‑in custom field system. You can create your own fields (text, number or monetary) from **Debt Counters → Custom Fields** and capture the values for each council. Monetary fields display a £ symbol and store values to two decimal places.
 
@@ -10,6 +10,7 @@ The plugin will automatically create the necessary database tables on activation
 
 If you provide an OpenAI API key you can let the plugin attempt to pull key figures from uploaded Statement of Accounts documents. Select the desired model under **Debt Counters → Settings**; this option is ignored unless an API key has been entered on the **Licences & Addons** page. Models like **o3**, **o4-mini** and **gpt‑4o** are available alongside gpt‑3.5 and gpt‑4. The AI’s suggestions are shown in the admin area so you can review and confirm them before the values are stored for that council. Large PDFs are automatically split into smaller chunks so each OpenAI request stays within the model’s token limits. Requests are throttled to each model’s tokens-per-minute allowance (for example 200k TPM for o4-mini and 30k TPM for gpt‑4o). The progress overlay now displays how many tokens were used and shows a countdown bar so you know how long to wait. Requests allow up to 60 seconds by default; filter `cdc_openai_timeout` to change this.
 If the accounts indicate figures are in thousands of pounds (e.g. using "£000s" headings) the AI multiplies numbers by 1,000 so stored values are the full amounts.
+
 Each field on the council edit screen now features an **Ask AI** button. This queries OpenAI for that specific value and fills in the number while showing a source link below the field. The toolbar includes **Ask AI for All** to run the process for every field at once. When you click any Ask&nbsp;AI button the plugin suggests a question and displays it in a Bootstrap modal so you can tweak the wording before sending. If the AI reply can’t be parsed into a simple value, the full response is shown in the same modal so you can decide whether to rephrase the question. A drop‑down lets you specify the expected answer format &ndash; monetary figure, integer, single word or short sentence &ndash; before resubmitting. The AI is asked to favour official sources &ndash; ideally from **gov.uk** domains &ndash; and all requests are written to the Troubleshooting log so you can inspect what was returned or diagnose problems. Text fields like website URLs are supported and responses are trimmed down so the value can be inserted directly.
 
 By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**, and a **Financial Data Source URL** so visitors can view the statement used. These mandatory fields cannot be removed, though you may edit their labels. A **Total Debt** field is calculated automatically from the others and is visible as a read-only value. Additional custom fields &ndash; including a **Status Message** and **Status Message Type** &ndash; can be added, edited or removed from the admin screen and you can change whether they are required as well as their field type (text, number or monetary).
@@ -68,7 +69,7 @@ Use `[council_status]` to display any status message you have recorded for a cou
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.
 2. Activate **Council Debt Counters** in the WordPress admin.
-3. Visit **Debt Counters** in the admin menu to enter your license key and start adding councils.
+3. Visit **Debt Counters** in the admin menu to configure settings or enter a licence key if you have one, then start adding councils.
 
 ## Asset loading and CDNs
 

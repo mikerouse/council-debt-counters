@@ -143,21 +143,25 @@ class Council_Admin_Page {
 
         $soa_value = Custom_Fields::get_value( $post_id, 'statement_of_accounts' );
         $soa_year  = sanitize_text_field( $_POST['statement_of_accounts_year'] ?? Docs_Manager::current_financial_year() );
+        $soa_type  = sanitize_key( $_POST['statement_of_accounts_type'] ?? 'draft_statement_of_accounts' );
+        if ( ! in_array( $soa_type, Docs_Manager::DOC_TYPES, true ) ) {
+            $soa_type = 'draft_statement_of_accounts';
+        }
 
         if ( ! empty( $_FILES['statement_of_accounts_file']['name'] ) ) {
-            $result = Docs_Manager::upload_document( $_FILES['statement_of_accounts_file'], 'statement_of_accounts', $post_id, $soa_year );
+            $result = Docs_Manager::upload_document( $_FILES['statement_of_accounts_file'], $soa_type, $post_id, $soa_year );
             if ( $result === true ) {
                 $soa_value = sanitize_file_name( $_FILES['statement_of_accounts_file']['name'] );
             }
         } elseif ( ! empty( $_POST['statement_of_accounts_url'] ) ) {
             $url = esc_url_raw( $_POST['statement_of_accounts_url'] );
-            $result = Docs_Manager::import_from_url( $url, 'statement_of_accounts', $post_id, $soa_year );
+            $result = Docs_Manager::import_from_url( $url, $soa_type, $post_id, $soa_year );
             if ( $result === true ) {
                 $soa_value = sanitize_file_name( basename( parse_url( $url, PHP_URL_PATH ) ) );
             }
         } elseif ( ! empty( $_POST['statement_of_accounts_existing'] ) ) {
             $existing = sanitize_file_name( $_POST['statement_of_accounts_existing'] );
-            Docs_Manager::assign_document( $existing, $post_id, 'statement_of_accounts', $soa_year );
+            Docs_Manager::assign_document( $existing, $post_id, $soa_type, $soa_year );
             $soa_value = $existing;
         }
 
