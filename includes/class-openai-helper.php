@@ -158,12 +158,20 @@ class OpenAI_Helper {
         wp_send_json_error( [ 'message' => $msg ] );
     }
 
-    private static function clarify_field_prompt( string $council, string $field ) {
-        $prompt = sprintf(
-            'We want to retrieve a single numeric figure for "%s" relating to %s council. Suggest a short question to ask an AI so it returns a number and a source URL. Reply only with the question.',
-            $field,
-            $council
-        );
+    private static function clarify_field_prompt( string $council, string $field, string $type ) {
+        if ( in_array( $type, [ 'number', 'money' ], true ) ) {
+            $prompt = sprintf(
+                'We want to retrieve a single numeric figure for "%s" relating to %s council. Suggest a short question to ask an AI so it returns a number and a source URL. Reply only with the question.',
+                $field,
+                $council
+            );
+        } else {
+            $prompt = sprintf(
+                'We want to retrieve "%s" for %s council. Suggest a short question to ask an AI so it returns the answer as a URL. Reply only with the question.',
+                $field,
+                $council
+            );
+        }
         $response = self::query( $prompt );
         if ( is_wp_error( $response ) ) {
             return $response;
@@ -171,14 +179,22 @@ class OpenAI_Helper {
         return trim( is_array( $response ) ? $response['content'] : $response );
     }
 
-    private static function ask_field_value( string $council, string $field, string $prompt = '' ) {
+    private static function ask_field_value( string $council, string $field, string $type, string $prompt = '' ) {
         Error_Logger::log_info( 'AI field request: ' . $field . ' for ' . $council );
         if ( empty( $prompt ) ) {
-            $prompt = sprintf(
-                'What is the most recent figure for %s for %s council in pounds? Respond only with JSON: {"value":number,"source":"URL"}. Prefer sources from .gov.uk domains.',
-                $field,
-                $council
-            );
+            if ( in_array( $type, [ 'number', 'money' ], true ) ) {
+                $prompt = sprintf(
+                    'What is the most recent figure for %s for %s council in pounds? Respond only with JSON: {"value":number,"source":"URL"}. Prefer sources from .gov.uk domains.',
+                    $field,
+                    $council
+                );
+            } else {
+                $prompt = sprintf(
+                    'What is the %s for %s council? Respond only with JSON: {"value":"text","source":"URL"}. Prefer sources from .gov.uk domains. If the answer is a URL, return the full URL with https:// prefix.',
+                    strtolower( $field ),
+                    $council
+                );
+            }
         }
         $response = self::query( $prompt );
         if ( is_wp_error( $response ) ) {
@@ -193,14 +209,22 @@ class OpenAI_Helper {
             return [ 'value' => $data['value'], 'source' => $data['source'] ?? '', 'tokens' => $tokens ];
         }
 
-        if ( preg_match( '/([0-9][0-9,\.]*)/', $content, $m ) ) {
-            $value = floatval( str_replace( ',', '', $m[1] ) );
-            $source = '';
-            if ( preg_match( '#https?://\S+#', $content, $s ) ) {
-                $source = rtrim( $s[0], ".,'\"" );
+        if ( in_array( $type, [ 'number', 'money' ], true ) ) {
+            if ( preg_match( '/([0-9][0-9,\.]*)/', $content, $m ) ) {
+                $value  = floatval( str_replace( ',', '', $m[1] ) );
+                $source = '';
+                if ( preg_match( '#https?://\S+#', $content, $s ) ) {
+                    $source = rtrim( $s[0], ".,'\"" );
+                }
+                Error_Logger::log_info( 'AI field parsed text: ' . $field . ' = ' . $value . ' tokens ' . $tokens );
+                return [ 'value' => $value, 'source' => $source, 'tokens' => $tokens ];
             }
-            Error_Logger::log_info( 'AI field parsed text: ' . $field . ' = ' . $value . ' tokens ' . $tokens );
-            return [ 'value' => $value, 'source' => $source, 'tokens' => $tokens ];
+        } else {
+            if ( preg_match( '#https?://\S+#', $content, $s ) ) {
+                $value = rtrim( $s[0], ".,'\"" );
+                Error_Logger::log_info( 'AI field parsed URL: ' . $field . ' = ' . $value . ' tokens ' . $tokens );
+                return [ 'value' => $value, 'source' => $value, 'tokens' => $tokens ];
+            }
         }
 
         Error_Logger::log_error( 'AI field parse error: ' . $content );
@@ -221,11 +245,13 @@ class OpenAI_Helper {
             wp_send_json_error( [ 'message' => __( 'Missing data.', 'council-debt-counters' ) ] );
         }
         $label = $field;
+        $type  = 'text';
         $f = Custom_Fields::get_field_by_name( $field );
         if ( $f ) {
             $label = $f->label;
+            $type  = $f->type;
         }
-        $prompt = self::clarify_field_prompt( $name, $label );
+        $prompt = self::clarify_field_prompt( $name, $label, $type );
         if ( is_wp_error( $prompt ) ) {
             wp_send_json_error( [ 'message' => $prompt->get_error_message() ] );
         }
@@ -249,12 +275,14 @@ class OpenAI_Helper {
         Error_Logger::log_debug( 'AJAX ask field "' . $field . '" for ' . $name . ' (ID ' . $cid . ')' );
 
         $label = $field;
+        $type  = 'text';
         $f = Custom_Fields::get_field_by_name( $field );
         if ( $f ) {
             $label = $f->label;
+            $type  = $f->type;
         }
         $user_prompt = sanitize_text_field( $_POST['prompt'] ?? '' );
-        $result = self::ask_field_value( $name, $label, $user_prompt );
+        $result = self::ask_field_value( $name, $label, $type, $user_prompt );
         if ( is_wp_error( $result ) ) {
             wp_send_json_error( [ 'message' => $result->get_error_message() ] );
         }
