@@ -238,7 +238,10 @@
                 '<div class="modal-header"><h5 class="modal-title">'+cdcAiMessages.editPrompt+'</h5>'+
                 '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'+
                 '<div class="modal-body">'+
-                '<div id="cdc-ai-response" class="alert alert-info mb-2" style="display:none;white-space:pre-wrap"></div>'+
+                '<div id="cdc-ai-response" class="alert alert-info mb-2" style="display:none">'+
+                '<div id="cdc-ai-response-text" style="white-space:pre-wrap"></div>'+
+                '<button type="button" class="btn btn-success btn-sm mt-2" id="cdc-ai-accept-btn">'+cdcAiMessages.accept+'</button>'+
+                '</div>'+
                 '<label for="cdc-ai-type" class="form-label">'+cdcAiMessages.typeLabel+'</label>'+
                 '<select id="cdc-ai-type" class="form-select mb-2">'+
                 '<option value="money">'+cdcAiMessages.typeMoney+'</option>'+
@@ -259,14 +262,18 @@
             var textarea=modalEl.querySelector('#cdc-ai-prompt');
             var select=modalEl.querySelector('#cdc-ai-type');
             var resp=modalEl.querySelector('#cdc-ai-response');
+            var respText=modalEl.querySelector('#cdc-ai-response-text');
+            var acceptBtn=modalEl.querySelector('#cdc-ai-accept-btn');
             textarea.value=prompt;
             if(select) select.value=type||'';
             if(resp){
                 if(responseText){
-                    resp.textContent=responseText;
+                    if(respText) respText.textContent=responseText;
                     resp.style.display='block';
+                    if(acceptBtn) acceptBtn.style.display='inline-block';
                 }else{
                     resp.style.display='none';
+                    if(acceptBtn) acceptBtn.style.display='none';
                 }
             }
             var modal=bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -276,12 +283,15 @@
                     done=true;
                     modalEl.removeEventListener('hidden.bs.modal', onHide);
                     sendBtn.removeEventListener('click', onSend);
+                    if(acceptBtn) acceptBtn.removeEventListener('click', onAccept);
                 }
                 function onHide(){ if(!done){ cleanup(); resolve(null); } }
                 function onSend(){ if(!done){ var val=textarea.value; var t=select.value; cleanup(); modal.hide(); resolve({prompt:val,type:t}); } }
+                function onAccept(){ if(!done){ cleanup(); modal.hide(); resolve({insert:responseText}); } }
                 var sendBtn=modalEl.querySelector('#cdc-ai-send-btn');
                 modalEl.addEventListener('hidden.bs.modal', onHide, {once:true});
                 sendBtn.addEventListener('click', onSend);
+                if(acceptBtn && responseText){ acceptBtn.addEventListener('click', onAccept); }
                 modal.show();
             });
         }
@@ -329,6 +339,17 @@
                 }else if(res2.data && res2.data.response){
                     promptInfo=await showPromptModal(userPrompt,ansType,res2.data.response);
                     if(promptInfo===null) break;
+                    if(promptInfo.insert!==undefined){
+                        var input2=document.querySelector('[data-cdc-field="'+field+'"]');
+                        if(input2){
+                            input2.value=promptInfo.insert || '';
+                            input2.dispatchEvent(new Event('input'));
+                            var info2=input2.parentElement.querySelector('.cdc-ai-source');
+                            if(!info2){ info2=document.createElement('div'); info2.className='cdc-ai-source mt-1'; input2.parentElement.appendChild(info2); }
+                            info2.textContent='';
+                        }
+                        break;
+                    }
                     userPrompt=promptInfo.prompt;
                     ansType=promptInfo.type;
                 }else if(res2.data && res2.data.message){

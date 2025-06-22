@@ -97,6 +97,7 @@ class Council_Admin_Page {
             'typeWord' => __( 'Single word', 'council-debt-counters' ),
             'typeSentence' => __( 'Short sentence', 'council-debt-counters' ),
             'responseLabel' => __( 'AI response', 'council-debt-counters' ),
+            'accept' => __( 'Accept and Insert', 'council-debt-counters' ),
         ] );
         $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
         wp_localize_script( 'cdc-council-form', 'cdcToolbarData', [
