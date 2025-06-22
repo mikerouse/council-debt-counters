@@ -23,14 +23,9 @@ class License_Manager {
      * This is a placeholder for real validation logic.
      */
     public static function is_valid() {
-        $flag = get_option( self::OPTION_VALID );
-        $valid = (bool) $flag;
-        if ( ! $valid ) {
-            $key = self::get_license_key();
-            $prefix = $key ? substr( $key, 0, 8 ) . '…' : 'none';
-            Error_Logger::log_info( 'License invalid - key prefix: ' . $prefix . ' flag: ' . $flag );
-        }
-        return $valid;
+        // All features are currently free, so licences are treated as valid.
+        // This logic is retained for potential future use.
+        return true;
     }
 
     /**
