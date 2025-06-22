@@ -82,9 +82,10 @@ if ( 'edit' === $req_action ) {
 				?>
 								<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-<?php echo esc_attr( $tab_key ); ?>" type="button" role="tab"><?php echo esc_html( ucfirst( $tab_key ) ); ?></button></li>
 						<?php endforeach; ?>
-                        <?php if ( $docs_field ) : ?>
-                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></button></li>
-						<?php if ( $council_id ) : ?>
+<?php if ( $docs_field ) : ?>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></button></li>
+<?php endif; ?>
+<?php if ( $council_id ) : ?>
 				<!-- Whistleblower reports moved to dedicated admin page -->
 		</ul>
 		<div class="tab-content pt-3">
@@ -223,7 +224,8 @@ $readonly = true;
 </tr>
 </table>
 </div>
-			<?php
+<?php endif; ?>
+<?php
 			foreach ( $enabled as $tab_key ) :
 				if ( empty( $groups[ $tab_key ] ) ) {
 								continue;}
@@ -394,8 +396,9 @@ $readonly = true;
                 <?php endif; ?>
                 <?php submit_button( __( 'Save Council', 'council-debt-counters' ) ); ?>
 	</form>
-	</div>
-	<?php
+</div>
+<?php endif; ?>
+<?php
 	return;
 }
 
