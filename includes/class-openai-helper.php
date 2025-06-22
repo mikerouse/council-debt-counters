@@ -179,7 +179,7 @@ class OpenAI_Helper {
         return trim( is_array( $response ) ? $response['content'] : $response );
     }
 
-    private static function ask_field_value( string $council, string $field, string $type, string $prompt = '' ) {
+    private static function ask_field_value( string $council, string $field, string $type, string $prompt = '', string $format = '' ) {
         Error_Logger::log_info( 'AI field request: ' . $field . ' for ' . $council );
         if ( empty( $prompt ) ) {
             if ( in_array( $type, [ 'number', 'money' ], true ) ) {
@@ -194,6 +194,23 @@ class OpenAI_Helper {
                     strtolower( $field ),
                     $council
                 );
+            }
+        }
+
+        if ( $format ) {
+            switch ( $format ) {
+                case 'money':
+                    $prompt .= ' Reply with a number in pounds.';
+                    break;
+                case 'integer':
+                    $prompt .= ' Reply with a whole number.';
+                    break;
+                case 'word':
+                    $prompt .= ' Reply using a single word only.';
+                    break;
+                case 'sentence':
+                    $prompt .= ' Reply with a short sentence.';
+                    break;
             }
         }
         $response = self::query( $prompt );
@@ -228,7 +245,11 @@ class OpenAI_Helper {
         }
 
         Error_Logger::log_error( 'AI field parse error: ' . $content );
-        return new \WP_Error( 'invalid_ai', __( 'Unexpected AI response.', 'council-debt-counters' ) );
+        return new \WP_Error(
+            'invalid_ai',
+            __( 'Unexpected AI response.', 'council-debt-counters' ),
+            [ 'content' => $content ]
+        );
     }
 
     public static function ajax_clarify_field() {
@@ -255,7 +276,12 @@ class OpenAI_Helper {
         if ( is_wp_error( $prompt ) ) {
             wp_send_json_error( [ 'message' => $prompt->get_error_message() ] );
         }
-        wp_send_json_success( [ 'prompt' => $prompt ] );
+        wp_send_json_success(
+            [
+                'prompt' => $prompt,
+                'type'   => $type,
+            ]
+        );
     }
 
     public static function ajax_ai_field() {
@@ -282,9 +308,17 @@ class OpenAI_Helper {
             $type  = $f->type;
         }
         $user_prompt = sanitize_text_field( $_POST['prompt'] ?? '' );
-        $result = self::ask_field_value( $name, $label, $type, $user_prompt );
+        $format      = sanitize_text_field( $_POST['format'] ?? '' );
+        $result      = self::ask_field_value( $name, $label, $type, $user_prompt, $format );
         if ( is_wp_error( $result ) ) {
-            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
+            $data = [
+                'message'  => $result->get_error_message(),
+            ];
+            $extra = $result->get_error_data();
+            if ( is_array( $extra ) && isset( $extra['content'] ) ) {
+                $data['response'] = $extra['content'];
+            }
+            wp_send_json_error( $data );
         }
         wp_send_json_success( $result );
     }

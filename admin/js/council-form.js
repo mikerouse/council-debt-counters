@@ -237,7 +237,16 @@
                 '<div class="modal-dialog"><div class="modal-content">'+
                 '<div class="modal-header"><h5 class="modal-title">'+cdcAiMessages.editPrompt+'</h5>'+
                 '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'+
-                '<div class="modal-body"><textarea id="cdc-ai-prompt" class="form-control" rows="3"></textarea></div>'+
+                '<div class="modal-body">'+
+                '<div id="cdc-ai-response" class="alert alert-info mb-2" style="display:none;white-space:pre-wrap"></div>'+
+                '<label for="cdc-ai-type" class="form-label">'+cdcAiMessages.typeLabel+'</label>'+
+                '<select id="cdc-ai-type" class="form-select mb-2">'+
+                '<option value="money">'+cdcAiMessages.typeMoney+'</option>'+
+                '<option value="integer">'+cdcAiMessages.typeInteger+'</option>'+
+                '<option value="word">'+cdcAiMessages.typeWord+'</option>'+
+                '<option value="sentence">'+cdcAiMessages.typeSentence+'</option>'+
+                '</select>'+
+                '<textarea id="cdc-ai-prompt" class="form-control" rows="3"></textarea></div>'+
                 '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">'+cdcAiMessages.cancel+'</button>'+
                 '<button type="button" class="btn btn-primary" id="cdc-ai-send-btn">'+cdcAiMessages.ask+'</button></div>'+
                 '</div></div></div>';
@@ -245,10 +254,21 @@
             return document.getElementById('cdc-ai-prompt-modal');
         }
 
-        function showPromptModal(prompt){
+        function showPromptModal(prompt,type,responseText){
             var modalEl=ensurePromptModal();
             var textarea=modalEl.querySelector('#cdc-ai-prompt');
+            var select=modalEl.querySelector('#cdc-ai-type');
+            var resp=modalEl.querySelector('#cdc-ai-response');
             textarea.value=prompt;
+            if(select) select.value=type||'';
+            if(resp){
+                if(responseText){
+                    resp.textContent=responseText;
+                    resp.style.display='block';
+                }else{
+                    resp.style.display='none';
+                }
+            }
             var modal=bootstrap.Modal.getOrCreateInstance(modalEl);
             return new Promise(function(resolve){
                 var done=false;
@@ -258,7 +278,7 @@
                     sendBtn.removeEventListener('click', onSend);
                 }
                 function onHide(){ if(!done){ cleanup(); resolve(null); } }
-                function onSend(){ if(!done){ var val=textarea.value; cleanup(); modal.hide(); resolve(val); } }
+                function onSend(){ if(!done){ var val=textarea.value; var t=select.value; cleanup(); modal.hide(); resolve({prompt:val,type:t}); } }
                 var sendBtn=modalEl.querySelector('#cdc-ai-send-btn');
                 modalEl.addEventListener('hidden.bs.modal', onHide, {once:true});
                 sendBtn.addEventListener('click', onSend);
@@ -280,29 +300,44 @@
                 alert(res.data&&res.data.message?res.data.message:cdcAiMessages.error);
                 return;
             }
-            var userPrompt=await showPromptModal(res.data.prompt);
-            if(userPrompt===null) return;
+            var promptInfo=await showPromptModal(res.data.prompt,res.data.type||'',null);
+            if(promptInfo===null) return;
+            var userPrompt=promptInfo.prompt;
+            var ansType=promptInfo.type;
 
-            var overlay2=aiOverlay('Asking AI…');
-            var data2=new FormData();
-            data2.append('action','cdc_ai_field');
-            data2.append('field',field);
-            data2.append('council_id', cdcToolbarData.id);
-            data2.append('council_name', name?name.value:'');
-            data2.append('prompt', userPrompt);
-            var res2=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data2}).then(r=>r.json());
-            removeOverlay(overlay2);
-            if(res2.success && res2.data){
-                var input=document.querySelector('[data-cdc-field="'+field+'"]');
-                if(input){
-                    input.value=res2.data.value || '';
-                    input.dispatchEvent(new Event('input'));
-                    var info=input.parentElement.querySelector('.cdc-ai-source');
-                    if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
-                    info.innerHTML=res2.data.source ? 'Source: <a href="'+res2.data.source+'" target="_blank" rel="noopener">'+res2.data.source+'</a>' : '';
+            while(true){
+                var overlay2=aiOverlay('Asking AI…');
+                var data2=new FormData();
+                data2.append('action','cdc_ai_field');
+                data2.append('field',field);
+                data2.append('council_id', cdcToolbarData.id);
+                data2.append('council_name', name?name.value:'');
+                data2.append('prompt', userPrompt);
+                data2.append('format', ansType);
+                var res2=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data2}).then(r=>r.json());
+                removeOverlay(overlay2);
+                if(res2.success && res2.data){
+                    var input=document.querySelector('[data-cdc-field="'+field+'"]');
+                    if(input){
+                        input.value=res2.data.value || '';
+                        input.dispatchEvent(new Event('input'));
+                        var info=input.parentElement.querySelector('.cdc-ai-source');
+                        if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
+                        info.innerHTML=res2.data.source ? 'Source: <a href="'+res2.data.source+'" target="_blank" rel="noopener">'+res2.data.source+'</a>' : '';
+                    }
+                    break;
+                }else if(res2.data && res2.data.response){
+                    promptInfo=await showPromptModal(userPrompt,ansType,res2.data.response);
+                    if(promptInfo===null) break;
+                    userPrompt=promptInfo.prompt;
+                    ansType=promptInfo.type;
+                }else if(res2.data && res2.data.message){
+                    alert(res2.data.message);
+                    break;
+                }else{
+                    alert(cdcAiMessages.error);
+                    break;
                 }
-            }else if(res2.data && res2.data.message){
-                alert(res2.data.message);
             }
         }
 
