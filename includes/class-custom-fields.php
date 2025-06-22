@@ -346,6 +346,9 @@ class Custom_Fields {
         ]);
         $total = 0.0;
         foreach ( $posts as $id ) {
+            if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
+                continue;
+            }
             $val = self::get_value( (int) $id, $name );
             if ( is_numeric( $val ) ) {
                 $total += (float) $val;

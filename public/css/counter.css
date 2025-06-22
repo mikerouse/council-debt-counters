@@ -12,6 +12,10 @@
     text-align: center;
 }
 
+.cdc-counter-static {
+    display: inline-block;
+}
+
 /* Hide reCAPTCHA badge while retaining compliance via inline notice */
 .grecaptcha-badge {
     visibility: hidden;

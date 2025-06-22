@@ -180,11 +180,24 @@ if ( 'edit' === $req_action ) {
                                                 </div>
                                                 <input type="hidden" id="cdc-sharing-image" name="cdc_sharing_image" value="<?php echo esc_attr( $share ); ?>" data-url="<?php echo esc_url( $share ? wp_get_attachment_url( $share ) : '' ); ?>" />
                                                 <button type="button" class="button" id="cdc-sharing-image-button"><?php esc_html_e( 'Select Image', 'council-debt-counters' ); ?></button>
-                                                <button type="button" class="button" id="cdc-sharing-image-remove" <?php if ( ! $share ) echo 'style="display:none"'; ?>><?php esc_html_e( 'Remove', 'council-debt-counters' ); ?></button>
-                                        </td>
-                                </tr>
-                                </table>
-                        </div>
+<button type="button" class="button" id="cdc-sharing-image-remove" <?php if ( ! $share ) echo 'style="display:none"'; ?>><?php esc_html_e( 'Remove', 'council-debt-counters' ); ?></button>
+</td>
+</tr>
+<tr>
+<th scope="row"><?php esc_html_e( 'Taken over by', 'council-debt-counters' ); ?></th>
+<td>
+<?php $parent = $council_id ? intval( get_post_meta( $council_id, 'cdc_parent_council', true ) ) : 0; ?>
+<select name="cdc_parent_council" class="form-select">
+<option value="0"><?php esc_html_e( 'None', 'council-debt-counters' ); ?></option>
+<?php foreach ( get_posts( [ 'post_type' => 'council', 'numberposts' => -1, 'exclude' => $council_id ? [ $council_id ] : [] ] ) as $c ) : ?>
+<option value="<?php echo esc_attr( $c->ID ); ?>" <?php selected( $parent, $c->ID ); ?>><?php echo esc_html( $c->post_title ); ?></option>
+<?php endforeach; ?>
+</select>
+<button type="submit" name="cdc_confirm_takeover" value="1" class="button mt-2"><?php esc_html_e( 'Confirm Takeover', 'council-debt-counters' ); ?></button>
+</td>
+</tr>
+</table>
+</div>
 			<?php
 			foreach ( $enabled as $tab_key ) :
 				if ( empty( $groups[ $tab_key ] ) ) {
