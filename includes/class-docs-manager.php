@@ -334,6 +334,9 @@ class Docs_Manager {
         foreach ( $figures as $field => $value ) {
             Custom_Fields::update_value( $cid, sanitize_key( $field ), sanitize_text_field( $value ) );
         }
+        if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
+            Council_Post_Type::calculate_total_debt( $cid );
+        }
         $all = get_option( 'cdc_ai_suggestions', [] );
         unset( $all[ $cid ] );
         update_option( 'cdc_ai_suggestions', $all );
