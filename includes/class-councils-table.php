@@ -98,14 +98,20 @@ class Councils_Table extends \WP_List_Table {
         }
         $order = 'desc' === strtolower( $order ) ? 'desc' : 'asc';
 
-        $query = new \WP_Query( [
+        $query_args = [
             'post_type'      => 'council',
             'post_status'    => $this->status,
             'posts_per_page' => $per_page,
             'paged'          => $paged,
             'orderby'        => $orderby,
             'order'          => $order,
-        ] );
+        ];
+
+        if ( ! empty( $_REQUEST['s'] ) ) {
+            $query_args['s'] = sanitize_text_field( $_REQUEST['s'] );
+        }
+
+        $query = new \WP_Query( $query_args );
 
         $this->items = $query->posts;
 
