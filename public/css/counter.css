@@ -14,6 +14,8 @@
 
 .cdc-counter-static {
     display: inline-block;
+    letter-spacing: 2px;
+    font-size: 1em;
 }
 
 /* Hide reCAPTCHA badge while retaining compliance via inline notice */
