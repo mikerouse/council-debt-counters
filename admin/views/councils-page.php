@@ -114,7 +114,7 @@ $readonly = true;
 					<tr>
 						<th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?>
 					<?php
-					if ( $field->required ) {
+                                        if ( $is_required ) {
 						echo ' *';}
 					?>
 						</label></th>
@@ -241,20 +241,26 @@ $readonly = true;
                                                                       <div id="cdc-debt-rates" class="alert alert-info mb-2"></div>
                                                               <?php endif; ?>
                                                               <table class="form-table" role="presentation">
-								<?php
+                                                                <?php
                                                                 foreach ( $groups[ $tab_key ] as $field ) :
-                                                                               $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
-                                                                               if ( ! $council_id && $field->required && in_array( $field->type, array( 'number', 'money' ), true ) ) {
-                                                                                       $val = '0';
+                                                                               $val       = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                                                               $na_val    = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : '';
+                                                                               $tab_na    = $council_id ? get_post_meta( $council_id, 'cdc_na_tab_debt', true ) : '';
+                                                                               $input_type  = 'text' === $field->type ? 'text' : 'number';
+                                                                               $is_required = (bool) $field->required;
+                                                                               if ( in_array( $field->name, array( 'current_liabilities', 'long_term_liabilities', 'finance_lease_pfi_liabilities' ), true ) ) {
+                                                                                   $enabled_debt = in_array( 'debt', $enabled, true );
+                                                                                   $is_required = $is_required && $enabled_debt && $na_val !== '1' && $tab_na !== '1';
                                                                                }
-										$input_type  = 'text' === $field->type ? 'text' : 'number';
-										$is_required = (bool) $field->required;
-										$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
-									?>
+                                                                               if ( ! $council_id && $is_required && in_array( $field->type, array( 'number', 'money' ), true ) ) {
+                                                                                   $val = '0';
+                                                                               }
+                                                                               $readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
+                                                                        ?>
 					<tr>
 						<th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?>
 									<?php
-									if ( $field->required ) {
+                                                                        if ( $is_required ) {
 										echo ' *';}
 									?>
 						</label></th>

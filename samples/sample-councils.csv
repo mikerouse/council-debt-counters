@@ -1,2 +1,2 @@
-council_name,council_type,council_location,current_liabilities,long_term_liabilities,finance_lease_pfi_liabilities,interest_paid_on_debt
+council_name,council_type,council_location,current_liabilities,long_term_liabilities,finance_lease_pfi_liabilities,interest_paid
 Example Council,Unitary,England,1000000,2500000,500000,150000

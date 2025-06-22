@@ -144,7 +144,7 @@
         var leaseField = document.querySelector('[data-cdc-field="finance_lease_pfi_liabilities"]');
         var manualField = document.querySelector('[data-cdc-field="manual_debt_entry"]');
         var adjustmentsField = document.querySelector('[data-cdc-field="debt_adjustments"]');
-        var interestField = document.querySelector('[data-cdc-field="interest_paid_on_debt"]');
+        var interestField = document.querySelector('[data-cdc-field="interest_paid"]');
         var totalField = document.querySelector('[data-cdc-field="total_debt"]');
         var ratesOutput = document.getElementById('cdc-debt-rates');
 

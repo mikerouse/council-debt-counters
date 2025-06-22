@@ -222,7 +222,7 @@ class Shortcode_Renderer {
                        $total = 0;
                }
                $parent = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
-		$interest          = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
+            $interest          = (float) Custom_Fields::get_value( $id, 'interest_paid' );
 		$growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
 		// Council balance sheets cover the year ending 31 March.
@@ -392,7 +392,7 @@ endforeach;
                 }
 
                 $name     = get_the_title( $id );
-                $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid_on_debt' );
+                $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid' );
                 $debt      = (float) Custom_Fields::get_value( $id, 'total_debt' );
                 $permalink = get_permalink( $id );
 
@@ -550,7 +550,7 @@ endforeach;
                                 continue;
                         }
                         $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt' );
-                        $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid_on_debt' );
+                        $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid' );
                 }
           
                 $count = count( array_filter( $posts, function( $cid ) {
