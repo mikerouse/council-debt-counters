@@ -1,4 +1,8 @@
 (function() {
+    function ready(fn){
+        if(document.readyState !== 'loading') { fn(); }
+        else { document.addEventListener('DOMContentLoaded', fn); }
+    }
     function formatCurrency(val) {
         if (isNaN(val)) return '';
         return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 }).format(val);
@@ -16,11 +20,93 @@
         update();
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    ready(function() {
         var actionInput = document.querySelector('input[name="action"][value="cdc_save_council"]');
         if (!actionInput) return; // only on edit/add page
         var form = actionInput.closest('form');
         if (!form) return;
+
+        var statusSelect = document.getElementById('cdc-post-status');
+        var assignee = document.querySelector('select[name="assigned_user"]');
+        var uploadBtn = document.getElementById('cdc-upload-doc');
+        var msgArea = document.getElementById('cdc-status-msg');
+        function flash(msg){
+            if(!msgArea) return;
+            msgArea.innerHTML = '<div class="alert alert-success mb-0">'+msg+'</div>';
+            setTimeout(function(){ msgArea.innerHTML = ''; },3000);
+        }
+        function sendToolbar(data){
+            data.append('action','cdc_update_toolbar');
+            data.append('post_id', cdcToolbarData.id);
+            data.append('nonce', cdcToolbarData.nonce);
+            fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                .then(function(r){return r.json();})
+                .then(function(res){ if(res.success && res.data && res.data.message){ flash(res.data.message); } });
+        }
+        if(statusSelect){
+            statusSelect.addEventListener('change', function(){
+                var d=new FormData(); d.append('post_status', statusSelect.value); sendToolbar(d);
+            });
+        }
+        if(assignee){
+            assignee.addEventListener('change', function(){
+                var d=new FormData(); d.append('assigned_user', assignee.value); sendToolbar(d);
+            });
+        }
+        if(uploadBtn){
+            uploadBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                var file=document.getElementById('cdc-soa');
+                var url=form.querySelector('input[name="statement_of_accounts_url"]');
+                var year=document.getElementById('cdc-soa-year');
+                var existing=form.querySelector('select[name="statement_of_accounts_existing"]');
+                var d=new FormData();
+                d.append('action','cdc_upload_doc');
+                d.append('nonce', cdcToolbarData.nonce);
+                d.append('council_id', cdcToolbarData.id);
+                if(year) d.append('year', year.value);
+                if(file && file.files.length){ d.append('file', file.files[0]); }
+                if(url && url.value){ d.append('url', url.value); }
+                if(existing && existing.value){ d.append('existing', existing.value); }
+                fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:d})
+                    .then(function(r){return r.json();})
+                    .then(function(res){
+                        if(res.success && res.data && res.data.html){
+                            var table=document.getElementById('cdc-docs-table');
+                            if(table){
+                                var tbody=table.querySelector('tbody');
+                                tbody.insertAdjacentHTML('beforeend', res.data.html);
+                            }
+                            flash(res.data.message || 'Document added.');
+                        } else if(res.data && res.data.message){
+                            alert(res.data.message);
+                        }
+                    });
+            });
+        }
+
+        function validateField(field){
+            if(!field.required) return;
+            if(field.value.trim()===''){ field.classList.add('is-invalid'); }
+            else{ field.classList.remove('is-invalid'); }
+        }
+
+        form.querySelectorAll('[required]').forEach(function(f){
+            validateField(f);
+            f.addEventListener('input', function(){
+                validateField(f); updateTabState();
+            });
+        });
+
+        function updateTabState(){
+            document.querySelectorAll('.tab-pane').forEach(function(tab){
+                var link = document.querySelector('[data-bs-target="#'+tab.id+'"]');
+                if(!link) return;
+                if(tab.querySelector('.is-invalid')) link.classList.add('text-danger');
+                else link.classList.remove('text-danger');
+            });
+        }
+        updateTabState();
 
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
             // Only add helper if field represents a monetary value
@@ -74,10 +160,22 @@
         if (leaseField) leaseField.addEventListener('input', updateAll);
         if (interestField) interestField.addEventListener('input', updateAll);
         updateAll();
-        document.querySelectorAll(".cdc-extract-ai").forEach(function(btn){
-            btn.addEventListener("click", function(e){
-                e.preventDefault();
-                var docId = btn.value;
+
+        form.addEventListener('submit', function(){
+            var file = document.getElementById('cdc-soa');
+            var url = form.querySelector('input[name="statement_of_accounts_url"]');
+            if((file && file.files.length>0) || (url && url.value.trim()!=='')){
+                var overlay=document.createElement('div');
+                overlay.id='cdc-upload-overlay';
+                overlay.innerHTML='<span class="spinner is-active"></span><p>Uploading…</p>';
+                document.body.appendChild(overlay);
+            }
+        });
+        document.addEventListener('click', function(e){
+            var target = e.target.closest('.cdc-extract-ai');
+            if(!target) return;
+            e.preventDefault();
+            var docId = target.value;
                 var overlay = document.createElement("div");
                 overlay.id = "cdc-ai-overlay";
                 overlay.innerHTML = "<span class=\"spinner is-active\"></span><div class=\"progress w-75 mt-2\" style=\"height:8px\"><div class=\"progress-bar\" style=\"width:0%\"></div></div><p></p>";
@@ -125,6 +223,109 @@
                         p.textContent = cdcAiMessages.error;
                     });
             });
+
+        function aiOverlay(msg){
+            var ov=document.createElement('div');
+            ov.id='cdc-ai-overlay';
+            ov.innerHTML='<span class="spinner is-active"></span><p>'+msg+'</p>';
+            document.body.appendChild(ov);
+            return ov;
+        }
+        function removeOverlay(ov){ if(ov&&ov.parentNode){ ov.parentNode.removeChild(ov); } }
+
+        function ensurePromptModal(){
+            var m=document.getElementById('cdc-ai-prompt-modal');
+            if(m) return m;
+            var html='<div class="modal fade" id="cdc-ai-prompt-modal" tabindex="-1" aria-hidden="true">'+
+                '<div class="modal-dialog"><div class="modal-content">'+
+                '<div class="modal-header"><h5 class="modal-title">'+cdcAiMessages.editPrompt+'</h5>'+
+                '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'+
+                '<div class="modal-body"><textarea id="cdc-ai-prompt" class="form-control" rows="3"></textarea></div>'+
+                '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">'+cdcAiMessages.cancel+'</button>'+
+                '<button type="button" class="btn btn-primary" id="cdc-ai-send-btn">'+cdcAiMessages.ask+'</button></div>'+
+                '</div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+            return document.getElementById('cdc-ai-prompt-modal');
+        }
+
+        function showPromptModal(prompt){
+            var modalEl=ensurePromptModal();
+            var textarea=modalEl.querySelector('#cdc-ai-prompt');
+            textarea.value=prompt;
+            var modal=bootstrap.Modal.getOrCreateInstance(modalEl);
+            return new Promise(function(resolve){
+                var done=false;
+                function cleanup(){
+                    done=true;
+                    modalEl.removeEventListener('hidden.bs.modal', onHide);
+                    sendBtn.removeEventListener('click', onSend);
+                }
+                function onHide(){ if(!done){ cleanup(); resolve(null); } }
+                function onSend(){ if(!done){ var val=textarea.value; cleanup(); modal.hide(); resolve(val); } }
+                var sendBtn=modalEl.querySelector('#cdc-ai-send-btn');
+                modalEl.addEventListener('hidden.bs.modal', onHide, {once:true});
+                sendBtn.addEventListener('click', onSend);
+                modal.show();
+            });
+        }
+
+        async function askField(field){
+            var name=document.querySelector('[data-cdc-field="council_name"]');
+            var data=new FormData();
+            data.append('action','cdc_ai_clarify_field');
+            data.append('field',field);
+            data.append('council_id', cdcToolbarData.id);
+            data.append('council_name', name?name.value:'');
+            var overlay=aiOverlay('Preparing prompt…');
+            var res=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data}).then(r=>r.json());
+            removeOverlay(overlay);
+            if(!res.success||!res.data||!res.data.prompt){
+                alert(res.data&&res.data.message?res.data.message:cdcAiMessages.error);
+                return;
+            }
+            var userPrompt=await showPromptModal(res.data.prompt);
+            if(userPrompt===null) return;
+
+            var overlay2=aiOverlay('Asking AI…');
+            var data2=new FormData();
+            data2.append('action','cdc_ai_field');
+            data2.append('field',field);
+            data2.append('council_id', cdcToolbarData.id);
+            data2.append('council_name', name?name.value:'');
+            data2.append('prompt', userPrompt);
+            var res2=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data2}).then(r=>r.json());
+            removeOverlay(overlay2);
+            if(res2.success && res2.data){
+                var input=document.querySelector('[data-cdc-field="'+field+'"]');
+                if(input){
+                    input.value=res2.data.value || '';
+                    input.dispatchEvent(new Event('input'));
+                    var info=input.parentElement.querySelector('.cdc-ai-source');
+                    if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
+                    info.innerHTML=res2.data.source ? 'Source: <a href="'+res2.data.source+'" target="_blank" rel="noopener">'+res2.data.source+'</a>' : '';
+                }
+            }else if(res2.data && res2.data.message){
+                alert(res2.data.message);
+            }
+        }
+
+        document.addEventListener('click',function(ev){
+            var b=ev.target.closest('.cdc-ask-ai');
+            if(b){
+                ev.preventDefault();
+                askField(b.dataset.field);
+            }
         });
+
+        var askAll=document.getElementById('cdc-ask-ai-all');
+        if(askAll){
+            askAll.addEventListener('click',async function(ev){
+                ev.preventDefault();
+                var buttons=document.querySelectorAll('.cdc-ask-ai');
+                for(var i=0;i<buttons.length;i++){
+                    await askField(buttons[i].dataset.field);
+                }
+            });
+        }
     });
 })();

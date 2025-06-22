@@ -61,6 +61,20 @@ $types = [
                     <input type="number" name="cdc_counter_weight" id="cdc_counter_weight" value="<?php echo esc_attr( $weight ); ?>" min="100" max="900" step="100" />
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e( 'Default Sharing Thumbnail', 'council-debt-counters' ); ?></th>
+                <td>
+                    <?php $thumb = absint( get_option( 'cdc_default_sharing_thumbnail', 0 ) ); ?>
+                    <div id="cdc-default-thumbnail-preview">
+                        <?php if ( $thumb ) : ?>
+                            <?php echo wp_get_attachment_image( $thumb, array( 150, 150 ) ); ?>
+                        <?php endif; ?>
+                    </div>
+                    <input type="hidden" id="cdc-default-thumbnail" name="cdc_default_sharing_thumbnail" value="<?php echo esc_attr( $thumb ); ?>" data-url="<?php echo esc_url( $thumb ? wp_get_attachment_url( $thumb ) : '' ); ?>" />
+                    <button type="button" class="button" id="cdc-default-thumbnail-button"><?php esc_html_e( 'Select Image', 'council-debt-counters' ); ?></button>
+                    <button type="button" class="button" id="cdc-default-thumbnail-remove" <?php if ( ! $thumb ) echo 'style="display:none"'; ?>><?php esc_html_e( 'Remove', 'council-debt-counters' ); ?></button>
+                </td>
+            </tr>
         </table>
         <?php submit_button(); ?>
     </form>

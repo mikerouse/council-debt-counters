@@ -54,14 +54,13 @@ class Council_Search {
         set_transient( $key, 1, 2 );
         Stats_Page::log_search( $query );
         $args = [
-            'post_type'   => 'page',
-            'post_status' => 'publish',
-            'post_parent' => 3642,
-            's'           => $query,
-            'numberposts' => -1,
-            'orderby'     => 'title',
-            'order'       => 'ASC',
-            'fields'      => 'ids',
+            'post_type'      => 'council',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            's'              => $query,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+            'fields'         => 'ids',
         ];
         $posts = get_posts( $args );
         $results = [];

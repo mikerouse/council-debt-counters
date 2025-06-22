@@ -9,24 +9,41 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Shortcode_Renderer {
 
-	private static function get_council_id_from_atts( array $atts ) {
-			$id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+       /**
+        * Get the URL for an icon asset.
+        *
+        * @param string $name Icon filename without extension.
+        * @return string Icon URL.
+        */
+       private static function icon_url( string $name ): string {
+               $plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
+               return plugins_url( 'public/icons/' . $name . '.svg', $plugin_file );
+       }
 
-		if ( 0 === $id && ! empty( $atts['council'] ) ) {
-				$name = sanitize_text_field( $atts['council'] );
-				$post = get_page_by_title( $name, OBJECT, 'council' );
+       private static function get_council_id_from_atts( array $atts ) {
+               $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
 
-			if ( ! $post ) {
-					$post = get_page_by_path( sanitize_title( $name ), OBJECT, 'council' );
-			}
+               if ( 0 === $id && isset( $atts['council_id'] ) ) {
+                       $id = intval( $atts['council_id'] );
+               }
 
-			if ( $post ) {
-						$id = $post->ID;
-			}
-		}
+               if ( 0 === $id && ! empty( $atts['council'] ) ) {
+                       $name = sanitize_text_field( $atts['council'] );
+                       $post = get_page_by_title( $name, OBJECT, 'council' );
+                       if ( ! $post ) {
+                               $post = get_page_by_path( sanitize_title( $name ), OBJECT, 'council' );
+                       }
+                       if ( $post ) {
+                               $id = $post->ID;
+                       }
+               }
 
-			return $id;
-	}
+               if ( 0 === $id && is_singular( 'council' ) ) {
+                       $id = get_the_ID();
+               }
+
+               return $id;
+       }
 
 	private static function render_annual_counter( int $id, string $field, string $type = '', bool $with_details = true ) {
 		$enabled = (array) get_option( 'cdc_enabled_counters', array() );
@@ -109,6 +126,7 @@ class Shortcode_Renderer {
                 add_shortcode( 'total_custom_counter', array( __CLASS__, 'render_total_custom_counter' ) );
                 add_shortcode( 'cdc_leaderboard', array( __CLASS__, 'render_leaderboard' ) );
                 add_shortcode( 'cdc_share_buttons', array( __CLASS__, 'render_share_buttons' ) );
+                add_shortcode( 'council_status', array( __CLASS__, 'render_status_message' ) );
                 add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
                 add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
                 add_action( 'wp_ajax_cdc_log_js', array( __CLASS__, 'ajax_log_js' ) );
@@ -153,19 +171,19 @@ class Shortcode_Renderer {
 		);
 	}
 
-	public static function render_counter( $atts ) {
-		$atts = shortcode_atts(
-			array(
-				'id'   => 0,
-				'type' => 'debt',
-			),
-			$atts
-		);
-		$id   = intval( $atts['id'] );
-		$type = sanitize_key( $atts['type'] );
-		if ( 0 === $id ) {
-			return '';
-		}
+       public static function render_counter( $atts ) {
+               $atts = shortcode_atts(
+                       array(
+                               'id'   => 0,
+                               'type' => 'debt',
+                       ),
+                       $atts
+               );
+               $id   = self::get_council_id_from_atts( $atts );
+               $type = sanitize_key( $atts['type'] );
+               if ( 0 === $id ) {
+                       return '';
+               }
 		if ( '' !== $type && 'debt' !== $type ) {
 			// Delegate to the custom counter handler for non-debt types
 			return self::render_custom_counter( $atts );
@@ -366,18 +384,39 @@ endforeach;
                 ?>
                 <div class="cdc-share-buttons mt-3">
                         <div class="fw-bold mb-1"><?php esc_html_e( 'Share this', 'council-debt-counters' ); ?></div>
-                        <a class="btn btn-outline-primary btn-sm me-2 cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="twitter" target="_blank" rel="noopener noreferrer" href="https://x.com/intent/tweet?text=<?php echo esc_attr( $encoded ); ?>">
-                                X
+                        <a class="btn btn-outline-primary btn-sm me-2 d-inline-flex align-items-center cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="twitter" target="_blank" rel="noopener noreferrer" href="https://x.com/intent/tweet?text=<?php echo esc_attr( $encoded ); ?>">
+                                <img src="<?php echo esc_url( self::icon_url( 'twitter-x' ) ); ?>" alt="" width="16" height="16" class="me-1">
+                                <span><?php esc_html_e( 'X', 'council-debt-counters' ); ?></span>
                         </a>
-                        <a class="btn btn-outline-success btn-sm me-2 cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="whatsapp" target="_blank" rel="noopener noreferrer" href="https://wa.me/?text=<?php echo esc_attr( $encoded ); ?>">
-                                WhatsApp
+                        <a class="btn btn-outline-success btn-sm me-2 d-inline-flex align-items-center cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="whatsapp" target="_blank" rel="noopener noreferrer" href="https://wa.me/?text=<?php echo esc_attr( $encoded ); ?>">
+                                <img src="<?php echo esc_url( self::icon_url( 'whatsapp' ) ); ?>" alt="" width="16" height="16" class="me-1">
+                                <span><?php esc_html_e( 'WhatsApp', 'council-debt-counters' ); ?></span>
                         </a>
-                        <a class="btn btn-outline-primary btn-sm cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="facebook" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo esc_attr( rawurlencode( $permalink ) ); ?>">
-                                Facebook
+                        <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center cdc-share-link" data-council-id="<?php echo esc_attr( $id ); ?>" data-share-type="facebook" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo esc_attr( rawurlencode( $permalink ) ); ?>">
+                                <img src="<?php echo esc_url( self::icon_url( 'facebook' ) ); ?>" alt="" width="16" height="16" class="me-1">
+                                <span><?php esc_html_e( 'Facebook', 'council-debt-counters' ); ?></span>
                         </a>
                 </div>
                 <?php
                 return ob_get_clean();
+        }
+
+        public static function render_status_message( $atts ) {
+                $id = self::get_council_id_from_atts( $atts );
+                if ( 0 === $id ) {
+                        return '';
+                }
+
+                $message = Custom_Fields::get_value( $id, 'status_message' );
+                $type    = Custom_Fields::get_value( $id, 'status_message_type' );
+
+                if ( ! is_string( $message ) || '' === trim( $message ) ) {
+                        return '';
+                }
+
+                $type = in_array( $type, array( 'info', 'warning', 'danger' ), true ) ? $type : 'info';
+
+                return sprintf( '<div class="alert alert-%1$s" role="status">%2$s</div>', esc_attr( $type ), esc_html( $message ) );
         }
 
         private static function render_total_annual_counter( string $field, string $type = '' ) {
@@ -574,9 +613,9 @@ endforeach;
                                 case 'debt_per_resident':
                                         $value = ( $population > 0 ) ? $debt / $population : null;
                                         break;
-                                case 'debt_to_reserves_ratio':
-                                        $value = ( $reserves > 0 ) ? $debt / $reserves : null;
-                                        break;
+                               case 'reserves_to_debt_ratio':
+                                       $value = ( $debt > 0 ) ? $reserves / $debt : null;
+                                       break;
                                 case 'biggest_deficit':
                                         $value = $deficit !== 0 ? $deficit : ( $spending - $income );
                                         break;
@@ -604,10 +643,10 @@ endforeach;
                         );
                 }
 
-                $desc = true;
-                if ( 'lowest_reserves' === $type ) {
-                        $desc = false;
-                }
+               $desc = true;
+               if ( in_array( $type, array( 'lowest_reserves', 'reserves_to_debt_ratio' ), true ) ) {
+                       $desc = false;
+               }
 
                 usort(
                         $rows,
@@ -632,7 +671,7 @@ endforeach;
                 if ( 'list' === $format ) {
                         echo '<ul class="list-group">';
                         foreach ( $rows as $row ) {
-                                $label = ( in_array( $type, array( 'debt_to_reserves_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
+                               $label = ( in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
                                 echo '<li class="list-group-item d-flex justify-content-between align-items-center">';
                                 echo esc_html( $row['name'] );
                                 echo '<span class="badge bg-secondary">' . esc_html( $label ) . '</span>';
@@ -650,7 +689,7 @@ endforeach;
                         }
                         echo '</tr></thead><tbody>';
                         foreach ( $rows as $row ) {
-                                $label = ( in_array( $type, array( 'debt_to_reserves_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
+                               $label = ( in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
                                 echo '<tr><td>' . esc_html( $row['name'] ) . '</td><td>' . esc_html( $label ) . '</td>';
                                 if ( $with_link ) {
                                         echo '<td><a href="' . esc_url( get_permalink( $row['id'] ) ) . '">' . esc_html__( 'View details', 'council-debt-counters' ) . '</a></td>';

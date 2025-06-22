@@ -10,8 +10,9 @@ The plugin will automatically create the necessary database tables on activation
 
 If you provide an OpenAI API key you can let the plugin attempt to pull key figures from uploaded Statement of Accounts documents. Select the desired model under **Debt Counters → Settings**; this option is ignored unless an API key has been entered on the **Licences & Addons** page. Models like **o3**, **o4-mini** and **gpt‑4o** are available alongside gpt‑3.5 and gpt‑4. The AI’s suggestions are shown in the admin area so you can review and confirm them before the values are stored for that council. Large PDFs are automatically split into smaller chunks so each OpenAI request stays within the model’s token limits. Requests are throttled to each model’s tokens-per-minute allowance (for example 200k TPM for o4-mini and 30k TPM for gpt‑4o). The progress overlay now displays how many tokens were used and shows a countdown bar so you know how long to wait. Requests allow up to 60 seconds by default; filter `cdc_openai_timeout` to change this.
 If the accounts indicate figures are in thousands of pounds (e.g. using "£000s" headings) the AI multiplies numbers by 1,000 so stored values are the full amounts.
+Each field on the council edit screen now features an **Ask AI** button. This queries OpenAI for that specific value and fills in the number while showing a source link below the field. The toolbar includes **Ask AI for All** to run the process for every field at once. When you click any Ask&nbsp;AI button the plugin suggests a question and displays it in a Bootstrap modal so you can tweak the wording before sending. The AI is asked to favour official sources &ndash; ideally from **gov.uk** domains &ndash; and all requests are written to the Troubleshooting log so you can inspect what was returned or diagnose problems. Text fields like website URLs are supported and responses are trimmed down so the value can be inserted directly.
 
-By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**. These mandatory fields cannot be removed, though you may edit their labels. A **Total Debt** field is calculated automatically from the others and is visible as a read-only value. Additional custom fields can be added, edited or removed from the admin screen and you can change whether they are required as well as their field type (text, number or monetary).
+By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**, and a **Financial Data Source URL** so visitors can view the statement used. These mandatory fields cannot be removed, though you may edit their labels. A **Total Debt** field is calculated automatically from the others and is visible as a read-only value. Additional custom fields &ndash; including a **Status Message** and **Status Message Type** &ndash; can be added, edited or removed from the admin screen and you can change whether they are required as well as their field type (text, number or monetary).
 
 Councils can be added, edited, and deleted from the **Debt Counters → Councils** page which uses a clean Bootstrap design. All custom fields are displayed on this screen so you can capture relevant information before uploading finance documents.
 
@@ -45,7 +46,7 @@ Display ranked tables or lists of councils with `[cdc_leaderboard]`. Example:
 ```
 
 Available `type` options include `highest_debt`, `debt_per_resident`,
-`debt_to_reserves_ratio`, `biggest_deficit`, `lowest_reserves`,
+`reserves_to_debt_ratio`, `biggest_deficit`, `lowest_reserves`,
 `highest_spending_per_resident` and `highest_interest_paid`. The `limit`
 parameter controls how many rows are shown, `format` can be `table` or `list`,
 and setting `link="1"` adds a View details link for each council.
@@ -54,9 +55,15 @@ and setting `link="1"` adds a View details link for each council.
 
 Add `[cdc_share_buttons]` on a single council page to show buttons for sharing
 that council’s stats on X, WhatsApp or Facebook. The shortcode automatically
-uses the selected council’s name, relevant figure and permalink so each share
-promotes that specific page rather than the site in general.
+uses the selected council’s name, relevant figure and permalink.
 
+The social preview image defaults to the **Default Sharing Thumbnail** set on the
+plugin Settings page. You can override this per council by selecting a
+**Sharing Image** when editing a council.
+
+### Status messages
+
+Use `[council_status]` to display any status message you have recorded for a council. If the field is empty then nothing is shown.
 
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.

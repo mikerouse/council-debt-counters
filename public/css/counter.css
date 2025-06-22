@@ -7,3 +7,12 @@
     transform: translateY(10px);
     transition: opacity 0.4s ease, transform 0.4s ease;
 }
+
+.cdc-share-buttons {
+    text-align: center;
+}
+
+/* Hide reCAPTCHA badge while retaining compliance via inline notice */
+.grecaptcha-badge {
+    visibility: hidden;
+}

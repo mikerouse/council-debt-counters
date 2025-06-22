@@ -16,6 +16,7 @@ class Council_Admin_Page {
         add_action( 'admin_menu', [ __CLASS__, 'add_page' ], 11 );
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
         add_action( 'admin_post_cdc_save_council', [ __CLASS__, 'handle_save' ] );
+        add_action( 'wp_ajax_cdc_update_toolbar', [ __CLASS__, 'ajax_update_toolbar' ] );
     }
 
     public static function add_page() {
@@ -55,14 +56,28 @@ class Council_Admin_Page {
         wp_enqueue_style( 'cdc-counter-font', $font_url, [], null );
         wp_add_inline_style( 'cdc-counter-font', ".cdc-counter{font-family:'{$font}',sans-serif;font-weight:{$weight};}" );
         wp_enqueue_script( 'cdc-counter-animations' );
+        wp_enqueue_media();
         wp_enqueue_script(
-            'cdc-council-form',
-            plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
+            'cdc-media-select',
+            plugins_url( 'admin/js/media-select.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
             [],
             '0.1.0',
             true
         );
+        wp_localize_script( 'cdc-media-select', 'CDC_MEDIA_SELECT', [
+            'title'  => __( 'Select Image', 'council-debt-counters' ),
+            'button' => __( 'Use this image', 'council-debt-counters' ),
+        ] );
+        wp_enqueue_script(
+            'cdc-council-form',
+            plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
+            [],
+            '0.1.3',
+            true
+        );
         wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_enqueue_style( 'cdc-upload-progress', plugins_url( 'admin/css/upload-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_enqueue_style( 'cdc-toolbar', plugins_url( 'admin/css/toolbar.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
         wp_localize_script( 'cdc-council-form', 'cdcAiMessages', [
             'steps' => [
                 __( 'Checking OpenAI API key…', 'council-debt-counters' ),
@@ -73,6 +88,14 @@ class Council_Admin_Page {
             ],
             'error' => __( 'Extraction failed', 'council-debt-counters' ),
             'timeout' => apply_filters( 'cdc_openai_timeout', 60 ),
+            'editPrompt' => __( 'Edit the question to send to AI', 'council-debt-counters' ),
+            'ask'    => __( 'Ask AI', 'council-debt-counters' ),
+            'cancel' => __( 'Cancel', 'council-debt-counters' ),
+        ] );
+        $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
+        wp_localize_script( 'cdc-council-form', 'cdcToolbarData', [
+            'id'    => $council_id,
+            'nonce' => wp_create_nonce( 'cdc_save_council' ),
         ] );
     }
 
@@ -93,10 +116,15 @@ class Council_Admin_Page {
             }
         }
 
+        $status = sanitize_key( $_POST['post_status'] ?? 'publish' );
+        if ( ! in_array( $status, [ 'publish', 'draft', 'under_review' ], true ) ) {
+            $status = 'publish';
+        }
+
         if ( $post_id ) {
-            wp_update_post( [ 'ID' => $post_id, 'post_title' => $title ] );
+            wp_update_post( [ 'ID' => $post_id, 'post_title' => $title, 'post_status' => $status ] );
         } else {
-            $post_id = wp_insert_post( [ 'post_type' => 'council', 'post_status' => 'publish', 'post_title' => $title ] );
+            $post_id = wp_insert_post( [ 'post_type' => 'council', 'post_status' => $status, 'post_title' => $title ] );
         }
 
         foreach ( $fields as $field ) {
@@ -131,6 +159,19 @@ class Council_Admin_Page {
             Custom_Fields::update_value( $post_id, 'statement_of_accounts', $soa_value );
         }
 
+        if ( isset( $_POST['assigned_user'] ) ) {
+            update_post_meta( $post_id, 'assigned_user', intval( $_POST['assigned_user'] ) );
+        }
+
+        if ( isset( $_POST['cdc_sharing_image'] ) ) {
+            $img = absint( $_POST['cdc_sharing_image'] );
+            if ( $img ) {
+                update_post_meta( $post_id, 'cdc_sharing_image', $img );
+            } else {
+                delete_post_meta( $post_id, 'cdc_sharing_image' );
+            }
+        }
+
         // Document edits or deletions from the Documents tab
         if ( isset( $_POST['update_doc'] ) && isset( $_POST['docs'][ $_POST['update_doc'] ] ) ) {
             $doc_id = intval( $_POST['update_doc'] );
@@ -149,8 +190,38 @@ class Council_Admin_Page {
             }
         }
 
-        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&action=edit&post=' . $post_id . '&updated=1' ) );
         exit;
+    }
+
+    public static function ajax_update_toolbar() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+        }
+        check_ajax_referer( 'cdc_save_council', 'nonce' );
+
+        $post_id = intval( $_POST['post_id'] ?? 0 );
+        if ( ! $post_id ) {
+            wp_send_json_error( __( 'Invalid council.', 'council-debt-counters' ) );
+        }
+
+        $message_parts = [];
+
+        if ( isset( $_POST['assigned_user'] ) ) {
+            update_post_meta( $post_id, 'assigned_user', intval( $_POST['assigned_user'] ) );
+            $message_parts[] = __( 'Assignee updated.', 'council-debt-counters' );
+        }
+
+        if ( isset( $_POST['post_status'] ) ) {
+            $status = sanitize_key( $_POST['post_status'] );
+            if ( ! in_array( $status, [ 'publish', 'draft', 'under_review' ], true ) ) {
+                $status = 'publish';
+            }
+            wp_update_post( [ 'ID' => $post_id, 'post_status' => $status ] );
+            $message_parts[] = __( 'Status updated.', 'council-debt-counters' );
+        }
+
+        wp_send_json_success( [ 'message' => implode( ' ', $message_parts ) ] );
     }
 
     public static function render_page() {

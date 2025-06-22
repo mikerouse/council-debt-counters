@@ -38,16 +38,29 @@ class Whistleblower_Form {
 		 * @param array $atts Shortcode attributes.
 		 * @return int Council post ID.
 		 */
-	private static function get_council_id_from_atts( array $atts ): int {
-		$id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
-		if ( ! $id && ! empty( $atts['council'] ) ) {
-			$post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
-			if ( $post ) {
-				$id = $post->ID;
-			}
-		}
-		return $id;
-	}
+       private static function get_council_id_from_atts( array $atts ): int {
+               $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
+
+               if ( 0 === $id && isset( $atts['council_id'] ) ) {
+                       $id = intval( $atts['council_id'] );
+               }
+
+               if ( 0 === $id && ! empty( $atts['council'] ) ) {
+                       $post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
+                       if ( ! $post ) {
+                               $post = get_page_by_path( sanitize_title( $atts['council'] ), OBJECT, 'council' );
+                       }
+                       if ( $post ) {
+                               $id = $post->ID;
+                       }
+               }
+
+               if ( 0 === $id && is_singular( 'council' ) ) {
+                       $id = get_the_ID();
+               }
+
+               return $id;
+       }
 
 		/**
 		 * Register the custom post type used to store reports.
@@ -278,12 +291,15 @@ class Whistleblower_Form {
 				<label for="cdc-email" class="form-label"><?php esc_html_e( 'Contact email (optional)', 'council-debt-counters' ); ?></label>
 				<input type="email" class="form-control" id="cdc-email" name="cdc_email" />
 			</div>
-               <?php if ( $site_key ) : ?>
+                       <?php if ( $site_key ) : ?>
                                <input type="hidden" name="g-recaptcha-response" />
                        <?php endif; ?>
                        <button type="submit" class="btn btn-primary"><?php esc_html_e( 'Submit Report', 'council-debt-counters' ); ?></button>
                </form>
                <div class="cdc-response mt-3"></div>
+               <p class="small text-muted mt-2">
+                       <?php esc_html_e( 'This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.', 'council-debt-counters' ); ?>
+               </p>
                <?php
                return ob_get_clean();
        }

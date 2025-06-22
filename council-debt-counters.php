@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Council Debt Counters
  * Description: Animated counters visualising council debt figures.
- * Version: 0.2.2
+ * Version: 0.2.5
  * Author: Mike Rouse using OpenAI Codex
  * Author URI: https://www.mikerouse.co.uk
  * Text Domain: council-debt-counters
@@ -25,6 +25,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-error-logger.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-docs-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-license-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-post-type.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-councils-table.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-admin-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-custom-fields.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-openai-helper.php';
@@ -36,6 +37,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-dashboard-widge
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-shortcode-playground.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-search.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-stats-page.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-sharing-meta.php';
 
 register_activation_hook( __FILE__, function() {
     \CouncilDebtCounters\Custom_Fields::install();
@@ -68,6 +70,7 @@ add_action( 'plugins_loaded', function() {
     \CouncilDebtCounters\Shortcode_Playground::init();
     \CouncilDebtCounters\Council_Search::init();
     \CouncilDebtCounters\Stats_Page::init();
+    \CouncilDebtCounters\Sharing_Meta::init();
 } );
 
 /**

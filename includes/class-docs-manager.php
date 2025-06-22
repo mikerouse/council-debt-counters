@@ -42,6 +42,7 @@ class Docs_Manager {
         add_action( 'admin_post_cdc_dismiss_ai_figures', [ __CLASS__, 'handle_dismiss_ai' ] );
         add_action( 'admin_notices', [ __CLASS__, 'show_ai_suggestions' ] );
         add_action( 'wp_ajax_cdc_extract_figures', [ __CLASS__, 'handle_ajax_extract' ] );
+        add_action( 'wp_ajax_cdc_upload_doc', [ __CLASS__, 'handle_ajax_upload_doc' ] );
     }
 
     public static function install() {
@@ -386,6 +387,73 @@ class Docs_Manager {
         wp_send_json_success( [ 'message' => $msg, 'tokens' => $tokens ] );
     }
 
+    public static function handle_ajax_upload_doc() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'council-debt-counters' ) ], 403 );
+        }
+        check_ajax_referer( 'cdc_save_council', 'nonce' );
+
+        $cid  = intval( $_POST['council_id'] ?? 0 );
+        if ( ! $cid ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid council.', 'council-debt-counters' ) ] );
+        }
+        $year = sanitize_text_field( $_POST['year'] ?? self::current_financial_year() );
+        $filename = '';
+        $result = null;
+        if ( ! empty( $_FILES['file']['name'] ) ) {
+            $filename = basename( $_FILES['file']['name'] );
+            $result   = self::upload_document( $_FILES['file'], 'statement_of_accounts', $cid, $year );
+        } elseif ( ! empty( $_POST['url'] ) ) {
+            $url      = esc_url_raw( $_POST['url'] );
+            $filename = basename( parse_url( $url, PHP_URL_PATH ) );
+            $result   = self::import_from_url( $url, 'statement_of_accounts', $cid, $year );
+        } elseif ( ! empty( $_POST['existing'] ) ) {
+            $filename = sanitize_file_name( $_POST['existing'] );
+            self::assign_document( $filename, $cid, 'statement_of_accounts', $year );
+            $result = true;
+        } else {
+            wp_send_json_error( [ 'message' => __( 'No document specified.', 'council-debt-counters' ) ] );
+        }
+
+        if ( $result === true ) {
+            $doc = self::get_document( $filename );
+            if ( $doc ) {
+                wp_send_json_success( [
+                    'html'    => self::render_doc_row( $doc ),
+                    'message' => __( 'Document added.', 'council-debt-counters' ),
+                ] );
+            }
+        }
+        wp_send_json_error( [ 'message' => is_string( $result ) ? $result : __( 'Upload failed.', 'council-debt-counters' ) ] );
+    }
+
+    public static function render_doc_row( $doc ) {
+        ob_start();
+        ?>
+        <tr>
+            <td><?php echo esc_html( $doc->filename ); ?></td>
+            <td>
+                <select name="docs[<?php echo esc_attr( $doc->id ); ?>][financial_year]">
+                    <?php foreach ( self::financial_years() as $y ) : ?>
+                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $doc->financial_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+            <td>
+                <select name="docs[<?php echo esc_attr( $doc->id ); ?>][doc_type]">
+                    <option value="statement_of_accounts" <?php selected( $doc->doc_type, 'statement_of_accounts' ); ?>><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></option>
+                </select>
+            </td>
+            <td>
+                <button type="button" value="<?php echo esc_attr( $doc->id ); ?>" class="button cdc-extract-ai"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Extract Figures', 'council-debt-counters' ); ?></button>
+                <button type="submit" name="update_doc" value="<?php echo esc_attr( $doc->id ); ?>" class="button button-secondary"><?php esc_html_e( 'Update', 'council-debt-counters' ); ?></button>
+                <button type="submit" name="delete_doc" value="<?php echo esc_attr( $doc->id ); ?>" class="button button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Delete this document?', 'council-debt-counters' ) ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
+            </td>
+        </tr>
+        <?php
+        return ob_get_clean();
+    }
+
     private static function extract_text( string $file ) {
         if ( ! file_exists( $file ) ) {
             Error_Logger::log_error( 'extract_text file missing: ' . $file );
@@ -398,6 +466,22 @@ class Docs_Manager {
         $ext = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
         Error_Logger::log_debug( 'extract_text extension ' . $ext );
         if ( $ext === 'pdf' ) {
+            // Use the system pdftotext binary if available as it tends to be
+            // more reliable with a wide range of PDF files.
+            if ( function_exists( 'shell_exec' ) ) {
+                $bin_check = shell_exec( 'command -v pdftotext' );
+                if ( ! empty( $bin_check ) ) {
+                    $cmd    = 'pdftotext ' . escapeshellarg( $file ) . ' -';
+                    $output = shell_exec( $cmd );
+                    if ( ! empty( $output ) ) {
+                        Error_Logger::log_debug( 'pdftotext used for extraction' );
+                        return $output;
+                    }
+                    Error_Logger::log_error( 'pdftotext returned no output for ' . $file );
+                }
+            }
+
+            // Fallback to the PHP parser if pdftotext is unavailable or failed.
             if ( class_exists( '\\Smalot\\PdfParser\\Parser' ) ) {
                 try {
                     $parser = new \Smalot\PdfParser\Parser();
@@ -407,16 +491,7 @@ class Docs_Manager {
                     Error_Logger::log_error( 'PDF parse error: ' . $e->getMessage() );
                 }
             }
-            // Fallback to pdftotext if available.
-            if ( function_exists( 'shell_exec' ) && trim( shell_exec( 'command -v pdftotext' ) ) ) {
-                $cmd    = 'pdftotext ' . escapeshellarg( $file ) . ' -';
-                $output = shell_exec( $cmd );
-                if ( ! empty( $output ) ) {
-                    Error_Logger::log_debug( 'pdftotext used for extraction' );
-                    return $output;
-                }
-                Error_Logger::log_error( 'pdftotext returned no output for ' . $file );
-            }
+
             return '';
         }
         if ( $ext === 'csv' || $ext === 'txt' ) {
