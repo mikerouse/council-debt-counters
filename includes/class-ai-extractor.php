@@ -125,7 +125,7 @@ class AI_Extractor {
             . "Return ONLY a JSON object with these keys: "
             . "current_liabilities, long_term_liabilities, finance_lease_pfi_liabilities, "
             . "interest_paid, annual_spending, total_income, "
-            . "annual_deficit, interest_paid, usable_reserves, consultancy_spend. "
+            . "annual_deficit, usable_reserves, consultancy_spend. "
             . "Use 0 if a figure is not mentioned. Numbers should be digits without commas or currency symbols. "
             . "If the document shows figures in thousands of pounds (e.g. £000s), multiply them by 1000 before returning the values." 
             . "\n" . $text;
@@ -166,7 +166,6 @@ class AI_Extractor {
             'annual_spending',
             'total_income',
             'annual_deficit',
-            'interest_paid',
             'usable_reserves',
             'consultancy_spend',
         ];
