@@ -1,4 +1,8 @@
 (function() {
+    function ready(fn){
+        if(document.readyState !== 'loading') { fn(); }
+        else { document.addEventListener('DOMContentLoaded', fn); }
+    }
     function formatCurrency(val) {
         if (isNaN(val)) return '';
         return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 }).format(val);
@@ -16,7 +20,7 @@
         update();
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    ready(function() {
         var actionInput = document.querySelector('input[name="action"][value="cdc_save_council"]');
         if (!actionInput) return; // only on edit/add page
         var form = actionInput.closest('form');
@@ -219,6 +223,109 @@
                         p.textContent = cdcAiMessages.error;
                     });
             });
+
+        function aiOverlay(msg){
+            var ov=document.createElement('div');
+            ov.id='cdc-ai-overlay';
+            ov.innerHTML='<span class="spinner is-active"></span><p>'+msg+'</p>';
+            document.body.appendChild(ov);
+            return ov;
+        }
+        function removeOverlay(ov){ if(ov&&ov.parentNode){ ov.parentNode.removeChild(ov); } }
+
+        function ensurePromptModal(){
+            var m=document.getElementById('cdc-ai-prompt-modal');
+            if(m) return m;
+            var html='<div class="modal fade" id="cdc-ai-prompt-modal" tabindex="-1" aria-hidden="true">'+
+                '<div class="modal-dialog"><div class="modal-content">'+
+                '<div class="modal-header"><h5 class="modal-title">'+cdcAiMessages.editPrompt+'</h5>'+
+                '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'+
+                '<div class="modal-body"><textarea id="cdc-ai-prompt" class="form-control" rows="3"></textarea></div>'+
+                '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">'+cdcAiMessages.cancel+'</button>'+
+                '<button type="button" class="btn btn-primary" id="cdc-ai-send-btn">'+cdcAiMessages.ask+'</button></div>'+
+                '</div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+            return document.getElementById('cdc-ai-prompt-modal');
+        }
+
+        function showPromptModal(prompt){
+            var modalEl=ensurePromptModal();
+            var textarea=modalEl.querySelector('#cdc-ai-prompt');
+            textarea.value=prompt;
+            var modal=bootstrap.Modal.getOrCreateInstance(modalEl);
+            return new Promise(function(resolve){
+                var done=false;
+                function cleanup(){
+                    done=true;
+                    modalEl.removeEventListener('hidden.bs.modal', onHide);
+                    sendBtn.removeEventListener('click', onSend);
+                }
+                function onHide(){ if(!done){ cleanup(); resolve(null); } }
+                function onSend(){ if(!done){ var val=textarea.value; cleanup(); modal.hide(); resolve(val); } }
+                var sendBtn=modalEl.querySelector('#cdc-ai-send-btn');
+                modalEl.addEventListener('hidden.bs.modal', onHide, {once:true});
+                sendBtn.addEventListener('click', onSend);
+                modal.show();
+            });
+        }
+
+        async function askField(field){
+            var name=document.querySelector('[data-cdc-field="council_name"]');
+            var data=new FormData();
+            data.append('action','cdc_ai_clarify_field');
+            data.append('field',field);
+            data.append('council_id', cdcToolbarData.id);
+            data.append('council_name', name?name.value:'');
+            var overlay=aiOverlay('Preparing prompt…');
+            var res=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data}).then(r=>r.json());
+            removeOverlay(overlay);
+            if(!res.success||!res.data||!res.data.prompt){
+                alert(res.data&&res.data.message?res.data.message:cdcAiMessages.error);
+                return;
+            }
+            var userPrompt=await showPromptModal(res.data.prompt);
+            if(userPrompt===null) return;
+
+            var overlay2=aiOverlay('Asking AI…');
+            var data2=new FormData();
+            data2.append('action','cdc_ai_field');
+            data2.append('field',field);
+            data2.append('council_id', cdcToolbarData.id);
+            data2.append('council_name', name?name.value:'');
+            data2.append('prompt', userPrompt);
+            var res2=await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data2}).then(r=>r.json());
+            removeOverlay(overlay2);
+            if(res2.success && res2.data){
+                var input=document.querySelector('[data-cdc-field="'+field+'"]');
+                if(input){
+                    input.value=res2.data.value || '';
+                    input.dispatchEvent(new Event('input'));
+                    var info=input.parentElement.querySelector('.cdc-ai-source');
+                    if(!info){ info=document.createElement('div'); info.className='cdc-ai-source mt-1'; input.parentElement.appendChild(info); }
+                    info.innerHTML=res2.data.source ? 'Source: <a href="'+res2.data.source+'" target="_blank" rel="noopener">'+res2.data.source+'</a>' : '';
+                }
+            }else if(res2.data && res2.data.message){
+                alert(res2.data.message);
+            }
+        }
+
+        document.addEventListener('click',function(ev){
+            var b=ev.target.closest('.cdc-ask-ai');
+            if(b){
+                ev.preventDefault();
+                askField(b.dataset.field);
+            }
         });
+
+        var askAll=document.getElementById('cdc-ask-ai-all');
+        if(askAll){
+            askAll.addEventListener('click',async function(ev){
+                ev.preventDefault();
+                var buttons=document.querySelectorAll('.cdc-ask-ai');
+                for(var i=0;i<buttons.length;i++){
+                    await askField(buttons[i].dataset.field);
+                }
+            });
+        }
     });
 })();
