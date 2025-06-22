@@ -92,6 +92,17 @@ class Docs_Manager {
         return plugin_dir_path( dirname( __FILE__ ) ) . self::DOCS_DIR . '/';
     }
 
+    /**
+     * Ensure filename is unique within docs directory.
+     */
+    private static function unique_filename( string $filename ) {
+        $dir = self::get_docs_path();
+        if ( ! function_exists( 'wp_unique_filename' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+        return wp_unique_filename( $dir, $filename );
+    }
+
     public static function list_documents( int $council_id = 0 ) {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
@@ -124,6 +135,7 @@ class Docs_Manager {
             return __( 'Upload limit reached.', 'council-debt-counters' );
         }
         $filename = basename( $file['name'] );
+        $filename = self::unique_filename( $filename );
         $target   = self::get_docs_path() . $filename;
         if ( move_uploaded_file( $file['tmp_name'], $target ) ) {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
@@ -177,6 +189,7 @@ class Docs_Manager {
         }
 
         $filename = basename( $path );
+        $filename = self::unique_filename( $filename );
         $target   = self::get_docs_path() . $filename;
         if ( ! copy( $tmp, $target ) ) {
             unlink( $tmp );
