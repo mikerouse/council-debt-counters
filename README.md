@@ -2,7 +2,7 @@
 
 This WordPress plugin provides animated counters to display UK council debt figures. Counters can be embedded using a shortcode and configured through the WordPress admin interface.
 
-The plugin registers a custom **Council** post type where you can store detailed information about each local authority. The post type is hidden from the regular WordPress menu so users cannot manually add councils from the Posts screen. Councils are managed from the plugin's own **Debt Counters → Councils** submenu. The free version allows up to **two councils**; enter a valid license key on the settings page to create more.
+The plugin registers a custom **Council** post type where you can store detailed information about each local authority. The post type is hidden from the regular WordPress menu so users cannot manually add councils from the Posts screen. Councils are managed from the plugin's own **Debt Counters → Councils** submenu. You can optionally enter a licence key on the settings page, though all features are currently free.
 
 Version 0.2 replaces the dependency on Advanced Custom Fields with a built‑in custom field system. You can create your own fields (text, number or monetary) from **Debt Counters → Custom Fields** and capture the values for each council. Monetary fields display a £ symbol and store values to two decimal places.
 
@@ -68,7 +68,7 @@ Use `[council_status]` to display any status message you have recorded for a cou
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.
 2. Activate **Council Debt Counters** in the WordPress admin.
-3. Visit **Debt Counters** in the admin menu to enter your license key and start adding councils.
+3. Visit **Debt Counters** in the admin menu to configure settings or enter a licence key if you have one, then start adding councils.
 
 ## Asset loading and CDNs
 
