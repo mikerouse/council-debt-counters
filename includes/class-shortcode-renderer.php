@@ -177,8 +177,8 @@ class Shortcode_Renderer {
 		$font     = get_option( 'cdc_counter_font', 'Oswald' );
 		$weight   = get_option( 'cdc_counter_weight', '600' );
 		$font_url = 'https://fonts.googleapis.com/css2?family=' . rawurlencode( $font ) . ':wght@' . $weight . '&display=swap';
-		wp_register_style( 'cdc-counter-font', $font_url, array(), null );
-		wp_add_inline_style( 'cdc-counter-font', ".cdc-counter{font-family:'{$font}',sans-serif;font-weight:{$weight};}" );
+               wp_register_style( 'cdc-counter-font', $font_url, array(), null );
+               wp_add_inline_style( 'cdc-counter-font', ".cdc-counter, .cdc-counter-static{font-family:'{$font}',sans-serif;font-weight:{$weight};}" );
 		wp_register_script( 'countup', $countup_js, array(), '2.6.2', true );
                 wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', $plugin_file ), array( 'countup' ), '0.1.0', true );
                 wp_register_script( 'cdc-share-tracking', plugins_url( 'public/js/share-tracking.js', $plugin_file ), array(), '0.1.0', true );
@@ -212,10 +212,18 @@ class Shortcode_Renderer {
 			// Delegate to the custom counter handler for non-debt types
 			return self::render_custom_counter( $atts );
 		}
-		$enabled = (array) get_option( 'cdc_enabled_counters', array() );
-		if ( ! in_array( 'debt', $enabled, true ) ) {
-			return '';
-		}
+               $enabled = (array) get_option( 'cdc_enabled_counters', array() );
+               if ( ! in_array( 'debt', $enabled, true ) ) {
+                       return '';
+               }
+
+               $na_tab = get_post_meta( $id, 'cdc_na_tab_debt', true );
+               if ( $na_tab ) {
+                       wp_enqueue_style( 'bootstrap-5' );
+                       wp_enqueue_style( 'cdc-counter' );
+                       wp_enqueue_style( 'cdc-counter-font' );
+                       return '<div class="cdc-counter-static display-4 fw-bold">&pound;??.??</div>';
+               }
 
                $total  = Custom_Fields::get_value( $id, 'total_debt' );
                if ( ! $total ) {
