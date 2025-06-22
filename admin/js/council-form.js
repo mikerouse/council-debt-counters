@@ -70,20 +70,39 @@
                 if(url && url.value){ d.append('url', url.value); }
                 if(existing && existing.value){ d.append('existing', existing.value); }
                 if(typeSel){ d.append('doc_type', typeSel.value); }
-                fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:d})
-                    .then(function(r){return r.json();})
-                    .then(function(res){
-                        if(res.success && res.data && res.data.html){
-                            var table=document.getElementById('cdc-docs-table');
-                            if(table){
-                                var tbody=table.querySelector('tbody');
-                                tbody.insertAdjacentHTML('beforeend', res.data.html);
-                            }
-                            flash(res.data.message || 'Document added.');
-                        } else if(res.data && res.data.message){
-                            alert(res.data.message);
-                        }
-                    });
+
+                var overlay=document.createElement('div');
+                overlay.id='cdc-upload-overlay';
+                overlay.innerHTML='<span class="spinner is-active"></span><div class="progress w-75 mt-2" style="height:8px"><div class="progress-bar"></div></div><p>Uploading…</p>';
+                document.body.appendChild(overlay);
+                var bar=overlay.querySelector('.progress-bar');
+                var msg=overlay.querySelector('p');
+                var xhr=new XMLHttpRequest();
+                xhr.open('POST', ajaxurl);
+                xhr.withCredentials=true;
+                xhr.upload.addEventListener('progress', function(ev){
+                    if(ev.lengthComputable){
+                        var pct=Math.round((ev.loaded/ev.total)*100);
+                        bar.style.width=pct+'%';
+                    }
+                });
+                xhr.onload=function(){
+                    var res=null;
+                    try{ res=JSON.parse(xhr.responseText); }catch(err){}
+                    if(res && res.success){
+                        bar.style.width='100%';
+                        msg.textContent=res.data.message||'Document added.';
+                        setTimeout(function(){ location.reload(); }, 800);
+                    }else{
+                        msg.textContent=res && res.data && res.data.message ? res.data.message : 'Upload failed';
+                        setTimeout(function(){ overlay.remove(); }, 2000);
+                    }
+                };
+                xhr.onerror=function(){
+                    msg.textContent='Upload failed';
+                    setTimeout(function(){ overlay.remove(); }, 2000);
+                };
+                xhr.send(d);
             });
         }
 

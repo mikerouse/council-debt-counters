@@ -72,11 +72,11 @@ class Council_Admin_Page {
             'cdc-council-form',
             plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
             [],
-            '0.1.3',
+            '0.1.4',
             true
         );
         wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
-        wp_enqueue_style( 'cdc-upload-progress', plugins_url( 'admin/css/upload-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_enqueue_style( 'cdc-upload-progress', plugins_url( 'admin/css/upload-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.1' );
         wp_enqueue_style( 'cdc-toolbar', plugins_url( 'admin/css/toolbar.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
         wp_localize_script( 'cdc-council-form', 'cdcAiMessages', [
             'steps' => [

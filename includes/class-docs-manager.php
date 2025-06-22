@@ -129,10 +129,6 @@ class Docs_Manager {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
             Error_Logger::log_info( 'Document uploaded: ' . $filename );
 
-            if ( in_array( $doc_type, self::DOC_TYPES, true ) && $council_id > 0 ) {
-                self::maybe_extract_figures( $target, $council_id );
-            }
-
             return true;
         }
         Error_Logger::log( 'Failed to move uploaded document: ' . $file['name'] );
@@ -231,11 +227,6 @@ class Docs_Manager {
             self::add_document( $filename, $doc_type, $council_id, $financial_year );
         }
         Error_Logger::log_info( 'Document assigned: ' . $filename . ' to council ' . $council_id );
-
-        if ( in_array( $doc_type, self::DOC_TYPES, true ) && $council_id > 0 ) {
-            $path = self::get_docs_path() . $filename;
-            self::maybe_extract_figures( $path, $council_id );
-        }
 
         return true;
     }
