@@ -55,10 +55,7 @@ and setting `link="1"` adds a View details link for each council.
 
 Add `[cdc_share_buttons]` on a single council page to show buttons for sharing
 that council’s stats on X, WhatsApp or Facebook. The shortcode automatically
-uses the selected council’s name, relevant figure and permalink so each share
-promotes that specific page rather than the site in general. When used outside
-of a council post you can pass an `id` (or `council_id`) attribute to specify
-which council’s data should be used.
+uses the selected council’s name, relevant figure and permalink.
 
 The social preview image defaults to the **Default Sharing Thumbnail** set on the
 plugin Settings page. You can override this per council by selecting a
@@ -67,7 +64,6 @@ plugin Settings page. You can override this per council by selecting a
 ### Status messages
 
 Use `[council_status]` to display any status message you have recorded for a council. If the field is empty then nothing is shown.
-
 
 ## Installation
 1. Copy the plugin folder to your `wp-content/plugins` directory.
