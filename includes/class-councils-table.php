@@ -92,10 +92,15 @@ class Councils_Table extends \WP_List_Table {
 
         $orderby = sanitize_key( $_REQUEST['orderby'] ?? 'title' );
         $order   = sanitize_key( $_REQUEST['order'] ?? 'asc' );
-        $allowed = [ 'title', 'post_status' ];
-        if ( ! in_array( $orderby, $allowed, true ) ) {
-            $orderby = 'title';
+
+        $sortable = $this->get_sortable_columns();
+        $db_orderby = 'title';
+        if ( isset( $sortable[ $orderby ] ) ) {
+            $db_orderby = $sortable[ $orderby ][0];
+        } elseif ( in_array( $orderby, [ 'title', 'post_status' ], true ) ) {
+            $db_orderby = $orderby;
         }
+
         $order = 'desc' === strtolower( $order ) ? 'desc' : 'asc';
 
         $query_args = [
@@ -103,7 +108,7 @@ class Councils_Table extends \WP_List_Table {
             'post_status'    => $this->status,
             'posts_per_page' => $per_page,
             'paged'          => $paged,
-            'orderby'        => $orderby,
+            'orderby'        => $db_orderby,
             'order'          => $order,
         ];
 
