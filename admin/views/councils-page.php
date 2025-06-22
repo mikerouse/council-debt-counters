@@ -50,38 +50,23 @@ if ( 'edit' === $req_action ) {
                         echo '<button type="button" class="btn btn-sm btn-info me-2" id="cdc-ask-ai-all"><span class="dashicons dashicons-lightbulb"></span> ' . esc_html__( 'Ask AI for All', 'council-debt-counters' ) . '</button>';
                 }
                 echo '</div></div>';
-	$fields  = \CouncilDebtCounters\Custom_Fields::get_fields();
-	$enabled = (array) get_option( 'cdc_enabled_counters', array() );
-	$mapping = array(
-		'debt'        => array( 'current_liabilities', 'long_term_liabilities', 'finance_lease_pfi_liabilities', 'manual_debt_entry', 'interest_paid_on_debt', 'total_debt' ),
-		'spending'    => array( 'annual_spending' ),
-		'income'      => array( 'total_income' ),
-		'deficit'     => array( 'annual_deficit' ),
-		'interest'    => array( 'interest_paid' ),
-		'reserves'    => array( 'usable_reserves' ),
-		'consultancy' => array( 'consultancy_spend' ),
-	);
-	$groups  = array( 'general' => array() );
+        $fields  = \CouncilDebtCounters\Custom_Fields::get_fields();
+        $enabled = (array) get_option( 'cdc_enabled_counters', array() );
+        $groups  = array( 'general' => array() );
 	foreach ( $enabled as $e ) {
 		$groups[ $e ] = array();
 	}
 	$docs_field = null;
-	foreach ( $fields as $field ) {
-		if ( 'statement_of_accounts' === $field->name ) {
-			$docs_field = $field;
-			continue; }
-		$placed = false;
-		foreach ( $mapping as $group_key => $field_names ) {
-			if ( in_array( $field->name, $field_names, true ) ) {
-				if ( isset( $groups[ $group_key ] ) ) {
-					$groups[ $group_key ][] = $field; }
-					$placed = true;
-					break;
-			}
-		}
-		if ( ! $placed ) {
-			$groups['general'][] = $field; }
-	}
+        foreach ( $fields as $field ) {
+                if ( 'statement_of_accounts' === $field->name ) {
+                        $docs_field = $field;
+                        continue; }
+                $tab = \CouncilDebtCounters\Custom_Fields::get_field_tab( $field->name );
+                if ( isset( $groups[ $tab ] ) ) {
+                        $groups[ $tab ][] = $field;
+                } else {
+                        $groups['general'][] = $field; }
+        }
 		$docs = $council_id ? \CouncilDebtCounters\Docs_Manager::list_documents( $council_id ) : array();
 	?>
 	<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">

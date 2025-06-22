@@ -67,3 +67,14 @@ function maybe_unserialize($data) {
     if (is_serialized($data, false)) return @unserialize(trim($data));
     return $data;
 }
+
+$options_store = [];
+function get_option($option, $default = false) {
+    global $options_store;
+    return $options_store[$option] ?? $default;
+}
+function update_option($option, $value) {
+    global $options_store;
+    $options_store[$option] = $value;
+    return true;
+}
