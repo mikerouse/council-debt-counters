@@ -26,7 +26,6 @@ class Custom_Fields {
         'long_term_liabilities'         => 'debt',
         'finance_lease_pfi_liabilities' => 'debt',
         'manual_debt_entry'             => 'debt',
-        'interest_paid_on_debt'         => 'debt',
         'minimum_revenue_provision'     => 'debt',
         'total_debt'                    => 'debt',
         'annual_spending'               => 'spending',
@@ -46,14 +45,13 @@ class Custom_Fields {
         ['name' => 'current_liabilities', 'label' => 'Current Liabilities', 'type' => 'money', 'required' => 1],
         ['name' => 'long_term_liabilities', 'label' => 'Long-Term Liabilities', 'type' => 'money', 'required' => 1],
         ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI or Finance Lease Liabilities', 'type' => 'money', 'required' => 1],
-        ['name' => 'interest_paid_on_debt', 'label' => 'Interest Paid on Debt', 'type' => 'money', 'required' => 1],
         ['name' => 'minimum_revenue_provision', 'label' => 'Minimum Revenue Provision', 'type' => 'money', 'required' => 0],
         ['name' => 'total_debt', 'label' => 'Total Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
         ['name' => 'annual_spending', 'label' => 'Annual Spending', 'type' => 'money', 'required' => 0],
         ['name' => 'total_income', 'label' => 'Total Income', 'type' => 'money', 'required' => 0],
         ['name' => 'annual_deficit', 'label' => 'Annual Deficit', 'type' => 'money', 'required' => 0],
-        ['name' => 'interest_paid', 'label' => 'Interest Paid', 'type' => 'money', 'required' => 0],
+        ['name' => 'interest_paid', 'label' => 'Interest Paid on Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'capital_financing_requirement', 'label' => 'Capital Financing Requirement', 'type' => 'money', 'required' => 0],
         ['name' => 'usable_reserves', 'label' => 'Usable Reserves', 'type' => 'money', 'required' => 0],
         ['name' => 'consultancy_spend', 'label' => 'Consultancy Spend', 'type' => 'money', 'required' => 0],
@@ -122,6 +120,7 @@ class Custom_Fields {
 
         self::ensure_default_fields();
         self::ensure_default_tabs();
+        self::migrate_interest_paid_field();
     }
 
     /**
@@ -385,6 +384,48 @@ class Custom_Fields {
                 self::update_value( $post->ID, $key, $value );
             }
         }
+    }
+
+    /**
+     * Merge legacy interest_paid_on_debt field into interest_paid.
+     */
+    private static function migrate_interest_paid_field() {
+        global $wpdb;
+        $old = self::get_field_by_name( 'interest_paid_on_debt' );
+        $new = self::get_field_by_name( 'interest_paid' );
+        if ( ! $old ) {
+            if ( $new ) {
+                self::set_field_tab( 'interest_paid', 'interest' );
+                self::update_field( (int) $new->id, [ 'label' => 'Interest Paid on Debt' ] );
+            }
+            return;
+        }
+
+        if ( ! $new ) {
+            self::update_field( (int) $old->id, [ 'name' => 'interest_paid', 'label' => 'Interest Paid on Debt', 'required' => 0 ] );
+            self::set_field_tab( 'interest_paid', 'interest' );
+            return;
+        }
+
+        $values_table = $wpdb->prefix . self::TABLE_VALUES;
+        $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT council_id, value FROM ' . $values_table . ' WHERE field_id = %d', $old->id ), ARRAY_A );
+        foreach ( $rows as $row ) {
+            $existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . $values_table . ' WHERE council_id = %d AND field_id = %d', $row['council_id'], $new->id ) );
+            if ( $existing ) {
+                $wpdb->update( $values_table, [ 'value' => $row['value'] ], [ 'id' => $existing ], [ '%s' ], [ '%d' ] );
+            } else {
+                $wpdb->insert( $values_table, [
+                    'council_id' => $row['council_id'],
+                    'field_id'   => $new->id,
+                    'value'      => $row['value'],
+                ], [ '%d', '%d', '%s' ] );
+            }
+        }
+
+        $wpdb->delete( $values_table, [ 'field_id' => $old->id ], [ '%d' ] );
+        $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $old->id ], [ '%d' ] );
+        self::set_field_tab( 'interest_paid', 'interest' );
+        self::update_field( (int) $new->id, [ 'label' => 'Interest Paid on Debt' ] );
     }
 
     public static function render_page() {
