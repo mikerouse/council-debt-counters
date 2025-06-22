@@ -177,6 +177,36 @@
         if (interestField) interestField.addEventListener('input', updateAll);
         updateAll();
 
+        function handleNaToggle(name){
+            var input=document.querySelector('[data-cdc-field="'+name+'"]');
+            var checkbox=document.getElementById('cdc-na-'+name);
+            var tab=document.getElementById('cdc-na-tab-debt');
+            if(!input||!checkbox) return;
+            var label=input.closest('tr').querySelector('label');
+            var star=label?label.querySelector('.cdc-required-indicator'):null;
+            var initial=input.dataset.initialRequired==='1';
+            var notAvail=checkbox.checked||(tab&&tab.checked);
+            if(initial){
+                input.required=!notAvail;
+                if(star) star.style.display=notAvail?'none':'';
+            }
+        }
+
+        ['current_liabilities','long_term_liabilities','finance_lease_pfi_liabilities'].forEach(function(f){
+            var cb=document.getElementById('cdc-na-'+f);
+            if(cb){
+                cb.addEventListener('change',function(){handleNaToggle(f);});
+                handleNaToggle(f);
+            }
+        });
+        var tabToggle=document.getElementById('cdc-na-tab-debt');
+        if(tabToggle){
+            tabToggle.addEventListener('change',function(){
+                ['current_liabilities','long_term_liabilities','finance_lease_pfi_liabilities'].forEach(handleNaToggle);
+            });
+            ['current_liabilities','long_term_liabilities','finance_lease_pfi_liabilities'].forEach(handleNaToggle);
+        }
+
         form.addEventListener('submit', function(){
             var file = document.getElementById('cdc-soa');
             var url = form.querySelector('input[name="statement_of_accounts_url"]');
