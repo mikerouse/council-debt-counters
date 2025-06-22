@@ -199,10 +199,13 @@ if ( 'edit' === $req_action ) {
 			foreach ( $enabled as $tab_key ) :
 				if ( empty( $groups[ $tab_key ] ) ) {
 								continue;}
-				?>
-						<div class="tab-pane fade" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
-								<p class="description"><code>[council_counter id="<?php echo esc_attr( $council_id ); ?>" type="<?php echo esc_attr( $tab_key ); ?>"]</code></p>
-								<table class="form-table" role="presentation">
+                               ?>
+                                               <div class="tab-pane fade" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
+                                                               <p class="description"><code>[council_counter id="<?php echo esc_attr( $council_id ); ?>" type="<?php echo esc_attr( $tab_key ); ?>"]</code></p>
+                                                               <?php if ( 'debt' === $tab_key ) : ?>
+                                                                       <div id="cdc-debt-rates" class="alert alert-info mb-2"></div>
+                                                               <?php endif; ?>
+                                                               <table class="form-table" role="presentation">
 								<?php
 								foreach ( $groups[ $tab_key ] as $field ) :
 										$val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
