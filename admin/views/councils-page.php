@@ -97,8 +97,8 @@ if ( 'edit' === $req_action ) {
 				?>
 								<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-<?php echo esc_attr( $tab_key ); ?>" type="button" role="tab"><?php echo esc_html( ucfirst( $tab_key ) ); ?></button></li>
 						<?php endforeach; ?>
-			<?php if ( $docs_field ) : ?>
-				<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Documents', 'council-debt-counters' ); ?></button></li>
+                        <?php if ( $docs_field ) : ?>
+                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></button></li>
 			<?php endif; ?>
 						<?php if ( $council_id ) : ?>
 				<!-- Whistleblower reports moved to dedicated admin page -->
@@ -259,28 +259,39 @@ if ( 'edit' === $req_action ) {
 						<th scope="row"><label for="cdc-soa"><?php echo esc_html( $docs_field->label ); ?></label></th>
 						<td>
 														<?php $val = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, 'statement_of_accounts' ) : ''; ?>
-							<?php if ( $val ) : ?>
-								<p><a href="<?php echo esc_url( plugins_url( 'docs/' . $val, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View current document', 'council-debt-counters' ); ?></a></p>
-							<?php endif; ?>
-							<input type="file" id="cdc-soa" name="statement_of_accounts_file" accept="application/pdf">
-							<p class="description"><?php esc_html_e( 'or import from URL', 'council-debt-counters' ); ?></p>
+                                                        <?php if ( $val ) : ?>
+                                                                <p><a href="<?php echo esc_url( plugins_url( 'docs/' . $val, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View selected statement', 'council-debt-counters' ); ?></a></p>
+                                                        <?php endif; ?>
+                                                        <input type="file" id="cdc-soa" name="statement_of_accounts_file" accept="application/pdf">
+                                                        <p class="description"><?php esc_html_e( 'or import from URL', 'council-debt-counters' ); ?></p>
                                                         <input type="url" name="statement_of_accounts_url" class="form-control" placeholder="https://example.com/file.pdf">
-							<p class="description mt-2">
-								<label for="cdc-soa-year" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                                        <p class="description mt-2">
+                                                                <label for="cdc-soa-type" class="form-label"><?php esc_html_e( 'Statement Type', 'council-debt-counters' ); ?></label>
+                                                                <select id="cdc-soa-type" name="statement_of_accounts_type" class="form-select">
+                                                                        <option value="draft_statement_of_accounts"><?php esc_html_e( 'Draft', 'council-debt-counters' ); ?></option>
+                                                                        <option value="audited_statement_of_accounts"><?php esc_html_e( 'Audited', 'council-debt-counters' ); ?></option>
+                                                                </select>
+                                                        </p>
+                                                        <p class="description mt-2">
+                                                                <label for="cdc-soa-year" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
                                                                 <select id="cdc-soa-year" name="statement_of_accounts_year" class="form-select">
-									<?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
-										<option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
-									<?php endforeach; ?>
-								</select>
-							</p>
+                                                                        <?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+                                                                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                                        <?php endforeach; ?>
+                                                                </select>
+                                                        </p>
 							<?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
 							<?php if ( ! empty( $orphans ) ) : ?>
 								<p class="description mt-2"><?php esc_html_e( 'Or attach an existing document', 'council-debt-counters' ); ?></p>
                                                                 <select name="statement_of_accounts_existing">
-									<option value=""><?php esc_html_e( 'Select document', 'council-debt-counters' ); ?></option>
-									<?php foreach ( $orphans as $doc ) : ?>
-										<option value="<?php echo esc_attr( $doc->filename ); ?>"><?php echo esc_html( $doc->filename ); ?></option>
-									<?php endforeach; ?>
+                                                                        <option value=""><?php esc_html_e( 'Select document', 'council-debt-counters' ); ?></option>
+                                                                        <?php foreach ( $orphans as $doc ) : ?>
+                                                                                <option value="<?php echo esc_attr( $doc->filename ); ?>"><?php echo esc_html( $doc->filename ); ?></option>
+                                                                        <?php endforeach; ?>
+                                                                </select>
+                                                                <select name="statement_of_accounts_type" class="ms-2">
+                                                                        <option value="draft_statement_of_accounts"><?php esc_html_e( 'Draft', 'council-debt-counters' ); ?></option>
+                                                                        <option value="audited_statement_of_accounts"><?php esc_html_e( 'Audited', 'council-debt-counters' ); ?></option>
                                                                 </select>
                                                                 <button type="button" id="cdc-upload-doc" class="button button-secondary mt-2"><?php esc_html_e( 'Add Document', 'council-debt-counters' ); ?></button>
                                                         <?php endif; ?>
@@ -288,7 +299,7 @@ if ( 'edit' === $req_action ) {
                                         </tr>
                                 </table>
 				<?php if ( ! empty( $docs ) ) : ?>
-				<h2><?php esc_html_e( 'Existing Documents', 'council-debt-counters' ); ?></h2>
+                                <h2><?php esc_html_e( 'Uploaded Statements', 'council-debt-counters' ); ?></h2>
                                 <table id="cdc-docs-table" class="widefat">
 					<thead>
 						<tr>
@@ -310,9 +321,10 @@ if ( 'edit' === $req_action ) {
 								</select>
 							</td>
 							<td>
-								<select name="docs[<?php echo esc_attr( $d->id ); ?>][doc_type]">
-									<option value="statement_of_accounts" <?php selected( $d->doc_type, 'statement_of_accounts' ); ?>><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></option>
-								</select>
+                                                                <select name="docs[<?php echo esc_attr( $d->id ); ?>][doc_type]">
+                                                                        <option value="draft_statement_of_accounts" <?php selected( $d->doc_type, 'draft_statement_of_accounts' ); ?>><?php esc_html_e( 'Draft', 'council-debt-counters' ); ?></option>
+                                                                        <option value="audited_statement_of_accounts" <?php selected( $d->doc_type, 'audited_statement_of_accounts' ); ?>><?php esc_html_e( 'Audited', 'council-debt-counters' ); ?></option>
+                                                                </select>
 							</td>
 							<td>
 								<button type="button" value="<?php echo esc_attr( $d->id ); ?>" class="button cdc-extract-ai"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Extract Figures', 'council-debt-counters' ); ?></button>
