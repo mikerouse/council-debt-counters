@@ -120,6 +120,12 @@ class Councils_Table extends \WP_List_Table {
 
         $this->items = $query->posts;
 
+        // Set up the column headers so the table renders correctly.
+        $columns  = $this->get_columns();
+        $hidden   = [];
+        $sortable = $this->get_sortable_columns();
+        $this->_column_headers = [ $columns, $hidden, $sortable ];
+
         $this->set_pagination_args( [
             'total_items' => $query->found_posts,
             'per_page'    => $per_page,
