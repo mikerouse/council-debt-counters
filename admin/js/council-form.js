@@ -125,12 +125,7 @@
         var adjustmentsField = document.querySelector('[data-cdc-field="debt_adjustments"]');
         var interestField = document.querySelector('[data-cdc-field="interest_paid_on_debt"]');
         var totalField = document.querySelector('[data-cdc-field="total_debt"]');
-        var ratesOutput = document.createElement('div');
-        ratesOutput.id = 'cdc-debt-rates';
-        ratesOutput.className = 'mt-2 alert alert-info';
-        if (shortField) {
-            shortField.parentElement.appendChild(ratesOutput);
-        }
+        var ratesOutput = document.getElementById('cdc-debt-rates');
 
         var growthPerSecond = 0;
 
