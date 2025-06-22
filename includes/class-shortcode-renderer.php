@@ -52,6 +52,23 @@ class Shortcode_Renderer {
 		}
                $raw_value = Custom_Fields::get_value( $id, $field );
                $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
+               $na_tab    = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
+               $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
+               if ( $na_tab || $na_field ) {
+                       $obj   = Custom_Fields::get_field_by_name( $field );
+                       $label = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
+                       $map   = [
+                               'debt'        => __( 'Debt figures not available', 'council-debt-counters' ),
+                               'spending'    => __( 'Spending figures not available', 'council-debt-counters' ),
+                               'income'      => __( 'Income figures not available', 'council-debt-counters' ),
+                               'deficit'     => __( 'Deficit figures not available', 'council-debt-counters' ),
+                               'interest'    => __( 'Interest payments not available', 'council-debt-counters' ),
+                               'reserves'    => __( 'Reserves figures not available', 'council-debt-counters' ),
+                               'consultancy' => __( 'Consultancy spend figures not available', 'council-debt-counters' ),
+                       ];
+                       $msg = $map[ $type ] ?? sprintf( __( '%s not available', 'council-debt-counters' ), $label );
+                       return '<div class="alert alert-warning">' . esc_html( $msg ) . '</div>';
+               }
                if ( '' === $raw_value || null === $raw_value ) {
                        if ( $parent ) {
                                return '<div class="alert alert-warning">' . esc_html__( 'No longer applicable', 'council-debt-counters' ) . '</div>';
