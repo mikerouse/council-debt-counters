@@ -197,6 +197,13 @@ class Council_Admin_Page {
             }
         }
 
+        if ( isset( $_POST['cdc_no_accounts'] ) ) {
+            update_post_meta( $post_id, 'cdc_no_accounts', '1' );
+            Custom_Fields::update_value( $post_id, 'status_message_type', 'danger' );
+        } else {
+            delete_post_meta( $post_id, 'cdc_no_accounts' );
+        }
+
         // Document edits or deletions from the Documents tab
         if ( isset( $_POST['update_doc'] ) && isset( $_POST['docs'][ $_POST['update_doc'] ] ) ) {
             $doc_id = intval( $_POST['update_doc'] );

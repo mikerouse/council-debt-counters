@@ -94,15 +94,23 @@ if ( 'edit' === $req_action ) {
 				<table class="form-table" role="presentation">
 				<?php
 				$council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
-				$council_locations = array( 'England', 'Wales', 'Scotland', 'Northern Ireland' );
-                                foreach ( $groups['general'] as $field ) :
+$council_locations = array( 'England', 'Wales', 'Scotland', 'Northern Ireland' );
+$no_accounts       = $council_id ? get_post_meta( $council_id, 'cdc_no_accounts', true ) : '';
+foreach ( $groups['general'] as $field ) :
                                                 $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
                                                 if ( ! $council_id && $field->required && in_array( $field->type, array( 'number', 'money' ), true ) ) {
                                                         $val = '0';
                                                 }
-						$input_type  = 'text' === $field->type ? 'text' : 'number';
-						$is_required = (bool) $field->required;
-						$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
+$input_type  = 'text' === $field->type ? 'text' : 'number';
+$is_required = (bool) $field->required;
+if ( 'status_message' === $field->name && $no_accounts ) {
+$is_required = true;
+}
+$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
+if ( 'status_message_type' === $field->name && $no_accounts ) {
+$val      = 'danger';
+$readonly = true;
+}
 					?>
 					<tr>
 						<th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?>
@@ -194,6 +202,16 @@ if ( 'edit' === $req_action ) {
 <?php endforeach; ?>
 </select>
 <button type="submit" name="cdc_confirm_takeover" value="1" class="button mt-2"><?php esc_html_e( 'Confirm Takeover', 'council-debt-counters' ); ?></button>
+</td>
+</tr>
+<tr>
+<th scope="row"><?php esc_html_e( 'No Accounts Published', 'council-debt-counters' ); ?></th>
+<td>
+<?php $no_accounts = $council_id ? get_post_meta( $council_id, 'cdc_no_accounts', true ) : ''; ?>
+<label>
+<input type="checkbox" name="cdc_no_accounts" value="1" <?php checked( $no_accounts, '1' ); ?>>
+<?php esc_html_e( 'Mark council as having no published accounts', 'council-debt-counters' ); ?>
+</label>
 </td>
 </tr>
 </table>
