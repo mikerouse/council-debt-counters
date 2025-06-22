@@ -341,16 +341,13 @@ if ( 'edit' === $req_action ) {
 $status_param   = isset( $_GET['status'] ) ? sanitize_key( $_GET['status'] ) : 'publish';
 $valid_statuses = array( 'publish', 'draft', 'under_review' );
 if ( ! in_array( $status_param, $valid_statuses, true ) ) {
-		$status_param = 'publish';
+    $status_param = 'publish';
 }
-$councils = get_posts(
-	array(
-		'post_type'   => 'council',
-		'numberposts' => -1,
-		'post_status' => $status_param,
-	)
-);
-$counts   = wp_count_posts( 'council' );
+
+$table  = new \CouncilDebtCounters\Councils_Table( $status_param );
+$table->process_bulk_action();
+$table->prepare_items();
+$counts = wp_count_posts( 'council' );
 ?>
 <div class="wrap">
 	<h1><?php esc_html_e( 'Councils', 'council-debt-counters' ); ?></h1>
@@ -372,38 +369,10 @@ $counts   = wp_count_posts( 'council' );
 			</li>
 				<?php endforeach; ?>
 	</ul>
-	<table class="table table-striped">
-		<thead>
-			<tr>
-				<th><?php esc_html_e( 'Name', 'council-debt-counters' ); ?></th>
-				<th><?php esc_html_e( 'Debt Counter', 'council-debt-counters' ); ?></th>
-				<th><?php esc_html_e( 'Status', 'council-debt-counters' ); ?></th>
-				<th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
-			</tr>
-		</thead>
-		<tbody>
-			<?php if ( empty( $councils ) ) : ?>
-				<tr><td colspan="4"><?php esc_html_e( 'No councils found.', 'council-debt-counters' ); ?></td></tr>
-				<?php
-			else :
-				foreach ( $councils as $council ) :
-					?>
-				<tr>
-					<td><?php echo esc_html( get_the_title( $council ) ); ?></td>
-					<td>
-										<?php echo do_shortcode( '[council_counter id="' . $council->ID . '"]' ); ?>
-						<code>[council_counter id="<?php echo esc_attr( $council->ID ); ?>"]</code>
-					</td>
-					<td><?php echo esc_html( ucwords( str_replace( '_', ' ', $council->post_status ) ) ); ?></td>
-					<td>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-manage-councils&action=edit&post=' . $council->ID ) ); ?>" class="btn btn-sm btn-secondary"><?php esc_html_e( 'Edit', 'council-debt-counters' ); ?></a>
-						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=cdc-manage-councils&action=delete&post=' . $council->ID ), 'cdc_delete_council_' . $council->ID ) ); ?>" class="btn btn-sm btn-danger" onclick="return confirm('<?php esc_attr_e( 'Delete this council?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></a>
-					</td>
-				</tr>
-							<?php
-			endforeach;
-endif;
-			?>
-		</tbody>
-	</table>
+        <form method="post">
+            <?php
+            settings_errors( 'cdc_messages' );
+            $table->display();
+            ?>
+        </form>
 </div>
