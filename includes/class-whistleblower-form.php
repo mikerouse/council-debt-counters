@@ -8,6 +8,7 @@
 namespace CouncilDebtCounters;
 
 use CouncilDebtCounters\Error_Logger;
+use CouncilDebtCounters\CDC_Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -38,29 +39,6 @@ class Whistleblower_Form {
 		 * @param array $atts Shortcode attributes.
 		 * @return int Council post ID.
 		 */
-       private static function get_council_id_from_atts( array $atts ): int {
-               $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
-
-               if ( 0 === $id && isset( $atts['council_id'] ) ) {
-                       $id = intval( $atts['council_id'] );
-               }
-
-               if ( 0 === $id && ! empty( $atts['council'] ) ) {
-                       $post = get_page_by_title( sanitize_text_field( $atts['council'] ), OBJECT, 'council' );
-                       if ( ! $post ) {
-                               $post = get_page_by_path( sanitize_title( $atts['council'] ), OBJECT, 'council' );
-                       }
-                       if ( $post ) {
-                               $id = $post->ID;
-                       }
-               }
-
-               if ( 0 === $id && is_singular( 'council' ) ) {
-                       $id = get_the_ID();
-               }
-
-               return $id;
-       }
 
 		/**
 		 * Register the custom post type used to store reports.
@@ -249,8 +227,8 @@ class Whistleblower_Form {
 		 * @param array $atts Shortcode attributes. Must include 'id' or 'council'.
 		 * @return string
 		 */
-	public static function render_form( $atts = array() ) {
-		$council_id = self::get_council_id_from_atts( $atts );
+        public static function render_form( $atts = array() ) {
+                $council_id = CDC_Utils::resolve_council_id( $atts );
 		if ( ! $council_id ) {
 			return '';
 		}

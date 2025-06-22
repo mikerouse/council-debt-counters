@@ -2,6 +2,7 @@
 namespace CouncilDebtCounters;
 
 use CouncilDebtCounters\Custom_Fields;
+use CouncilDebtCounters\CDC_Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,30 +21,6 @@ class Shortcode_Renderer {
                return plugins_url( 'public/icons/' . $name . '.svg', $plugin_file );
        }
 
-       private static function get_council_id_from_atts( array $atts ) {
-               $id = isset( $atts['id'] ) ? intval( $atts['id'] ) : 0;
-
-               if ( 0 === $id && isset( $atts['council_id'] ) ) {
-                       $id = intval( $atts['council_id'] );
-               }
-
-               if ( 0 === $id && ! empty( $atts['council'] ) ) {
-                       $name = sanitize_text_field( $atts['council'] );
-                       $post = get_page_by_title( $name, OBJECT, 'council' );
-                       if ( ! $post ) {
-                               $post = get_page_by_path( sanitize_title( $name ), OBJECT, 'council' );
-                       }
-                       if ( $post ) {
-                               $id = $post->ID;
-                       }
-               }
-
-               if ( 0 === $id && is_singular( 'council' ) ) {
-                       $id = get_the_ID();
-               }
-
-               return $id;
-       }
 
 	private static function render_annual_counter( int $id, string $field, string $type = '', bool $with_details = true ) {
 		$enabled = (array) get_option( 'cdc_enabled_counters', array() );
@@ -203,7 +180,7 @@ class Shortcode_Renderer {
                        ),
                        $atts
                );
-               $id   = self::get_council_id_from_atts( $atts );
+              $id   = CDC_Utils::resolve_council_id( $atts );
                $type = sanitize_key( $atts['type'] );
                if ( 0 === $id ) {
                        return '';
@@ -341,32 +318,32 @@ endforeach;
 		return ob_get_clean();
 	}
 
-	public static function render_spending_counter( $atts ) {
-		$id = self::get_council_id_from_atts( $atts );
+        public static function render_spending_counter( $atts ) {
+                $id = CDC_Utils::resolve_council_id( $atts );
 		if ( 0 === $id ) {
 			return '';
 		}
 		return self::render_annual_counter( $id, 'annual_spending', 'spending' );
 	}
 
-	public static function render_deficit_counter( $atts ) {
-		$id = self::get_council_id_from_atts( $atts );
+        public static function render_deficit_counter( $atts ) {
+                $id = CDC_Utils::resolve_council_id( $atts );
 		if ( 0 === $id ) {
 			return '';
 		}
 		return self::render_annual_counter( $id, 'annual_deficit', 'deficit' );
 	}
 
-	public static function render_interest_counter( $atts ) {
-		$id = self::get_council_id_from_atts( $atts );
+        public static function render_interest_counter( $atts ) {
+                $id = CDC_Utils::resolve_council_id( $atts );
 		if ( 0 === $id ) {
 			return '';
 		}
 		return self::render_annual_counter( $id, 'interest_paid', 'interest' );
 	}
 
-	public static function render_revenue_counter( $atts ) {
-		$id = self::get_council_id_from_atts( $atts );
+        public static function render_revenue_counter( $atts ) {
+                $id = CDC_Utils::resolve_council_id( $atts );
 		if ( 0 === $id ) {
 			return '';
 		}
@@ -374,7 +351,7 @@ endforeach;
 	}
 
         public static function render_custom_counter( $atts ) {
-                $id   = self::get_council_id_from_atts( $atts );
+                $id   = CDC_Utils::resolve_council_id( $atts );
                 $type = sanitize_key( $atts['type'] ?? '' );
                 if ( 0 === $id || '' === $type ) {
                         return '';
@@ -394,7 +371,7 @@ endforeach;
         }
 
         public static function render_share_buttons( $atts ) {
-                $id = self::get_council_id_from_atts( $atts );
+                $id = CDC_Utils::resolve_council_id( $atts );
                 if ( 0 === $id ) {
                         return '';
                 }
@@ -442,7 +419,7 @@ endforeach;
         }
 
         public static function render_status_message( $atts ) {
-                $id = self::get_council_id_from_atts( $atts );
+                $id = CDC_Utils::resolve_council_id( $atts );
                 if ( 0 === $id ) {
                         return '';
                 }
