@@ -126,6 +126,7 @@ $readonly = true;
                                                                 </select>
                                                                 <?php if ( $is_required ) : ?>
                                                                         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
+                                                                <?php endif; ?>
 <?php elseif ( 'council_location' === $field->name ) : ?>
                                                                        <select id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" class="form-select" <?php echo $is_required ? 'required' : ''; ?> <?php echo $readonly ? 'disabled' : ''; ?>>
 															<?php foreach ( $council_locations as $t ) : ?>
@@ -134,6 +135,7 @@ $readonly = true;
                                                                 </select>
                                                                 <?php if ( $is_required ) : ?>
                                                                         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
+                                                                <?php endif; ?>
 <?php elseif ( 'financial_data_source_url' === $field->name ) : ?>
 <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="url" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?> placeholder="https://example.com/statement.pdf">
 <p class="description mt-1"><?php esc_html_e( 'Link to the published statement this data comes from.', 'council-debt-counters' ); ?></p>
@@ -162,6 +164,7 @@ $readonly = true;
     <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
+    <?php endif; ?>
 </div>
 <?php else : ?>
 <?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
@@ -172,12 +175,14 @@ $readonly = true;
     <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
+    <?php endif; ?>
 </div>
 <?php if ( 'council_name' !== $field->name ) : ?>
 <div class="cdc-ai-source mt-1"></div>
 <?php endif; ?>
+<?php endif; ?>
                                                 </td>
-					</tr>
+                                        </tr>
                                 <?php endforeach; ?>
                                 <tr>
                                         <th scope="row"><?php esc_html_e( 'Sharing Image', 'council-debt-counters' ); ?></th>
@@ -186,6 +191,7 @@ $readonly = true;
                                                 <div id="cdc-sharing-image-preview">
                                                         <?php if ( $share ) : ?>
                                                                 <?php echo wp_get_attachment_image( $share, array( 150, 150 ) ); ?>
+                                                        <?php endif; ?>
                                                 </div>
                                                 <input type="hidden" id="cdc-sharing-image" name="cdc_sharing_image" value="<?php echo esc_attr( $share ); ?>" data-url="<?php echo esc_url( $share ? wp_get_attachment_url( $share ) : '' ); ?>" />
                                                 <button type="button" class="button" id="cdc-sharing-image-button"><?php esc_html_e( 'Select Image', 'council-debt-counters' ); ?></button>
@@ -292,9 +298,10 @@ $readonly = true;
                                                 </td>
 					</tr>
 				<?php endforeach; ?>
-				</table>
-			</div>
-			<?php endforeach; ?>
+                                </table>
+                        </div>
+                        <?php endif; ?>
+                        <?php endforeach; ?>
 			<?php if ( $docs_field ) : ?>
 			<div class="tab-pane fade" id="tab-docs" role="tabpanel">
 				<table class="form-table" role="presentation">
@@ -322,8 +329,9 @@ $readonly = true;
                                                                         <?php endforeach; ?>
                                                                 </select>
                                                         </p>
-							<?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
-							<?php if ( ! empty( $orphans ) ) : ?>
+                                                        <?php endif; ?>
+                                                        <?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
+                                                        <?php if ( ! empty( $orphans ) ) : ?>
 								<p class="description mt-2"><?php esc_html_e( 'Or attach an existing document', 'council-debt-counters' ); ?></p>
                                                                 <select name="statement_of_accounts_existing">
                                                                         <option value=""><?php esc_html_e( 'Select document', 'council-debt-counters' ); ?></option>
@@ -336,6 +344,7 @@ $readonly = true;
                                                                         <option value="audited_statement_of_accounts"><?php esc_html_e( 'Audited', 'council-debt-counters' ); ?></option>
                                                                 </select>
                                                                 <button type="button" id="cdc-upload-doc" class="button button-secondary mt-2"><?php esc_html_e( 'Add Document', 'council-debt-counters' ); ?></button>
+                                                        <?php endif; ?>
                                                 </td>
                                         </tr>
                                 </table>
@@ -376,12 +385,14 @@ $readonly = true;
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
-				</table>
-			</div>
-						<?php if ( $council_id ) : ?>
-			<!-- Whistleblower reports moved to dedicated admin page -->
-		</div>
-		<?php submit_button( __( 'Save Council', 'council-debt-counters' ) ); ?>
+                                </table>
+                        </div>
+                        <?php endif; ?>
+                                                <?php if ( $council_id ) : ?>
+                        <!-- Whistleblower reports moved to dedicated admin page -->
+                </div>
+                <?php endif; ?>
+                <?php submit_button( __( 'Save Council', 'council-debt-counters' ) ); ?>
 	</form>
 	</div>
 	<?php
@@ -426,3 +437,4 @@ $counts = wp_count_posts( 'council' );
 		?>
 	</form>
 </div>
+?>
