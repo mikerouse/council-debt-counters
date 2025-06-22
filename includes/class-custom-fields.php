@@ -42,9 +42,11 @@ class Custom_Fields {
         ['name' => 'council_location', 'label' => 'Council Location', 'type' => 'text', 'required' => 0],
         ['name' => 'population', 'label' => 'Population', 'type' => 'number', 'required' => 0],
         ['name' => 'households', 'label' => 'Households', 'type' => 'number', 'required' => 0],
-        ['name' => 'current_liabilities', 'label' => 'Current Liabilities', 'type' => 'money', 'required' => 1],
-        ['name' => 'long_term_liabilities', 'label' => 'Long-Term Liabilities', 'type' => 'money', 'required' => 1],
-        ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI or Finance Lease Liabilities', 'type' => 'money', 'required' => 1],
+        // Liability figures are only mandatory when the Debt tab is enabled and
+        // the values are not marked as "Not available".
+        ['name' => 'current_liabilities', 'label' => 'Current Liabilities', 'type' => 'money', 'required' => 0],
+        ['name' => 'long_term_liabilities', 'label' => 'Long-Term Liabilities', 'type' => 'money', 'required' => 0],
+        ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI or Finance Lease Liabilities', 'type' => 'money', 'required' => 0],
         ['name' => 'minimum_revenue_provision', 'label' => 'Minimum Revenue Provision', 'type' => 'money', 'required' => 0],
         ['name' => 'total_debt', 'label' => 'Total Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
@@ -120,6 +122,8 @@ class Custom_Fields {
 
         self::ensure_default_fields();
         self::ensure_default_tabs();
+        // Ensure legacy interest fields are merged even if the plugin is
+        // updated without reactivation.
         self::migrate_interest_paid_field();
     }
 
@@ -144,6 +148,7 @@ class Custom_Fields {
 
         self::ensure_default_fields();
         self::ensure_default_tabs();
+        self::migrate_interest_paid_field();
     }
 
     /**
@@ -387,7 +392,9 @@ class Custom_Fields {
     }
 
     /**
-     * Merge legacy interest_paid_on_debt field into interest_paid.
+     * Merge any legacy `interest_paid_on_debt` values into the current
+     * `interest_paid` field. This runs during installation and on every
+     * initialisation so older data is always moved to the new tab.
      */
     private static function migrate_interest_paid_field() {
         global $wpdb;
