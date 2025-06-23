@@ -154,48 +154,22 @@ class Figure_Submission_Form {
 		}
 		wp_enqueue_style( 'bootstrap-5' );
 		wp_enqueue_script( 'bootstrap-5' );
-		ob_start();
-		$fields = Custom_Fields::get_fields();
-		$inputs = array();
-		if ( $council_id ) {
-			foreach ( $fields as $f ) {
-				if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
-					$na  = get_post_meta( $council_id, 'cdc_na_' . $f->name, true );
-					$val = Custom_Fields::get_value( $council_id, $f->name );
-					if ( $na || '' === $val ) {
-						$inputs[] = $f;
-					}
-				}
-			}
-		} else {
-			foreach ( $fields as $f ) {
-				if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
+				ob_start();
+				$fields = Custom_Fields::get_fields();
+				$inputs = array();
+		foreach ( $fields as $f ) {
+			if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
+						$tab = Custom_Fields::get_field_tab( $f->name );
+				if ( in_array( $tab, array( 'debt', 'spending', 'income', 'deficit', 'interest', 'reserves', 'consultancy' ), true ) ) {
 					$inputs[] = $f;
 				}
 			}
 		}
 		?>
-		<form method="post" class="cdc-fig-form">
-			<?php wp_nonce_field( 'cdc_fig', 'cdc_fig_nonce' ); ?>
-			<div class="mb-3">
-				<label for="cdc_council_id" class="form-label"><?php esc_html_e( 'Council', 'council-debt-counters' ); ?></label>
-				<select class="form-select" id="cdc_council_id" name="cdc_council_id" required>
-					<option value=""><?php esc_html_e( 'Select council', 'council-debt-counters' ); ?></option>
-					<?php
-					$councils = get_posts(
-						array(
-							'post_type'   => 'council',
-							'numberposts' => -1,
-							'post_status' => array( 'publish', 'draft' ),
-						)
-					);
-					foreach ( $councils as $c ) {
-						echo '<option value="' . esc_attr( $c->ID ) . '"' . selected( $council_id, $c->ID, false ) . '>' . esc_html( get_the_title( $c ) ) . '</option>';
-					}
-					?>
-				</select>
-			</div>
-			<?php foreach ( $inputs as $field ) : ?>
+				<form method="post" class="cdc-fig-form">
+						<?php wp_nonce_field( 'cdc_fig', 'cdc_fig_nonce' ); ?>
+						<input type="hidden" name="cdc_council_id" value="<?php echo esc_attr( $council_id ); ?>" />
+						<?php foreach ( $inputs as $field ) : ?>
 				<div class="mb-3">
 					<label for="fig-<?php echo esc_attr( $field->name ); ?>" class="form-label"><?php echo esc_html( $field->label ); ?></label>
 					<input type="number" step="0.01" class="form-control" id="fig-<?php echo esc_attr( $field->name ); ?>" name="cdc_figures[<?php echo esc_attr( $field->name ); ?>]" />
