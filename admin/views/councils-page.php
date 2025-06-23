@@ -237,8 +237,8 @@ $readonly = true;
 <?php endif; ?>
 <?php
 			foreach ( $enabled as $tab_key ) :
-				$tab = \CouncilDebtCounters\Custom_Fields::get_tab_by_key( $tab_key );
-				if ( ! $tab ) {
+				$tab = $tab_key; // using tab key directly, no get_tab_by_key method exists
+				if ( empty( $groups[ $tab_key ] ) ) {
 					continue;
 				}
 				$tab_fields = $groups[ $tab_key ] ?? array();
