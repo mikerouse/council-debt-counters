@@ -1,7 +1,8 @@
 # Council Debt Counters
 
-**Council Debt Counters** is the backend engine that powers the UK’s official local‐authority debt statistics on our site.  
-It gives site editors and administrators a simple interface to maintain, review and publish animated debt counters for every council.
+**Council Debt/Finance Counters** is the backend engine that powers the UK’s unofficial local authority debt (and finance) statistics on our website. Currently this is mikerouse.co.uk the founding developer, but will migrate to a more appropriate website in due course. 
+
+The backend engine, developed as a WordPress plugin, gives site editors and administrators a simple interface to maintain, review and publish animated debt counters for every council along with other information, statistics and facts. The plugin sits within a WordPress instance, allowing greater use of the site later to publish articles and other materials relating to councils as the service grows. 
 
 ---
 
@@ -14,7 +15,7 @@ It gives site editors and administrators a simple interface to maintain, review 
   - Liabilities (current, long-term, PFI/leases)  
   - Interest paid on debt  
   - Finance source URL  
-  - Custom fields, status messages, “Not available” toggles  
+  - Custom fields, status messages, “Not available” toggles for when data can't be found  
 
 - **Field-by-Field AI Assistance**  
   – **Ask AI** buttons on each field to fetch figures from PDF statements (OpenAI models).  
@@ -22,7 +23,7 @@ It gives site editors and administrators a simple interface to maintain, review 
   – “Ask AI for All” to batch-process every counter field at once.  
 
 - **Approval Workflow & Audit Log**  
-  – Data editors can submit updated figures for review.  
+  – Visitors can submit updated figures for review.  
   – Admins see side-by-side “Existing vs Submitted” values.  
   – Field-level acceptance or rejection, with actions recorded in a `moderation.log`.
 
@@ -63,8 +64,7 @@ It gives site editors and administrators a simple interface to maintain, review 
    - All actions are logged to `moderation.log` for audit.
 
 4. **Publishing Shortcodes**  
-   Embed counters anywhere on the live site using: 
-   ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
+   Embed counters anywhere on the live site using: ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
    See the “Shortcodes” section below for full usage.
 
 5. **Troubleshooting & Logs**  
@@ -80,19 +80,6 @@ It gives site editors and administrators a simple interface to maintain, review 
 - `[total_debt_counter]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals.  
 - `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.  
 - `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables.  
-
----
-
-## Configuration & Settings
-
-- **Licences & Addons**  
-  Enter your OpenAI API key and choose models (gpt-3.5, gpt-4, o4-mini, gpt-4o, etc.).  
-- **General Settings**  
-  Enable stacks, set currency format, pick fonts (default: Oswald 600).  
-- **Counters**  
-  Toggle which metrics appear and adjust animation timing.  
-- **AI & Debug**  
-  Control request throttling, timeouts (`cdc_openai_timeout` filter), and logging verbosity.  
 
 ---
 
