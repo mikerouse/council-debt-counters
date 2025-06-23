@@ -191,6 +191,7 @@ $readonly = true;
 <?php if ( 'council_name' !== $field->name ) : ?>
 <div class="cdc-ai-source mt-1"></div>
 <?php endif; ?>
+<?php endif; ?>
                                                 </td>
                                         </tr>
                                 <?php endforeach; ?>
