@@ -166,7 +166,9 @@
             var perDay = total / 365;
             var perHour = perDay / 24;
             var perSecond = perHour / 3600;
-            ratesOutput.textContent = 'Debt per day: £' + perDay.toFixed(2) + ', per hour: £' + perHour.toFixed(2) + ', per second: £' + perSecond.toFixed(2);
+            if(ratesOutput){
+                ratesOutput.textContent = 'Debt per day: £' + perDay.toFixed(2) + ', per hour: £' + perHour.toFixed(2) + ', per second: £' + perSecond.toFixed(2);
+            }
 
             growthPerSecond = interest / (365 * 24 * 60 * 60);
         }
