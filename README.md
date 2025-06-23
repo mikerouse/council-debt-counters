@@ -1,87 +1,105 @@
 # Council Debt Counters
 
-This WordPress plugin provides animated counters to display UK council debt figures. Counters can be embedded using a shortcode and configured through the WordPress admin interface.
+**Council Debt Counters** is the backend engine that powers the UK’s official local‐authority debt statistics on our site.  
+It gives site editors and administrators a simple interface to maintain, review and publish animated debt counters for every council.
 
-The plugin registers a custom **Council** post type where you can store detailed information about each local authority. The post type is hidden from the regular WordPress menu so users cannot manually add councils from the Posts screen. Councils are managed from the plugin's own **Debt Counters → Councils** submenu. You can optionally enter a licence key on the settings page, though all features are currently free.
+---
 
-Version 0.2 replaces the dependency on Advanced Custom Fields with a built‑in custom field system. You can create your own fields (text, number or monetary) from **Debt Counters → Custom Fields** and capture the values for each council. Monetary fields display a £ symbol and store values to two decimal places.
+## Key Features
 
-The plugin will automatically create the necessary database tables on activation or if they are missing after an update.
+- **Centralised Council Management**  
+  Store and edit each council’s data in one place. Fields include:
+  - Council name, type and region  
+  - Population & households  
+  - Liabilities (current, long-term, PFI/leases)  
+  - Interest paid on debt  
+  - Finance source URL  
+  - Custom fields, status messages, “Not available” toggles  
 
-If you provide an OpenAI API key you can let the plugin attempt to pull key figures from uploaded Statement of Accounts documents. Select the desired model under **Debt Counters → Settings**; this option is ignored unless an API key has been entered on the **Licences & Addons** page. Models like **o3**, **o4-mini** and **gpt‑4o** are available alongside gpt‑3.5 and gpt‑4. The AI’s suggestions are shown in the admin area so you can review and confirm them before the values are stored for that council. Large PDFs are automatically split into smaller chunks so each OpenAI request stays within the model’s token limits. Requests are throttled to each model’s tokens-per-minute allowance (for example 200k TPM for o4-mini and 30k TPM for gpt‑4o). The progress overlay now displays how many tokens were used and shows a countdown bar so you know how long to wait. Requests allow up to 60 seconds by default; filter `cdc_openai_timeout` to change this.
-If the accounts indicate figures are in thousands of pounds (e.g. using "£000s" headings) the AI multiplies numbers by 1,000 so stored values are the full amounts.
+- **Field-by-Field AI Assistance**  
+  – **Ask AI** buttons on each field to fetch figures from PDF statements (OpenAI models).  
+  – Review suggested values and sources before saving.  
+  – “Ask AI for All” to batch-process every counter field at once.  
 
-Each field on the council edit screen now features an **Ask AI** button. This queries OpenAI for that specific value and fills in the number while showing a source link below the field. The toolbar includes **Ask AI for All** to run the process for every field at once. When you click any Ask&nbsp;AI button the plugin suggests a question and displays it in a Bootstrap modal so you can tweak the wording before sending. If the AI reply can’t be parsed into a simple value, the full response is shown in the same modal so you can decide whether to rephrase the question. A drop‑down lets you specify the expected answer format &ndash; monetary figure, integer, single word or short sentence &ndash; before resubmitting. If you still want to use the raw reply, click **Accept and Insert** in the modal and it will populate the field. The AI is asked to favour official sources &ndash; ideally from **gov.uk** domains &ndash; and all requests are written to the Troubleshooting log so you can inspect what was returned or diagnose problems. Text fields like website URLs are supported and responses are trimmed down so the value can be inserted directly.
+- **Approval Workflow & Audit Log**  
+  – Data editors can submit updated figures for review.  
+  – Admins see side-by-side “Existing vs Submitted” values.  
+  – Field-level acceptance or rejection, with actions recorded in a `moderation.log`.
 
-By default each council includes standard fields such as **Council Name**, **Council Type**, **Population**, **Households**, **Current Liabilities**, **Long-Term Liabilities**, **PFI or Finance Lease Liabilities**, **Interest Paid on Debt**, and a **Financial Data Source URL** so visitors can view the statement used. Liability figures only become mandatory when the **Debt** counter is enabled in Settings and the relevant field is not marked **N/A**. The **Interest Paid on Debt** field now resides on the **Interest** tab and any legacy values are migrated automatically. A **Total Debt** field is calculated from the others and is shown as a read-only value. Additional custom fields &ndash; including a **Status Message** and **Status Message Type** &ndash; can be added, edited or removed from the admin screen and you can change whether they are required as well as their field type (text, number or monetary). The **Not available** toggles for each tab and field now use Bootstrap switches for a cleaner look.
+- **Animated Front-end Counters**  
+  – Counters animate when visible, powered by CountUp.js.  
+  – Shortcodes drive per-council or site-wide totals (debt, spending, deficit, interest, revenue).  
+  – Leaderboards: top/bottom councils by any metric.  
 
-Councils can be added, edited, and deleted from the **Debt Counters → Councils** page which uses a clean Bootstrap design. All custom fields are displayed on this screen so you can capture relevant information before uploading finance documents.
+- **Custom Fields & Tabs**  
+  – Create and configure your own text, number or monetary fields.  
+  – Mark individual fields or entire tabs as “N/A” via Bootstrap switches.  
+  – Total debt is calculated automatically from component values.
 
-Currently the plugin includes an admin page with instructions for uploading starting debt figures via CSV. Additional functionality such as data uploading and counter rendering will be added in future versions.
+- **Document Management**  
+  – Upload or link PDF “Statement of Accounts” for each council.  
+  – AI extraction can pull figures directly from uploaded documents.  
+  – Store multiple years/types and manage them in one place.
 
-The **Troubleshooting** submenu lets you view error logs and choose how much JavaScript debugging information appears in the browser console. Available levels are **Verbose**, **Standard**, and **Quiet**. Counters now log more details when set to Verbose, which can help diagnose issues with animation or data loading. Counters only initialise once when they become visible thanks to an `IntersectionObserver`, preventing duplicate animations if page builders reinsert the HTML.
+---
 
-You can also pick a Google Font and weight for the counters on the Settings page. The font defaults to **Oswald** with a weight of **600**, but you can select other styles to match your theme.
+## For Site Editors & Administrators
 
-## Shortcodes
+1. **Council List**  
+   Navigate to **Debt Counters → Councils**.  
+   - Filter by status (Active, Draft, Under Review).  
+   - Bulk-repair or mark as “Published as N/A.”
 
-Use `[council_counter]` to display figures for a specific council. For overall figures across every council in the database you can use the following shortcodes:
+2. **Edit a Council**  
+   - Update core fields or toggle “No Accounts Published.”  
+   - Upload new account statements or point to external URLs.  
+   - Use **Ask AI** for individual fields or **Ask AI for All**.  
+   - Save your changes; optionally submit for moderation review.
 
-- `[total_debt_counter]`
-- `[total_spending_counter]`
-- `[total_deficit_counter]`
-- `[total_interest_counter]`
-- `[total_revenue_counter]`
-- `[total_custom_counter type="reserves|spending|income|deficit|interest|consultancy"]`
+3. **Moderation Review**  
+   - Go to **Debt Counters → Submissions**.  
+   - Click **Review** on a pending submission.  
+   - Compare existing vs submitted values, choose per field, then **Save**.  
+   - All actions are logged to `moderation.log` for audit.
 
-These counters animate just like the per‑council versions but sum the selected field for all councils.
+4. **Publishing Shortcodes**  
+   Embed counters anywhere on the live site using: 
+   ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
+   See the “Shortcodes” section below for full usage.
 
-The total debt counter also displays how many councils are included in the calculation.
+5. **Troubleshooting & Logs**  
+- **Debt Counters → Troubleshooting** to view AI and error logs.  
+- Adjust JavaScript debug levels (Verbose, Standard, Quiet).  
+- Inspect token-usage and progress overlays when AI runs.
 
-### Leaderboards
+---
 
-Display ranked tables or lists of councils with `[cdc_leaderboard]`. Example:
+## Available Shortcodes
 
-```
-[cdc_leaderboard type="debt_per_resident" limit="5" format="table" link="1"]
-```
+- `[council_counter id="…"]` – Animated per-council figures.  
+- `[total_debt_counter]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals.  
+- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.  
+- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables.  
 
-Available `type` options include `highest_debt`, `debt_per_resident`,
-`reserves_to_debt_ratio`, `biggest_deficit`, `lowest_reserves`,
-`highest_spending_per_resident` and `highest_interest_paid`. The `limit`
-parameter controls how many rows are shown, `format` can be `table` or `list`,
-and setting `link="1"` adds a View details link for each council.
+---
 
-### Social sharing
+## Configuration & Settings
 
-Add `[cdc_share_buttons]` on a single council page to show buttons for sharing
-that council’s stats on X, WhatsApp or Facebook. The shortcode automatically
-uses the selected council’s name, relevant figure and permalink.
+- **Licences & Addons**  
+  Enter your OpenAI API key and choose models (gpt-3.5, gpt-4, o4-mini, gpt-4o, etc.).  
+- **General Settings**  
+  Enable stacks, set currency format, pick fonts (default: Oswald 600).  
+- **Counters**  
+  Toggle which metrics appear and adjust animation timing.  
+- **AI & Debug**  
+  Control request throttling, timeouts (`cdc_openai_timeout` filter), and logging verbosity.  
 
-The social preview image defaults to the **Default Sharing Thumbnail** set on the
-plugin Settings page. You can override this per council by selecting a
-**Sharing Image** when editing a council.
+---
 
-### Status messages
+## Deployment Notes
 
-Use `[council_status]` to display any status message you have recorded for a council. If the field is empty then nothing is shown.
+This plugin is tightly integrated into our site’s theme and admin UI. It is **not** intended for general WordPress distribution. Our team controls updates, security and licensing centrally. If you need to run it elsewhere, you can extract the plugin folder and see how you get on, but support is only provided for our official instance.
 
-## Installation
-1. Copy the plugin folder to your `wp-content/plugins` directory.
-2. Activate **Council Debt Counters** in the WordPress admin.
-3. Visit **Debt Counters** in the admin menu to configure settings or enter a licence key if you have one, then start adding councils.
+---
 
-## Asset loading and CDNs
-
-Bootstrap 5 and CountUp.js are bundled locally inside the plugin's `public/` directory. These files are loaded by default to avoid external requests. If you prefer to use a CDN instead, hook into the `cdc_use_cdn` filter:
-
-```php
-add_filter( 'cdc_use_cdn', '__return_true' );
-```
-
-## Uninstalling
-Deleting the plugin from the Plugins screen removes all data it created. This includes the custom `council` posts, uploaded documents, custom database tables and stored options like the licence key or OpenAI API key.
-
-## Legal notice
-
-When displaying council data you must comply with the **Copyright, Designs and Patents Act 1988**, **Section 11A of the Freedom of Information Act 2001**, and the **Re-Use of Public Sector Information Regulations 2005**. Data must not be shown in a misleading context or used for commercial gain, including behind paywalls. Always attribute the data source to the relevant council whenever it is displayed, including when output via shortcodes.
+*If you’re part of our content team and have questions about any feature, please reach out to the development team or review the Troubleshooting logs
