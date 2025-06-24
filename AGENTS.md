@@ -2,7 +2,7 @@
 
 ## 🎯 Purpose
 
-This plugin provides shortcode-driven **animated counters** that visualise public finance data (e.g. council debt) for individual UK local authorities. It is designed for **activists, campaigners, journalists, councillors, and civic tech developers** who want to embed live, meaningful financial data into WordPress websites in a user-friendly and visually compelling way. We also want the same people to be able to embed our counters on their own non-WordPress websites using embed codes, and we also want to provide an API for the same data to be available for things like mechanical counters that can call a particular API endpoint to make a particular request for a particular counter and get a simple number in reply. 
+This plugin assimilates into a WordPress-powered website and acts as the means to extend the functions of the website to deliver an app-like experience. Eventually, the plugin will be evolved into a standalone PHP app that does not depend on WordPress. The purpose of the app is to provide a visually compelling way to communicate local government finance data (e.g. council debt) for individual UK local authorities. It is designed for **activists, campaigners, journalists, councillors, and civic tech developers** who want to embed or use live, meaningful financial data in a user-friendly and visually compelling way. We will, eventually, provide an API for the same data to be available for things like mechanical counters that can call a particular API endpoint to make a particular request for a particular counter and get a simple number in reply. 
 
 ## 🔧 Architectural Principles
 
@@ -10,12 +10,13 @@ This plugin is built around the following key principles, which all contributors
 
 ### ✅ **A**ccessibility
 - Ensure that all UI elements are accessible (ARIA tags, high contrast modes, tab focus).
-- Counters should work with JS disabled (fallback static value).
+- Counters do not need to work with JS disabled - a message can be shown asking the user to turn on JavaScript. 
 
 ### ✅ **G**eneral Purpose & Portable
-- Plugin should work on any standard WordPress install without dependency on bespoke themes or frameworks.
-- All data (e.g. per-council debt figures) must be configurable via the WordPress admin interface.
+- Plugin only needs to work on this WordPress install for now, with a view to migrating to a PHP standalone app later (potentially based on the Symfony framework)
+- All data (e.g. per-council debt figures) must be configurable via the WordPress admin interface. We aim to provide as much configuration via backend screens as possible. 
 - Avoid hardcoded URLs, inline SQL, or site-specific hacks.
+- Ensure that as many actions as possible are logged to the Troubleshooting tool
 
 ### ✅ **E**xtensibility
 - All counter types (e.g. debt, tax per household, interest) should use a modular shortcode handler structure.
@@ -33,6 +34,7 @@ This plugin is built around the following key principles, which all contributors
 - Animations must be **smooth digit transitions** (not whole-number jumps).
 - Allow theme overrides via class names and filter hooks where appropriate.
 - Allow users to choose fonts and styles for counters they create.
+- When creating things like form fields ensure that descriptions and helper text is provided for the user. 
 
 ### ✅ **S**eparation of Concerns
 - Follow **object-oriented design** with a clear directory and file structure:
@@ -50,18 +52,6 @@ This plugin is built around the following key principles, which all contributors
 - - js/
 - - css/
 
-
-## 🧩 Features Planned
-
-- `[council_counter]` shortcode (with arguments like `type=debt`, `council="Redditch"`, etc.)
-- Admin panel for:
-- Uploading CSV of base figures
-- Overriding individual council data manually
-- Setting animation preferences (tick speed, rounding, digit format)
-- Smooth JS animation using `requestAnimationFrame` or lightweight libraries
-- Optional charts using Chart.js (or similar) for trends
-- Bootstrap UI components (cards, tooltips, badges, tables) for presenting supplementary data
-
 ## 📦 Plugin Compatibility Targets
 
 - WordPress 5.8+
@@ -78,11 +68,9 @@ We welcome pull requests that:
 
 Please respect the above design patterns, submit pull requests with clear commit messages, and include inline comments where appropriate.
 
-
 ## 📜 Licensing
 
-This plugin will be released under the **GNU General Public License v2 (or later)** to remain compatible with WordPress.org requirements.
-
+This plugin will be released under an appropriate attribution licence later.
 
 ## 🧠 Author Note
 
