@@ -315,6 +315,19 @@ class Custom_Fields {
         return maybe_unserialize( $raw );
     }
 
+    /**
+     * Get a field value for a specific financial year, falling back to the
+     * yearless value if not set.
+     */
+    public static function get_value_for_year( int $council_id, string $name, string $year ) {
+        $key  = $name . '_' . str_replace( '/', '_', $year );
+        $val  = self::get_value( $council_id, $key );
+        if ( '' === $val || null === $val ) {
+            $val = self::get_value( $council_id, $name );
+        }
+        return $val;
+    }
+
     public static function update_value( int $council_id, string $name, $value ) {
         $field = self::get_field_by_name( $name );
         if ( ! $field ) {
@@ -354,6 +367,28 @@ class Custom_Fields {
                 continue;
             }
             $val = self::get_value( (int) $id, $name );
+            if ( is_numeric( $val ) ) {
+                $total += (float) $val;
+            }
+        }
+        return $total;
+    }
+
+    /**
+     * Get the summed value of a field for a given year.
+     */
+    public static function get_total_value_for_year( string $name, string $year ) : float {
+        $posts = get_posts([
+            'post_type'   => 'council',
+            'numberposts' => -1,
+            'fields'      => 'ids',
+        ]);
+        $total = 0.0;
+        foreach ( $posts as $id ) {
+            if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
+                continue;
+            }
+            $val = self::get_value_for_year( (int) $id, $name, $year );
             if ( is_numeric( $val ) ) {
                 $total += (float) $val;
             }
