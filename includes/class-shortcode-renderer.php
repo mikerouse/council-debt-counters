@@ -261,15 +261,11 @@ class Shortcode_Renderer {
 
                 // Council balance sheets cover the year ending 31 March.
                 // Calculations therefore start on 1 April.
-                $year     = gmdate( 'Y' );
-                $now      = time();
-                $fy_start = strtotime( "$year-04-01" );
-                if ( $now < $fy_start ) {
-                        // If before 1 April, use previous year
-                        $fy_start = strtotime( ( $year - 1 ) . '-04-01' );
-                }
+                $now = time();
+                list( $start_year ) = explode( '/', CDC_Utils::current_financial_year() );
+                $fy_start = strtotime( $start_year . '-04-01' );
                $elapsed_seconds = max( 0, $now - $fy_start );
-               $start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
+                $start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
 
                if ( $parent ) {
                        wp_enqueue_style( 'bootstrap-5' );
@@ -622,12 +618,9 @@ class Shortcode_Renderer {
 
                 $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
-                $year     = gmdate( 'Y' );
-                $now      = time();
-                $fy_start = strtotime( "$year-04-01" );
-                if ( $now < $fy_start ) {
-                        $fy_start = strtotime( ( $year - 1 ) . '-04-01' );
-                }
+                $now = time();
+                list( $start_year ) = explode( '/', CDC_Utils::current_financial_year() );
+                $fy_start = strtotime( $start_year . '-04-01' );
                 $elapsed_seconds = max( 0, $now - $fy_start );
                 $start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
 

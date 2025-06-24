@@ -36,4 +36,28 @@ class CDC_Utils {
 
         return $id;
     }
+
+    /**
+     * Determine the financial year to use for counters.
+     *
+     * Calculates the UK financial year based on the server clock. If a
+     * `CDC_DEFAULT_FINANCIAL_YEAR` constant is defined and represents a more
+     * recent year than the calculation, that constant is returned instead.
+     *
+     * @return string Financial year in `YYYY/YY` format.
+     */
+    public static function current_financial_year() : string {
+        $year  = (int) date( 'Y' );
+        $start = ( date( 'n' ) < 4 ) ? $year - 1 : $year;
+        $computed = sprintf( '%d/%02d', $start, ( $start + 1 ) % 100 );
+
+        if ( defined( 'CDC_DEFAULT_FINANCIAL_YEAR' ) ) {
+            list( $def_start ) = explode( '/', CDC_DEFAULT_FINANCIAL_YEAR );
+            if ( $start > (int) $def_start ) {
+                return CDC_DEFAULT_FINANCIAL_YEAR;
+            }
+        }
+
+        return $computed;
+    }
 }

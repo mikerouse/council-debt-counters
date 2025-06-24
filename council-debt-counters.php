@@ -14,7 +14,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
-	require_once __DIR__ . '/vendor/autoload.php';
+        require_once __DIR__ . '/vendor/autoload.php';
+}
+
+// Default financial year used when real-world data for the current year is not
+// yet available.
+if ( ! defined( 'CDC_DEFAULT_FINANCIAL_YEAR' ) ) {
+        define( 'CDC_DEFAULT_FINANCIAL_YEAR', '2023/24' );
 }
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings-page.php';

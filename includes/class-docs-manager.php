@@ -43,10 +43,7 @@ class Docs_Manager {
     }
 
     public static function current_financial_year() {
-        $year = (int) date( 'Y' );
-        $start = ( date( 'n' ) < 4 ) ? $year - 1 : $year;
-        $end = $start + 1;
-        return sprintf( '%d/%02d', $start, $end % 100 );
+        return CDC_Utils::current_financial_year();
     }
 
     public static function init() {

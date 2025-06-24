@@ -11,12 +11,10 @@ class Counter_Manager {
      * Seconds since the start of the current financial year (1 April).
      */
     public static function seconds_since_fy_start() : int {
-        $year = date( 'Y' );
-        $now  = time();
-        $start = strtotime( "$year-04-01" );
-        if ( $now < $start ) {
-            $start = strtotime( ( $year - 1 ) . '-04-01' );
-        }
+        $now = time();
+        list( $start_year ) = explode( '/', CDC_Utils::current_financial_year() );
+        $start = strtotime( $start_year . '-04-01' );
+
         return max( 0, $now - $start );
     }
 

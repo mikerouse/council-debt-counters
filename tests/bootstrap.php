@@ -22,6 +22,7 @@ if (!defined('ABSPATH')) {
 global $wpdb;
 $wpdb = new WPDBStub();
 
+require_once __DIR__ . '/../includes/class-cdc-utils.php';
 require_once __DIR__ . '/../includes/class-counter-manager.php';
 require_once __DIR__ . '/../includes/class-custom-fields.php';
 
