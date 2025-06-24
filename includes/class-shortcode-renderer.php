@@ -155,7 +155,7 @@ class Shortcode_Renderer {
                         $bootstrap_css = plugins_url( 'public/css/bootstrap.min.css', $plugin_file );
                         $bootstrap_js  = plugins_url( 'public/js/bootstrap.bundle.min.js', $plugin_file );
                         $countup_js    = plugins_url( 'public/js/countUp.umd.js', $plugin_file );
-                        $fa_css        = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+                        $fa_css        = plugin_dir_url( $plugin_file ) . 'vendor/fortawesome/fontawesome-free/css/all.min.css';
                 }
 
                 wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', $plugin_file ), array(), '0.1.0' );
