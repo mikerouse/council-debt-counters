@@ -78,7 +78,7 @@ class Shortcode_Renderer {
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
                 wp_enqueue_style( 'cdc-counter-font' );
-                wp_enqueue_style( 'font-awesome' );
+                wp_enqueue_script( 'font-awesome-kit' );
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
@@ -143,20 +143,19 @@ class Shortcode_Renderer {
 
         public static function register_assets() {
                 $plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
-                $use_cdn     = apply_filters( 'cdc_use_cdn', false );
+               $use_cdn     = apply_filters( 'cdc_use_cdn', (bool) get_option( 'cdc_use_cdn_assets', 0 ) );
 
                 if ( $use_cdn ) {
                         $bootstrap_css = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css';
                         $bootstrap_js  = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js';
                         $countup_js    = 'https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js';
-                        $fa_css        = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
                 } else {
-                        // Default to CDN version for Font Awesome when local fonts are unavailable
                         $bootstrap_css = plugins_url( 'public/css/bootstrap.min.css', $plugin_file );
                         $bootstrap_js  = plugins_url( 'public/js/bootstrap.bundle.min.js', $plugin_file );
                         $countup_js    = plugins_url( 'public/js/countUp.umd.js', $plugin_file );
-                        $fa_css        = plugins_url( 'public/assets/fontawesome/css/all.min.css', $plugin_file );
                 }
+
+                $fa_script = 'https://kit.fontawesome.com/3a98f39235.js';
 
                 wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', $plugin_file ), array(), '0.1.0' );
                 $font     = get_option( 'cdc_counter_font', 'Oswald' );
@@ -169,14 +168,7 @@ class Shortcode_Renderer {
                 wp_register_script( 'cdc-share-tracking', plugins_url( 'public/js/share-tracking.js', $plugin_file ), array(), '0.1.0', true );
                 wp_register_style( 'bootstrap-5', $bootstrap_css, array(), '5.3.1' );
                 wp_register_script( 'bootstrap-5', $bootstrap_js, array(), '5.3.1', true );
-                // Register Font Awesome only if not already registered by theme or another plugin
-                if ( ! wp_style_is( 'font-awesome', 'registered' ) ) {
-                    wp_register_style( 'font-awesome', $fa_css, array(), '6.4.0' );
-                }
-        // Enqueue Font Awesome once
-        if ( ! wp_style_is( 'font-awesome', 'enqueued' ) ) {
-            wp_enqueue_style( 'font-awesome' );
-        }
+                wp_register_script( 'font-awesome-kit', $fa_script, array(), null, false );
         wp_localize_script(
                         'cdc-counter-animations',
                         'CDC_LOGGER',
@@ -215,7 +207,7 @@ class Shortcode_Renderer {
                        wp_enqueue_style( 'bootstrap-5' );
                        wp_enqueue_style( 'cdc-counter' );
                        wp_enqueue_style( 'cdc-counter-font' );
-                       wp_enqueue_style( 'font-awesome' );
+                       wp_enqueue_script( 'font-awesome-kit' );
                        return '<div class="cdc-counter-static display-4 fw-bold">&pound;??.??</div>';
                }
 
@@ -243,7 +235,7 @@ class Shortcode_Renderer {
                        wp_enqueue_style( 'bootstrap-5' );
                        wp_enqueue_style( 'cdc-counter' );
                        wp_enqueue_style( 'cdc-counter-font' );
-                       wp_enqueue_style( 'font-awesome' );
+                       wp_enqueue_script( 'font-awesome-kit' );
                        return '<div class="cdc-counter-static display-4 fw-bold">£' . esc_html( number_format_i18n( (float) $total, 2 ) ) . '</div>';
                }
 
@@ -467,7 +459,7 @@ endforeach;
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
                 wp_enqueue_style( 'cdc-counter-font' );
-                wp_enqueue_style( 'font-awesome' );
+                wp_enqueue_script( 'font-awesome-kit' );
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
@@ -575,7 +567,7 @@ endforeach;
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
                 wp_enqueue_style( 'cdc-counter-font' );
-                wp_enqueue_style( 'font-awesome' );
+                wp_enqueue_script( 'font-awesome-kit' );
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
