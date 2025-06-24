@@ -124,7 +124,7 @@ class Shortcode_Renderer {
                 $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
                 $obj           = Custom_Fields::get_field_by_name( $field );
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-               $title         = self::total_counter_title( $type ?: $field );
+               $title         = self::counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
                 ob_start();
                 ?>
