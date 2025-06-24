@@ -77,8 +77,9 @@ class Shortcode_Renderer {
 
 		wp_enqueue_style( 'bootstrap-5' );
 		wp_enqueue_style( 'cdc-counter' );
-		wp_enqueue_style( 'cdc-counter-font' );
-		wp_enqueue_script( 'bootstrap-5' );
+                wp_enqueue_style( 'cdc-counter-font' );
+                wp_enqueue_style( 'font-awesome' );
+                wp_enqueue_script( 'bootstrap-5' );
 		wp_enqueue_script( 'cdc-counter-animations' );
 
 		$counter_id    = 'cdc-counter-' . $id . '-' . sanitize_html_class( $field );
@@ -88,13 +89,13 @@ class Shortcode_Renderer {
 		$collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
 		ob_start();
 		?>
-		<div class="cdc-counter-wrapper text-center mb-3">
+                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
 			<div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
                                 &hellip;
 			</div>
 			<?php if ( $with_details ) : ?>
-                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
 			<div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
 				<ul class="mt-2 list-unstyled">
@@ -140,15 +141,17 @@ class Shortcode_Renderer {
 		$plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
 		$use_cdn     = apply_filters( 'cdc_use_cdn', false );
 
-		if ( $use_cdn ) {
-			$bootstrap_css = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css';
-			$bootstrap_js  = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js';
-			$countup_js    = 'https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js';
-		} else {
-			$bootstrap_css = plugins_url( 'public/css/bootstrap.min.css', $plugin_file );
-			$bootstrap_js  = plugins_url( 'public/js/bootstrap.bundle.min.js', $plugin_file );
-			$countup_js    = plugins_url( 'public/js/countUp.umd.js', $plugin_file );
-		}
+                if ( $use_cdn ) {
+                        $bootstrap_css = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css';
+                        $bootstrap_js  = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js';
+                        $countup_js    = 'https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js';
+                        $fa_css        = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+                } else {
+                        $bootstrap_css = plugins_url( 'public/css/bootstrap.min.css', $plugin_file );
+                        $bootstrap_js  = plugins_url( 'public/js/bootstrap.bundle.min.js', $plugin_file );
+                        $countup_js    = plugins_url( 'public/js/countUp.umd.js', $plugin_file );
+                        $fa_css        = plugins_url( 'public/css/fontawesome.min.css', $plugin_file );
+                }
 
 		wp_register_style( 'cdc-counter', plugins_url( 'public/css/counter.css', $plugin_file ), array(), '0.1.0' );
 		$font     = get_option( 'cdc_counter_font', 'Oswald' );
@@ -160,7 +163,8 @@ class Shortcode_Renderer {
                 wp_register_script( 'cdc-counter-animations', plugins_url( 'public/js/counter-animations.js', $plugin_file ), array( 'countup' ), '0.1.0', true );
                 wp_register_script( 'cdc-share-tracking', plugins_url( 'public/js/share-tracking.js', $plugin_file ), array(), '0.1.0', true );
                 wp_register_style( 'bootstrap-5', $bootstrap_css, array(), '5.3.1' );
-		wp_register_script( 'bootstrap-5', $bootstrap_js, array(), '5.3.1', true );
+                wp_register_script( 'bootstrap-5', $bootstrap_js, array(), '5.3.1', true );
+                wp_register_style( 'font-awesome', $fa_css, array(), '6.4.0' );
 		wp_localize_script(
 			'cdc-counter-animations',
 			'CDC_LOGGER',
@@ -199,6 +203,7 @@ class Shortcode_Renderer {
                        wp_enqueue_style( 'bootstrap-5' );
                        wp_enqueue_style( 'cdc-counter' );
                        wp_enqueue_style( 'cdc-counter-font' );
+                       wp_enqueue_style( 'font-awesome' );
                        return '<div class="cdc-counter-static display-4 fw-bold">&pound;??.??</div>';
                }
 
@@ -226,6 +231,7 @@ class Shortcode_Renderer {
                        wp_enqueue_style( 'bootstrap-5' );
                        wp_enqueue_style( 'cdc-counter' );
                        wp_enqueue_style( 'cdc-counter-font' );
+                       wp_enqueue_style( 'font-awesome' );
                        return '<div class="cdc-counter-static display-4 fw-bold">£' . esc_html( number_format_i18n( (float) $total, 2 ) ) . '</div>';
                }
 
@@ -262,15 +268,15 @@ class Shortcode_Renderer {
 		$collapse_id = 'cdc-detail-' . $id . '-debt';
 		ob_start();
 		?>
-		<div class="cdc-counter-wrapper text-center mb-3">
+                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="<?php echo esc_attr( 'cdc-counter-' . $id . '-debt' ); ?>" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
                         </div>
                         <noscript>
                                 <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
                         </noscript>
-                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
 			<div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
                                 <ul class="mt-2 list-unstyled">
@@ -449,6 +455,7 @@ endforeach;
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
                 wp_enqueue_style( 'cdc-counter-font' );
+                wp_enqueue_style( 'font-awesome' );
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
@@ -460,15 +467,15 @@ endforeach;
 
                 ob_start();
                 ?>
-                <div class="cdc-counter-wrapper text-center mb-3">
+                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
                                 &hellip;
                         </div>
                         <noscript>
                                 <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
                         </noscript>
-                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
                         <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
                                 <ul class="mt-2 list-unstyled">
@@ -556,6 +563,7 @@ endforeach;
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
                 wp_enqueue_style( 'cdc-counter-font' );
+                wp_enqueue_style( 'font-awesome' );
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
@@ -563,15 +571,15 @@ endforeach;
 
                 ob_start();
                 ?>
-                <div class="cdc-counter-wrapper text-center mb-3">
+                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
                         </div>
                         <noscript>
                                 <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
                         </noscript>
-                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <span aria-hidden="true">&#x2139;</span><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
                         <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
                                 <ul class="mt-2 list-unstyled">
