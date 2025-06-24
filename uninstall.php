@@ -26,10 +26,15 @@ foreach ( $option_names as $option ) {
 
 // Drop custom tables.
 global $wpdb;
+$values_table = $wpdb->prefix . 'cdc_field_values';
+$columns      = $wpdb->get_col( "DESC $values_table", 0 );
+if ( in_array( 'financial_year', $columns, true ) ) {
+        $wpdb->query( "ALTER TABLE $values_table DROP COLUMN financial_year" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+}
 $tables = array(
-	$wpdb->prefix . 'cdc_fields',
-	$wpdb->prefix . 'cdc_field_values',
-	$wpdb->prefix . 'cdc_documents',
+        $wpdb->prefix . 'cdc_fields',
+        $wpdb->prefix . 'cdc_field_values',
+        $wpdb->prefix . 'cdc_documents',
 );
 
 foreach ( $tables as $table ) {
