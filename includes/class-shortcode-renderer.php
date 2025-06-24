@@ -94,10 +94,14 @@ class Shortcode_Renderer {
                                 &hellip;
                         </div>
                         <?php if ( $with_details ) : ?>
-                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
-                        </button>
+                                <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                                </button>
+                        <?php endif; ?>
+                </div>
+                <?php if ( $with_details ) : ?>
                         <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
+                           <div class="text-center cdc-counter-details">
                                 <ul class="mt-2 list-unstyled">
                                         <?php // translators: %s: Field label ?>
                                         <li><?php echo esc_html( sprintf( __( 'Annual %s:', 'council-debt-counters' ), $label ) ); ?> £<?php echo esc_html( number_format_i18n( $annual, 2 ) ); ?></li>
@@ -106,9 +110,9 @@ class Shortcode_Renderer {
                                 <div class="alert alert-warning mt-2">
                                         <?php esc_html_e( 'This counter assumes the annual figure is spread evenly from 1 April.', 'council-debt-counters' ); ?>
                                 </div>
+                           </div>
                         </div>
-                        <?php endif; ?>
-                </div>
+                <?php endif; ?>
                 <?php
                 return ob_get_clean();
         }
