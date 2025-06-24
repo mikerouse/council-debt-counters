@@ -91,19 +91,37 @@ class Settings_Page {
 				'default' => 'gpt-3.5-turbo',
 			)
 		);
-		register_setting(
-			'cdc_settings',
-			'cdc_enabled_counters',
-			array(
-				'type'    => 'array',
-				'default' => array(),
-			)
-		);
-		register_setting(
-			'cdc_settings',
-			'cdc_log_level',
-			array(
-				'type'              => 'string',
+                register_setting(
+                        'cdc_settings',
+                        'cdc_enabled_counters',
+                        array(
+                                'type'    => 'array',
+                                'default' => array(),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
+                        'cdc_counter_titles',
+                        array(
+                                'type'              => 'array',
+                                'default'           => array(),
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_titles' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
+                        'cdc_total_counter_titles',
+                        array(
+                                'type'              => 'array',
+                                'default'           => array(),
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_titles' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
+                        'cdc_log_level',
+                        array(
+                                'type'              => 'string',
 				'default'           => 'standard',
 				'sanitize_callback' => array( __CLASS__, 'sanitize_log_level' ),
 			)
@@ -199,13 +217,24 @@ class Settings_Page {
 		return in_array( $value, self::FONT_CHOICES, true ) ? $value : 'Oswald';
 	}
 
-	public static function sanitize_weight( $value ) {
-		$value = preg_replace( '/[^0-9]/', '', $value );
-		if ( $value < 100 || $value > 900 ) {
-			return '600';
-		}
-		return $value;
-	}
+        public static function sanitize_weight( $value ) {
+                $value = preg_replace( '/[^0-9]/', '', $value );
+                if ( $value < 100 || $value > 900 ) {
+                        return '600';
+                }
+                return $value;
+        }
+
+        public static function sanitize_titles( $value ) {
+                if ( ! is_array( $value ) ) {
+                        return array();
+                }
+                $clean = array();
+                foreach ( $value as $k => $v ) {
+                        $clean[ sanitize_key( $k ) ] = sanitize_text_field( $v );
+                }
+                return $clean;
+        }
 
 	public static function render_page() {
 		include plugin_dir_path( __DIR__ ) . 'admin/views/instructions-page.php';

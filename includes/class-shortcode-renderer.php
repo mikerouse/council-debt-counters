@@ -10,6 +10,44 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Shortcode_Renderer {
 
+       private static function default_labels(): array {
+               return array(
+                       'debt'        => __( 'Debt', 'council-debt-counters' ),
+                       'spending'    => __( 'Spending', 'council-debt-counters' ),
+                       'income'      => __( 'Income', 'council-debt-counters' ),
+                       'deficit'     => __( 'Deficit', 'council-debt-counters' ),
+                       'interest'    => __( 'Interest', 'council-debt-counters' ),
+                       'reserves'    => __( 'Reserves', 'council-debt-counters' ),
+                       'consultancy' => __( 'Consultancy', 'council-debt-counters' ),
+               );
+       }
+
+       private static function counter_title( string $type ): string {
+               $defaults = self::default_labels();
+               $titles   = (array) get_option( 'cdc_counter_titles', array() );
+               $default  = $defaults[ $type ] ?? ucwords( $type );
+               return sanitize_text_field( $titles[ $type ] ?? $default );
+       }
+
+       private static function total_default_labels(): array {
+               return array(
+                       'debt'        => __( 'Total Debt', 'council-debt-counters' ),
+                       'spending'    => __( 'Total Spending', 'council-debt-counters' ),
+                       'income'      => __( 'Total Income', 'council-debt-counters' ),
+                       'deficit'     => __( 'Total Deficit', 'council-debt-counters' ),
+                       'interest'    => __( 'Total Interest', 'council-debt-counters' ),
+                       'reserves'    => __( 'Total Reserves', 'council-debt-counters' ),
+                       'consultancy' => __( 'Consultancy Spend', 'council-debt-counters' ),
+               );
+       }
+
+       private static function total_counter_title( string $type ): string {
+               $defaults = self::total_default_labels();
+               $titles   = (array) get_option( 'cdc_total_counter_titles', array() );
+               $default  = $defaults[ $type ] ?? ucwords( $type );
+               return sanitize_text_field( $titles[ $type ] ?? $default );
+       }
+
        /**
         * Get the URL for an icon asset.
         *
@@ -86,9 +124,11 @@ class Shortcode_Renderer {
                 $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
                 $obj           = Custom_Fields::get_field_by_name( $field );
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
+               $title         = self::total_counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
                 ob_start();
                 ?>
+                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
                 <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
                                 &hellip;
@@ -270,8 +310,10 @@ class Shortcode_Renderer {
                 $debt_repayment_explainer = __( 'Growth uses the annual interest figure from the latest accounts. Actual borrowing and repayments may differ.', 'council-debt-counters' );
 
                 $collapse_id = 'cdc-detail-' . $id . '-debt';
+                $title       = self::counter_title( 'debt' );
                 ob_start();
                 ?>
+                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
                 <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="<?php echo esc_attr( 'cdc-counter-' . $id . '-debt' ); ?>" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
@@ -467,10 +509,12 @@ endforeach;
                 $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
                 $obj           = Custom_Fields::get_field_by_name( $field );
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
+               $title         = self::total_counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-total-' . sanitize_html_class( $field );
 
                 ob_start();
                 ?>
+                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
                 <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
                                 &hellip;
@@ -571,10 +615,12 @@ endforeach;
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
-                $collapse_id = 'cdc-detail-total-debt';
+               $collapse_id = 'cdc-detail-total-debt';
+               $title       = self::total_counter_title( 'debt' );
 
                 ob_start();
                 ?>
+                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
                 <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
