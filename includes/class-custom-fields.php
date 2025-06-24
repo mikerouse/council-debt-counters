@@ -5,6 +5,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+use CouncilDebtCounters\Docs_Manager;
+use CouncilDebtCounters\Error_Logger;
+
 class Custom_Fields {
     const TABLE_FIELDS = 'cdc_fields';
     const TABLE_VALUES = 'cdc_field_values';
@@ -88,6 +91,7 @@ class Custom_Fields {
         // Verify tables exist in case the plugin was updated without reactivation.
         add_action( 'init', [ __CLASS__, 'maybe_install' ] );
         add_action( 'init', [ __CLASS__, 'register_meta_fields' ] );
+        add_action( 'admin_notices', [ __CLASS__, 'maybe_show_financial_year_notice' ] );
     }
 
     public static function install() {
@@ -111,6 +115,7 @@ class Custom_Fields {
             council_id bigint(20) NOT NULL,
             field_id mediumint(9) NOT NULL,
             value longtext NULL,
+            financial_year varchar(9) NOT NULL DEFAULT '" . Docs_Manager::current_financial_year() . "',
             PRIMARY KEY  (id),
             KEY council_id (council_id),
             KEY field_id (field_id)
@@ -140,6 +145,15 @@ class Custom_Fields {
             if ( ! in_array( 'required', $columns, true ) ) {
                 $wpdb->query( 'ALTER TABLE ' . $fields_table . ' ADD required tinyint(1) NOT NULL DEFAULT 0' );
             }
+        }
+
+        $values_table = $wpdb->prefix . self::TABLE_VALUES;
+        $value_cols   = $wpdb->get_col( 'DESC ' . $values_table, 0 );
+        if ( ! in_array( 'financial_year', $value_cols, true ) ) {
+            $wpdb->query( "ALTER TABLE $values_table ADD financial_year varchar(9) NOT NULL DEFAULT '" . Docs_Manager::current_financial_year() . "'" );
+            $wpdb->query( "UPDATE $values_table SET financial_year='2023/24'" );
+            Error_Logger::log_info( 'Financial year column added to field values' );
+            update_option( 'cdc_fy_update_notice', 1 );
         }
 
         foreach ( self::IMMUTABLE_FIELDS as $name ) {
@@ -433,6 +447,19 @@ class Custom_Fields {
         $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $old->id ], [ '%d' ] );
         self::set_field_tab( 'interest_paid', 'interest' );
         self::update_field( (int) $new->id, [ 'label' => 'Interest Paid on Debt' ] );
+    }
+
+    /**
+     * Display a one-time notice after assigning legacy figures to 2023/24.
+     */
+    public static function maybe_show_financial_year_notice() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        if ( get_option( 'cdc_fy_update_notice' ) ) {
+            echo '<div class="notice notice-info"><p>' . esc_html__( 'Existing figures have been assigned to the 2023/24 financial year.', 'council-debt-counters' ) . '</p></div>';
+            delete_option( 'cdc_fy_update_notice' );
+        }
     }
 
     public static function render_page() {
