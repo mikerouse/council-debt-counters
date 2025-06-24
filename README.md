@@ -87,6 +87,8 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
 
 This plugin is tightly integrated into our site’s theme and admin UI. It is **not** intended for general WordPress distribution. Our team controls updates, security and licensing centrally. If you need to run it elsewhere, you can extract the plugin folder and see how you get on, but support is only provided for our official instance.
 
+You can optionally load Bootstrap and Font Awesome from a CDN via **Debt Counters → Settings → Load assets from CDN**.
+
 ---
 
 *If you’re part of our content team and have questions about any feature, please reach out to the development team or review the Troubleshooting logs

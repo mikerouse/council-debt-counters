@@ -75,6 +75,13 @@ $types = [
                     <button type="button" class="button" id="cdc-default-thumbnail-remove" <?php if ( ! $thumb ) echo 'style="display:none"'; ?>><?php esc_html_e( 'Remove', 'council-debt-counters' ); ?></button>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><label for="cdc_use_cdn_assets"><?php esc_html_e( 'Load assets from CDN (Bootstrap, Font Awesome)', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <?php $cdn = get_option( 'cdc_use_cdn_assets', 0 ); ?>
+                    <input type="checkbox" id="cdc_use_cdn_assets" name="cdc_use_cdn_assets" value="1" <?php checked( $cdn, 1 ); ?> />
+                </td>
+            </tr>
         </table>
         <?php submit_button(); ?>
     </form>

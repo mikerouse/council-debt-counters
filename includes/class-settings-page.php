@@ -135,6 +135,14 @@ class Settings_Page {
                                 'sanitize_callback' => 'absint',
                         )
                 );
+                register_setting(
+                        'cdc_settings',
+                        'cdc_use_cdn_assets',
+                        array(
+                                'type'    => 'boolean',
+                                'default' => 0,
+                        )
+                );
         }
 
         public static function enqueue_assets( $hook ) {

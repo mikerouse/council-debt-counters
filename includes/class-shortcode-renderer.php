@@ -143,7 +143,7 @@ class Shortcode_Renderer {
 
         public static function register_assets() {
                 $plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
-                $use_cdn     = apply_filters( 'cdc_use_cdn', false );
+               $use_cdn     = apply_filters( 'cdc_use_cdn', (bool) get_option( 'cdc_use_cdn_assets', 0 ) );
 
                 if ( $use_cdn ) {
                         $bootstrap_css = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css';
