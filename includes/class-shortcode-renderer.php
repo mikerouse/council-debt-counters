@@ -29,6 +29,25 @@ class Shortcode_Renderer {
                return sanitize_text_field( $titles[ $type ] ?? $default );
        }
 
+       private static function total_default_labels(): array {
+               return array(
+                       'debt'        => __( 'Total Debt', 'council-debt-counters' ),
+                       'spending'    => __( 'Total Spending', 'council-debt-counters' ),
+                       'income'      => __( 'Total Income', 'council-debt-counters' ),
+                       'deficit'     => __( 'Total Deficit', 'council-debt-counters' ),
+                       'interest'    => __( 'Total Interest', 'council-debt-counters' ),
+                       'reserves'    => __( 'Total Reserves', 'council-debt-counters' ),
+                       'consultancy' => __( 'Consultancy Spend', 'council-debt-counters' ),
+               );
+       }
+
+       private static function total_counter_title( string $type ): string {
+               $defaults = self::total_default_labels();
+               $titles   = (array) get_option( 'cdc_total_counter_titles', array() );
+               $default  = $defaults[ $type ] ?? ucwords( $type );
+               return sanitize_text_field( $titles[ $type ] ?? $default );
+       }
+
        /**
         * Get the URL for an icon asset.
         *
@@ -105,7 +124,7 @@ class Shortcode_Renderer {
                 $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
                 $obj           = Custom_Fields::get_field_by_name( $field );
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-                $title         = self::counter_title( $type ?: $field );
+               $title         = self::total_counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
                 ob_start();
                 ?>
@@ -490,7 +509,7 @@ endforeach;
                 $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
                 $obj           = Custom_Fields::get_field_by_name( $field );
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-                $title         = self::counter_title( $type ?: $field );
+               $title         = self::total_counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-total-' . sanitize_html_class( $field );
 
                 ob_start();
@@ -596,8 +615,8 @@ endforeach;
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
-                $collapse_id = 'cdc-detail-total-debt';
-                $title       = self::counter_title( 'debt' );
+               $collapse_id = 'cdc-detail-total-debt';
+               $title       = self::total_counter_title( 'debt' );
 
                 ob_start();
                 ?>

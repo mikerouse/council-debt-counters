@@ -110,6 +110,15 @@ class Settings_Page {
                 );
                 register_setting(
                         'cdc_settings',
+                        'cdc_total_counter_titles',
+                        array(
+                                'type'              => 'array',
+                                'default'           => array(),
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_titles' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
                         'cdc_log_level',
                         array(
                                 'type'              => 'string',
