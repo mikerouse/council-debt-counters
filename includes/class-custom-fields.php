@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+use CouncilDebtCounters\Docs_Manager;
+
 class Custom_Fields {
     const TABLE_FIELDS = 'cdc_fields';
     const TABLE_VALUES = 'cdc_field_values';
@@ -106,14 +108,16 @@ class Custom_Fields {
         ) $charset_collate;";
 
         $values_table = $wpdb->prefix . self::TABLE_VALUES;
-        $sql_values = "CREATE TABLE $values_table (
+        $sql_values  = "CREATE TABLE $values_table (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             council_id bigint(20) NOT NULL,
             field_id mediumint(9) NOT NULL,
+            financial_year varchar(9) NOT NULL,
             value longtext NULL,
             PRIMARY KEY  (id),
             KEY council_id (council_id),
-            KEY field_id (field_id)
+            KEY field_id (field_id),
+            KEY financial_year (financial_year)
         ) $charset_collate;";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -140,6 +144,13 @@ class Custom_Fields {
             if ( ! in_array( 'required', $columns, true ) ) {
                 $wpdb->query( 'ALTER TABLE ' . $fields_table . ' ADD required tinyint(1) NOT NULL DEFAULT 0' );
             }
+        }
+
+        $values_table = $wpdb->prefix . self::TABLE_VALUES;
+        $value_columns = $wpdb->get_col( 'DESC ' . $values_table, 0 );
+        if ( ! in_array( 'financial_year', $value_columns, true ) ) {
+            $wpdb->query( "ALTER TABLE $values_table ADD financial_year varchar(9) NOT NULL DEFAULT '" . Docs_Manager::current_financial_year() . "'" );
+            $wpdb->query( "ALTER TABLE $values_table ADD KEY financial_year (financial_year)" );
         }
 
         foreach ( self::IMMUTABLE_FIELDS as $name ) {
@@ -305,32 +316,39 @@ class Custom_Fields {
         }
     }
 
-    public static function get_value( int $council_id, string $name ) {
+    public static function get_value( int $council_id, string $name, string $year = '' ) {
         $field = self::get_field_by_name( $name );
         if ( ! $field ) {
             return '';
         }
         global $wpdb;
-        $raw = $wpdb->get_var( $wpdb->prepare( 'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d', $council_id, $field->id ) );
+        if ( empty( $year ) ) {
+            $year = Docs_Manager::current_financial_year();
+        }
+        $raw = $wpdb->get_var( $wpdb->prepare( 'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d AND financial_year = %s', $council_id, $field->id, $year ) );
         return maybe_unserialize( $raw );
     }
 
-    public static function update_value( int $council_id, string $name, $value ) {
+    public static function update_value( int $council_id, string $name, $value, string $year = '' ) {
         $field = self::get_field_by_name( $name );
         if ( ! $field ) {
             return false;
         }
         global $wpdb;
-        $table = $wpdb->prefix . self::TABLE_VALUES;
-        $existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . $table . ' WHERE council_id = %d AND field_id = %d', $council_id, $field->id ) );
+        if ( empty( $year ) ) {
+            $year = Docs_Manager::current_financial_year();
+        }
+        $table    = $wpdb->prefix . self::TABLE_VALUES;
+        $existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . $table . ' WHERE council_id = %d AND field_id = %d AND financial_year = %s', $council_id, $field->id, $year ) );
         if ( $existing ) {
             $wpdb->update( $table, [ 'value' => maybe_serialize( $value ) ], [ 'id' => $existing ], [ '%s' ], [ '%d' ] );
         } else {
             $wpdb->insert( $table, [
                 'council_id' => $council_id,
                 'field_id'   => $field->id,
+                'financial_year' => $year,
                 'value'      => maybe_serialize( $value ),
-            ], [ '%d', '%d', '%s' ] );
+            ], [ '%d', '%d', '%s', '%s' ] );
         }
         return true;
     }

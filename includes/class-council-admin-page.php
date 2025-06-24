@@ -17,6 +17,7 @@ class Council_Admin_Page {
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
         add_action( 'admin_post_cdc_save_council', [ __CLASS__, 'handle_save' ] );
         add_action( 'wp_ajax_cdc_update_toolbar', [ __CLASS__, 'ajax_update_toolbar' ] );
+        add_action( 'wp_ajax_cdc_load_council_year', [ __CLASS__, 'ajax_load_council_year' ] );
     }
 
     public static function add_page() {
@@ -113,6 +114,7 @@ class Council_Admin_Page {
         check_admin_referer( 'cdc_save_council' );
 
         $post_id = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
+        $year    = sanitize_text_field( $_POST['cdc_financial_year'] ?? Docs_Manager::current_financial_year() );
 
         $fields = Custom_Fields::get_fields();
         $title  = '';
@@ -140,7 +142,7 @@ class Council_Admin_Page {
                 continue;
             }
             $value = $_POST['cdc_fields'][ $field->id ] ?? '';
-            Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ) );
+            Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ), $year );
             $meta_key = 'cdc_na_' . $field->name;
             if ( isset( $na_flags[ $field->name ] ) ) {
                 update_post_meta( $post_id, $meta_key, '1' );
@@ -241,7 +243,7 @@ class Council_Admin_Page {
         }
 
         Error_Logger::log_info( 'Council saved: ' . $post_id );
-        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&action=edit&post=' . $post_id . '&updated=1' ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&action=edit&post=' . $post_id . '&year=' . $year . '&updated=1' ) );
         exit;
     }
 
@@ -275,6 +277,30 @@ class Council_Admin_Page {
         Error_Logger::log_info( 'Toolbar updated for council ' . $post_id );
 
         wp_send_json_success( [ 'message' => implode( ' ', $message_parts ) ] );
+    }
+
+    public static function ajax_load_council_year() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+        }
+        check_ajax_referer( 'cdc_save_council', 'nonce' );
+
+        $post_id = intval( $_POST['council_id'] ?? 0 );
+        $year    = sanitize_text_field( $_POST['year'] ?? Docs_Manager::current_financial_year() );
+        if ( ! $post_id ) {
+            wp_send_json_error( __( 'Invalid council.', 'council-debt-counters' ) );
+        }
+
+        $fields = Custom_Fields::get_fields();
+        $values = [];
+        foreach ( $fields as $field ) {
+            if ( $field->name === 'total_debt' || $field->name === 'statement_of_accounts' ) {
+                continue;
+            }
+            $values[ $field->name ] = Custom_Fields::get_value( $post_id, $field->name, $year );
+        }
+
+        wp_send_json_success( $values );
     }
 
     public static function render_page() {
