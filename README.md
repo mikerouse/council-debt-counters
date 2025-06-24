@@ -37,10 +37,11 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
   – Mark individual fields or entire tabs as “N/A” via Bootstrap switches.  
   – Total debt is calculated automatically from component values.
 
-- **Document Management**  
-  – Upload or link PDF “Statement of Accounts” for each council.  
-  – AI extraction can pull figures directly from uploaded documents.  
+- **Document Management**
+  – Upload or link PDF “Statement of Accounts” for each council.
+  – AI extraction can pull figures directly from uploaded documents.
   – Store multiple years/types and manage them in one place.
+  – Choose the financial year from a dropdown when uploading; it defaults to the current year.
 
 ---
 
@@ -51,10 +52,11 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - Filter by status (Active, Draft, Under Review).  
    - Bulk-repair or mark as “Published as N/A.”
 
-2. **Edit a Council**  
-   - Update core fields or toggle “No Accounts Published.”  
-   - Upload new account statements or point to external URLs.  
-   - Use **Ask AI** for individual fields or **Ask AI for All**.  
+2. **Edit a Council**
+   - Update core fields or toggle “No Accounts Published.”
+   - Upload new account statements or point to external URLs.
+   - Select the correct financial year from the dropdown (defaults to the current year).
+   - Use **Ask AI** for individual fields or **Ask AI for All**.
    - Save your changes; optionally submit for moderation review.
 
 3. **Moderation Review**  
@@ -63,9 +65,10 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - Compare existing vs submitted values, choose per field, then **Save**.  
    - All actions are logged to `moderation.log` for audit.
 
-4. **Publishing Shortcodes**  
+4. **Publishing Shortcodes**
    Embed counters anywhere on the live site using: ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
    See the “Shortcodes” section below for full usage.
+   All counter shortcodes accept a `year="YYYY/YY"` attribute to display historical totals.
 
 5. **Troubleshooting & Logs**  
 - **Debt Counters → Troubleshooting** to view AI and error logs.  
@@ -76,10 +79,12 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
 
 ## Available Shortcodes
 
-- `[council_counter id="…"]` – Animated per-council figures.  
-- `[total_debt_counter]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals.  
-- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.  
-- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables.  
+- `[council_counter id="…"]` – Animated per-council figures.
+- `[total_debt_counter]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals.
+- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.
+- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables.
+
+All of the above accept an optional `year` attribute to display a previous financial year. Without it the counters use the current year.
 
 ---
 
@@ -88,6 +93,8 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
 This plugin is tightly integrated into our site’s theme and admin UI. It is **not** intended for general WordPress distribution. Our team controls updates, security and licensing centrally. If you need to run it elsewhere, you can extract the plugin folder and see how you get on, but support is only provided for our official instance.
 
 Bootstrap can be loaded from a CDN via **Debt Counters → Settings → Load assets from CDN**. Font Awesome icons are always served via our kit.
+
+Additional migration notes and historical data guidance can be found in [docs/MIGRATION.md](docs/MIGRATION.md).
 
 ---
 
