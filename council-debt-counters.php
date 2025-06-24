@@ -37,6 +37,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-whistleblower-reports
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-whistleblower-form.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-figure-submission-form.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-figure-submissions-page.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-figure-submission-ips-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-dashboard-widget.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-shortcode-playground.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-search.php';
