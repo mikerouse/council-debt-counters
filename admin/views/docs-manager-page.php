@@ -16,7 +16,7 @@ if ( isset( $_POST['cdc_assign_doc'], $_POST['cdc_doc_name'], $_POST['cdc_counci
     $year = sanitize_text_field( $_POST['cdc_doc_year'] );
     Docs_Manager::assign_document( $file, $council, $type, $year );
     if ( in_array( $type, [ 'draft_statement_of_accounts', 'audited_statement_of_accounts' ], true ) ) {
-        \CouncilDebtCounters\Custom_Fields::update_value( $council, 'statement_of_accounts', $file );
+        \CouncilDebtCounters\Custom_Fields::update_value( $council, 'statement_of_accounts', $file, \CouncilDebtCounters\CDC_Utils::current_financial_year() );
     }
     echo '<div class="notice notice-success"><p>' . esc_html__( 'Document assigned.', 'council-debt-counters' ) . '</p></div>';
     $docs = Docs_Manager::list_documents();

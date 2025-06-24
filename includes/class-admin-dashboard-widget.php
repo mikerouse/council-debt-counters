@@ -22,8 +22,9 @@ class Admin_Dashboard_Widget {
         }
         echo '<table class="widefat"><thead><tr><th>' . esc_html__( 'Council', 'council-debt-counters' ) . '</th><th>' . esc_html__( 'Debt', 'council-debt-counters' ) . '</th><th>' . esc_html__( 'Deficit', 'council-debt-counters' ) . '</th></tr></thead><tbody>';
         foreach ( $councils as $c ) {
-            $debt = (float) Custom_Fields::get_value( $c->ID, 'total_debt' );
-            $def  = (float) Custom_Fields::get_value( $c->ID, 'annual_deficit' );
+            $year = CDC_Utils::current_financial_year();
+            $debt = (float) Custom_Fields::get_value( $c->ID, 'total_debt', $year );
+            $def  = (float) Custom_Fields::get_value( $c->ID, 'annual_deficit', $year );
             echo '<tr><td>' . esc_html( $c->post_title ) . '</td><td>' . esc_html( number_format_i18n( $debt, 2 ) ) . '</td><td>' . esc_html( number_format_i18n( $def, 2 ) ) . '</td></tr>';
         }
         echo '</tbody></table>';
