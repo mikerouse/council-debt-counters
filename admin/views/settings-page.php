@@ -127,6 +127,14 @@ $types = [
                     <input type="checkbox" id="cdc_use_cdn_assets" name="cdc_use_cdn_assets" value="1" <?php checked( $cdn, 1 ); ?> />
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><label for="cdc_blocked_ips"><?php esc_html_e( 'Blocked IPs', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <?php $ips = get_option( 'cdc_blocked_ips', '' ); ?>
+                    <textarea name="cdc_blocked_ips" id="cdc_blocked_ips" rows="5" class="large-text code"><?php echo esc_textarea( $ips ); ?></textarea>
+                    <p class="description"><?php esc_html_e( 'One IP or CIDR range per line.', 'council-debt-counters' ); ?></p>
+                </td>
+            </tr>
         </table>
         <?php submit_button(); ?>
     </form>

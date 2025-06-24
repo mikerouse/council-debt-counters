@@ -161,6 +161,15 @@ class Settings_Page {
                                 'default' => 0,
                         )
                 );
+                register_setting(
+                        'cdc_settings',
+                        'cdc_blocked_ips',
+                        array(
+                                'type'              => 'string',
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_blocked_ips' ),
+                                'default'           => '',
+                        )
+                );
         }
 
         public static function enqueue_assets( $hook ) {
@@ -234,6 +243,18 @@ class Settings_Page {
                         $clean[ sanitize_key( $k ) ] = sanitize_text_field( $v );
                 }
                 return $clean;
+        }
+
+        public static function sanitize_blocked_ips( $value ) {
+                $lines = explode( "\n", (string) $value );
+                $clean = array();
+                foreach ( $lines as $line ) {
+                        $line = trim( $line );
+                        if ( $line !== '' ) {
+                                $clean[] = $line;
+                        }
+                }
+                return implode( "\n", $clean );
         }
 
 	public static function render_page() {

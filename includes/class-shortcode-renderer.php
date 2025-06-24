@@ -124,7 +124,7 @@ class Shortcode_Renderer {
                 $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
                 $obj           = Custom_Fields::get_field_by_name( $field );
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-               $title         = self::total_counter_title( $type ?: $field );
+               $title         = self::counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
                 ob_start();
                 ?>
@@ -288,6 +288,7 @@ class Shortcode_Renderer {
                 $details = array(
                         'interest'           => $interest,
                         'counter_start_date' => null,
+                        'total_debt'         => $total,
                 );
 
                 // Get band property counts
@@ -313,7 +314,12 @@ class Shortcode_Renderer {
                 $title       = self::counter_title( 'debt' );
                 ob_start();
                 ?>
-                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
+                <div class="cdc-counter-title text-center">
+                        <?php echo esc_html( $title ); ?>
+                        <button class="btn btn-link p-0 pb-1" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        </button>
+                </div>
                 <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="<?php echo esc_attr( 'cdc-counter-' . $id . '-debt' ); ?>" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
@@ -321,50 +327,58 @@ class Shortcode_Renderer {
                         <noscript>
                                 <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
                         </noscript>
-                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
-                        </button>
-                        <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
+                </div>
+                <div class="collapse text-center" id="<?php echo esc_attr( $collapse_id ); ?>">
+                        <ul class="mt-2 list-unstyled">
+                                        <li>
+                                                <?php esc_html_e( 'Total Reported Debt (Latest Annual Report):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( (float) $details['total_debt'], 2 ) ); ?>
+                                        </li>
+                                        <li>
+                                                <?php esc_html_e( 'Total Reported Interest (Latest Annual Report):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( (float) $details['interest'], 2 ) ); ?>
+                                        </li>
+                                        <li>
+                                                <?php esc_html_e( 'Growth (or reduction if -) per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 2 ) ); ?>
+                                        </li>
+                                        <?php if ( null !== $reserves_ratio ) : ?>
+                                                <li class="mt-2">
+                                                        <?php esc_html_e( 'Reserves to Debt Ratio:', 'council-debt-counters' ); ?> 
+                                                        <?php echo esc_html( number_format_i18n( $reserves_ratio, 1 ) ); ?>%
+                                                </li>
+                                                <li class="small text-muted">
+                                                        <?php esc_html_e( 'A lower ratio indicates a higher reliance on borrowing relative to savings.', 'council-debt-counters' ); ?>
+                                                </li>
+                                        <?php endif; ?>
+                        </ul>
+                        <?php if ( array_sum( $bands ) > 0 ) : ?>
+                                <h5><?php esc_html_e( 'Debt per property by Council Tax Band:', 'council-debt-counters' ); ?></h5>
                                 <ul class="mt-2 list-unstyled">
-                                                <li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( (float) $details['interest'], 2 ) ); ?></li>
-                                                <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
-                                                <?php if ( null !== $reserves_ratio ) : ?>
-                                                <li><?php esc_html_e( 'Reserves to Debt Ratio:', 'council-debt-counters' ); ?> <?php echo esc_html( number_format_i18n( $reserves_ratio, 1 ) ); ?>%</li>
-                                                <li class="small text-muted"><?php esc_html_e( 'A lower ratio indicates a higher reliance on borrowing relative to savings.', 'council-debt-counters' ); ?></li>
-                                                <?php endif; ?>
+                                <?php
+                                foreach ( $bands as $band => $count ) :
+                                        if ( $count > 0 ) :
+                                                $debt_per_property = $total / $count;
+                                                ?>
+                                                <?php // translators: 1: Council tax band letter, 2: Debt per property ?>
+                                        <li><?php echo esc_html( sprintf( 'Band %s: £%s per property', $band, number_format_i18n( $debt_per_property, 2 ) ) ); ?></li>
+                                                <?php
+                                endif;
+        endforeach;
+                                ?>
                                 </ul>
-                                <?php if ( array_sum( $bands ) > 0 ) : ?>
-                                        <h5><?php esc_html_e( 'Debt per property by Council Tax Band:', 'council-debt-counters' ); ?></h5>
-                                        <ul class="mt-2 list-unstyled">
-                                        <?php
-                                        foreach ( $bands as $band => $count ) :
-                                                if ( $count > 0 ) :
-                                                        $debt_per_property = $total / $count;
-                                                        ?>
-                                                        <?php // translators: 1: Council tax band letter, 2: Debt per property ?>
-                                                <li><?php echo esc_html( sprintf( 'Band %s: £%s per property', $band, number_format_i18n( $debt_per_property, 2 ) ) ); ?></li>
-                                                        <?php
-                                        endif;
-endforeach;
-                                        ?>
-                                        </ul>
-                                <?php endif; ?>
-                                <?php if ( $population > 0 ) : ?>
-                                <h5><?php esc_html_e( 'Debt per person:', 'council-debt-counters' ); ?></h5>
+                        <?php endif; ?>
+                        <?php if ( $population > 0 ) : ?>
                                 <ul class="mt-2 list-unstyled">
                                         <?php // translators: %s: Debt per person ?>
-                                        <li><?php echo esc_html( sprintf( '£%s per person', number_format_i18n( $total / $population, 2 ) ) ); ?></li>
+                                        <li>
+                                                <?php esc_html_e( 'Debt per person:', 'council-debt-counters' ); ?>
+                                                <?php echo esc_html( sprintf( '£%s per person', number_format_i18n( $total / $population, 2 ) ) ); ?>
+                                        </li>
                                 </ul>
-                                <?php endif; ?>
-                                <?php if ( $debt_repayment_explainer ) : ?>
-                                <div class="alert alert-info mt-2">
-                                        <?php echo esc_html( $debt_repayment_explainer ); ?>
-                                </div>
-                                <?php endif; ?>
-                                <div class="alert alert-warning mt-2">
-                                        <?php esc_html_e( 'Total debt = Current Liabilities + Long Term Liabilities + Finance Lease/PFI Liabilities + Adjustments. Growth is estimated using the latest annual interest figure spread evenly across the year. Borrowing or repayments may change the real total, so treat this as a guide.', 'council-debt-counters' ); ?>
-                                </div>
+                        <?php endif; ?>
+                        <?php if ( $debt_repayment_explainer ) : ?>
+                        <div class="alert alert-info mt-2">
+                                <?php echo esc_html( $debt_repayment_explainer ); ?>
                         </div>
+                        <?php endif; ?>
                 </div>
                 <?php
                 return ob_get_clean();
@@ -488,6 +502,12 @@ endforeach;
                return sprintf( '<div class="alert alert-%1$s" role="status">%2$s</div>', esc_attr( $type ), wp_kses_post( $message ) );
        }
 
+        /**
+         * Renders a total annual counter for a specific field.
+         * @param string $field
+         * @param string $type
+         * @return bool|string
+         */
         private static function render_total_annual_counter( string $field, string $type = '' ) {
                 $enabled = (array) get_option( 'cdc_enabled_counters', array() );
                 if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
@@ -514,7 +534,12 @@ endforeach;
 
                 ob_start();
                 ?>
-                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
+                <div class="cdc-counter-title text-center">
+                        <?php echo esc_html( $title ); ?>
+                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        </button>
+                </div>
                 <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
                                 &hellip;
@@ -522,18 +547,16 @@ endforeach;
                         <noscript>
                                 <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
                         </noscript>
-                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
-                        </button>
-                        <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
-                                <ul class="mt-2 list-unstyled">
-                                        <?php // translators: %s: Field label ?>
-                                        <li><?php echo esc_html( sprintf( __( 'Annual %s:', 'council-debt-counters' ), $label ) ); ?> £<?php echo esc_html( number_format_i18n( $annual, 2 ) ); ?></li>
-                                        <li><?php esc_html_e( 'Increase per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $rate, 6 ) ); ?></li>
-                                </ul>
-                                <div class="alert alert-warning mt-2">
-                                        <?php esc_html_e( 'This counter assumes the annual figure is spread evenly from 1 April.', 'council-debt-counters' ); ?>
-                                </div>
+                        
+                </div>
+                <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
+                        <ul class="mt-2 list-unstyled">
+                                <?php // translators: %s: Field label ?>
+                                <li><?php echo esc_html( sprintf( __( 'Annual %s:', 'council-debt-counters' ), $label ) ); ?> £<?php echo esc_html( number_format_i18n( $annual, 2 ) ); ?></li>
+                                <li><?php esc_html_e( 'Increase per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $rate, 6 ) ); ?></li>
+                        </ul>
+                        <div class="alert alert-warning mt-2">
+                                <?php esc_html_e( 'This counter assumes the annual figure is spread evenly from 1 April.', 'council-debt-counters' ); ?>
                         </div>
                 </div>
                 <?php
@@ -620,7 +643,12 @@ endforeach;
 
                 ob_start();
                 ?>
-                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
+                <div class="cdc-counter-title text-center">
+                        <?php echo esc_html( $title ); ?>
+                        <button class="btn btn-link p-0 pb-1" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
+                        </button>
+                </div>
                 <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
                         <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
@@ -628,23 +656,20 @@ endforeach;
                         <noscript>
                                 <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
                         </noscript>
-                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
-                                <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
-                        </button>
-                        <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
-                                <ul class="mt-2 list-unstyled">
-                                        <li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $interest, 2 ) ); ?></li>
-                                        <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
-                                </ul>
-                                <div class="text-muted">
-                                        <?php
-                                        printf(
-                                                /* translators: %s: number of councils */
-                                                esc_html__( 'Based on %s', 'council-debt-counters' ),
-                                                esc_html( sprintf( _n( '%d council', '%d councils', $count, 'council-debt-counters' ), $count ) )
-                                        );
-                                        ?>
-                                </div>
+                </div>
+                <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
+                        <ul class="mt-2 list-unstyled">
+                                <li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $interest, 2 ) ); ?></li>
+                                <li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
+                        </ul>
+                        <div class="text-muted">
+                                <?php
+                                printf(
+                                        /* translators: %s: number of councils */
+                                        esc_html__( 'Based on %s', 'council-debt-counters' ),
+                                        esc_html( sprintf( _n( '%d council', '%d councils', $count, 'council-debt-counters' ), $count ) )
+                                );
+                                ?>
                         </div>
                 </div>
                 <?php

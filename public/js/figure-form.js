@@ -31,7 +31,8 @@
             form.reset();
             box.className='alert alert-success mt-3';
             box.textContent=res.data||cdcFig.success;
-            document.cookie='cdcFigSubmitted=1; path=/';
+            const path=window.location.pathname||'/';
+            document.cookie='cdcFigSubmitted=1; path='+path;
             form.style.display='none';
           }else{
             box.className='alert alert-danger mt-3';
