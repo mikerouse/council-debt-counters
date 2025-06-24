@@ -25,17 +25,20 @@ class Councils_Table extends \WP_List_Table {
 
     public function get_columns() {
         return [
-            'cb'        => '<input type="checkbox" />',
-            'name'      => __( 'Name', 'council-debt-counters' ),
-            'shortcode' => __( 'Shortcode', 'council-debt-counters' ),
-            'status'    => __( 'Status', 'council-debt-counters' ),
+            'cb'           => '<input type="checkbox" />',
+            'name'         => __( 'Name', 'council-debt-counters' ),
+            'population'   => __( 'Population', 'council-debt-counters' ),
+            'last_updated' => __( 'Last Updated', 'council-debt-counters' ),
+            'status'       => __( 'Status', 'council-debt-counters' ),
         ];
     }
 
     protected function get_sortable_columns() {
         return [
-            'name'   => [ 'title', false ],
-            'status' => [ 'post_status', false ],
+            'name'         => [ 'title', false ],
+            'population'   => [ 'population', false ],
+            'last_updated' => [ 'last_updated', false ],
+            'status'       => [ 'post_status', false ],
         ];
     }
 
@@ -58,6 +61,15 @@ class Councils_Table extends \WP_List_Table {
         $code = sprintf( '[council_counter id="%d"]', $item->ID );
         $live = do_shortcode( $code );
         return $live . '<code>' . esc_html( $code ) . '</code>';
+    }
+
+    protected function column_population( $item ) {
+        $pop = (int) Custom_Fields::get_value( $item->ID, 'population' );
+        return $pop ? number_format_i18n( $pop ) : '&mdash;';
+    }
+
+    protected function column_last_updated( $item ) {
+        return esc_html( get_the_modified_date( get_option( 'date_format' ), $item ) );
     }
 
     protected function column_status( $item ) {
@@ -114,7 +126,7 @@ class Councils_Table extends \WP_List_Table {
         $orderby = sanitize_key( $_REQUEST['orderby'] ?? 'title' );
         $order   = sanitize_key( $_REQUEST['order'] ?? 'asc' );
 
-        $sortable = $this->get_sortable_columns();
+        $sortable   = $this->get_sortable_columns();
         $db_orderby = 'title';
         if ( isset( $sortable[ $orderby ] ) ) {
             $db_orderby = $sortable[ $orderby ][0];
@@ -127,8 +139,7 @@ class Councils_Table extends \WP_List_Table {
         $query_args = [
             'post_type'      => 'council',
             'post_status'    => $this->status,
-            'posts_per_page' => $per_page,
-            'paged'          => $paged,
+            'posts_per_page' => -1,
             'orderby'        => $db_orderby,
             'order'          => $order,
         ];
@@ -139,7 +150,31 @@ class Councils_Table extends \WP_List_Table {
 
         $query = new \WP_Query( $query_args );
 
-        $this->items = $query->posts;
+        $posts = $query->posts;
+
+        if ( 'population' === $orderby ) {
+            usort(
+                $posts,
+                function ( $a, $b ) use ( $order ) {
+                    $val_a = (int) Custom_Fields::get_value( $a->ID, 'population' );
+                    $val_b = (int) Custom_Fields::get_value( $b->ID, 'population' );
+                    return 'asc' === $order ? $val_a <=> $val_b : $val_b <=> $val_a;
+                }
+            );
+        } elseif ( 'last_updated' === $orderby ) {
+            usort(
+                $posts,
+                function ( $a, $b ) use ( $order ) {
+                    $val_a = strtotime( $a->post_modified );
+                    $val_b = strtotime( $b->post_modified );
+                    return 'asc' === $order ? $val_a <=> $val_b : $val_b <=> $val_a;
+                }
+            );
+        }
+
+        $total_items   = count( $posts );
+        $offset        = ( $paged - 1 ) * $per_page;
+        $this->items   = array_slice( $posts, $offset, $per_page );
 
         // Set up the column headers so the table renders correctly.
         $columns  = $this->get_columns();
@@ -147,9 +182,11 @@ class Councils_Table extends \WP_List_Table {
         $sortable = $this->get_sortable_columns();
         $this->_column_headers = [ $columns, $hidden, $sortable ];
 
-        $this->set_pagination_args( [
-            'total_items' => $query->found_posts,
-            'per_page'    => $per_page,
-        ] );
+        $this->set_pagination_args(
+            [
+                'total_items' => $total_items,
+                'per_page'    => $per_page,
+            ]
+        );
     }
 }
