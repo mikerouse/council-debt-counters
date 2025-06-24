@@ -81,10 +81,11 @@ add_action(
 		\CouncilDebtCounters\Admin_Dashboard_Widget::init();
 		\CouncilDebtCounters\Shortcode_Playground::init();
 		\CouncilDebtCounters\Council_Search::init();
-		\CouncilDebtCounters\Stats_Page::init();
-		\CouncilDebtCounters\Figure_Submission_Form::init();
-		\CouncilDebtCounters\Figure_Submissions_Page::init();
-		\CouncilDebtCounters\Sharing_Meta::init();
+                \CouncilDebtCounters\Stats_Page::init();
+                \CouncilDebtCounters\Figure_Submission_Form::init();
+                \CouncilDebtCounters\Figure_Submissions_Page::init();
+                \CouncilDebtCounters\Figure_Submission_IPs_Page::init();
+                \CouncilDebtCounters\Sharing_Meta::init();
 	}
 );
 

@@ -104,24 +104,35 @@ class Figure_Submissions_Page {
 			exit;
 	}
 
-	public static function render() {
-			$sub_id = isset( $_GET['submission'] ) ? intval( $_GET['submission'] ) : 0;
-		if ( $sub_id ) {
-				self::render_detail( $sub_id );
-				return;
-		}
+        public static function render() {
+                        $sub_id = isset( $_GET['submission'] ) ? intval( $_GET['submission'] ) : 0;
+            $filter_ip = isset( $_GET['ip'] ) ? sanitize_text_field( wp_unslash( $_GET['ip'] ) ) : '';
+            if ( $sub_id ) {
+                                self::render_detail( $sub_id );
+                                return;
+                }
 
-			$subs = get_posts(
-				array(
-					'post_type'   => Figure_Submission_Form::CPT,
-					'numberposts' => -1,
-					'post_status' => array( 'private', 'publish' ),
-				)
-			);
+                        $query_args = array(
+                                'post_type'   => Figure_Submission_Form::CPT,
+                                'numberposts' => -1,
+                                'post_status' => array( 'private', 'publish' ),
+                        );
+            if ( $filter_ip ) {
+                $query_args['meta_query'] = array(
+                        array(
+                                'key'   => 'ip_address',
+                                'value' => $filter_ip,
+                        ),
+                );
+            }
+                        $subs = get_posts( $query_args );
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Figure Submissions', 'council-debt-counters' ); ?></h1>
-		<?php if ( empty( $subs ) ) : ?>
+                <div class="wrap">
+                        <h1><?php esc_html_e( 'Figure Submissions', 'council-debt-counters' ); ?></h1>
+            <?php if ( $filter_ip ) : ?>
+                <p><?php printf( esc_html__( 'Filtering submissions from IP %s', 'council-debt-counters' ), esc_html( $filter_ip ) ); ?></p>
+            <?php endif; ?>
+                <?php if ( empty( $subs ) ) : ?>
 				<p><?php esc_html_e( 'No submissions found.', 'council-debt-counters' ); ?></p>
 			<?php else : ?>
 			<table class="widefat fixed striped">

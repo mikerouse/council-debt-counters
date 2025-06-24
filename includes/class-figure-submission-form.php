@@ -2,6 +2,7 @@
 namespace CouncilDebtCounters;
 
 use CouncilDebtCounters\Error_Logger;
+use CouncilDebtCounters\Docs_Manager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -57,12 +58,15 @@ class Figure_Submission_Form {
 		if ( empty( $_POST['cdc_fig_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['cdc_fig_nonce'] ) ), 'cdc_fig' ) ) {
 			return new \WP_Error( 'invalid', __( 'Security check failed.', 'council-debt-counters' ) );
 		}
-		$ip        = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
-		$limit_key = 'cdc_fig_limit_' . md5( $ip );
-		$last      = get_transient( $limit_key );
-		if ( $last && ( time() - (int) $last ) < 300 ) {
-			return new \WP_Error( 'rate_limited', __( "Whoa there! You're submitting too quickly. Please wait before trying again.", 'council-debt-counters' ) );
-		}
+                $ip        = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+                if ( self::ip_blocked( $ip ) ) {
+                        return new \WP_Error( 'blocked', __( 'Submissions from your IP address are blocked.', 'council-debt-counters' ) );
+                }
+                $limit_key = 'cdc_fig_limit_' . md5( $ip );
+                $last      = get_transient( $limit_key );
+                if ( $last && ( time() - (int) $last ) < MINUTE_IN_SECONDS * 2 ) {
+                        return new \WP_Error( 'rate_limited', __( 'Your IP address submitted a correction recently. Please wait two minutes before trying again.', 'council-debt-counters' ) );
+                }
 		$site_key   = get_option( 'cdc_recaptcha_site_key', '' );
 		$secret_key = get_option( 'cdc_recaptcha_secret_key', '' );
 		if ( $site_key && $secret_key ) {
@@ -86,7 +90,23 @@ class Figure_Submission_Form {
 				return new \WP_Error( 'recaptcha', __( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
 			}
 		}
-		$cid                   = isset( $_POST['cdc_council_id'] ) ? intval( $_POST['cdc_council_id'] ) : 0;
+                $cid                   = isset( $_POST['cdc_council_id'] ) ? intval( $_POST['cdc_council_id'] ) : 0;
+                if ( $cid ) {
+                        $existing = get_posts(
+                                array(
+                                        'post_type'   => self::CPT,
+                                        'numberposts' => -1,
+                                        'post_status' => array( 'private', 'publish' ),
+                                        'meta_query'  => array(
+                                                array( 'key' => 'ip_address', 'value' => $ip ),
+                                                array( 'key' => 'council_id', 'value' => $cid ),
+                                        ),
+                                )
+                        );
+                        if ( count( $existing ) >= 5 ) {
+                                return new \WP_Error( 'limit_reached', __( 'Thanks for your help! Please contact us to become a registered data contributor.', 'council-debt-counters' ) );
+                        }
+                }
 		$note                  = sanitize_textarea_field( wp_unslash( $_POST['cdc_note'] ?? '' ) );
 		$email                 = sanitize_email( wp_unslash( $_POST['cdc_email'] ?? '' ) );
 				$figures       = $_POST['cdc_figures'] ?? array();
@@ -123,11 +143,18 @@ class Figure_Submission_Form {
 		if ( ! empty( $clean_sources ) ) {
 				update_post_meta( $post_id, 'sources', $clean_sources );
 		}
-		if ( $email ) {
-				update_post_meta( $post_id, 'contact_email', $email );
-		}
-		update_post_meta( $post_id, 'ip_address', $ip );
-		set_transient( $limit_key, time(), 300 );
+                if ( $email ) {
+                                update_post_meta( $post_id, 'contact_email', $email );
+                }
+                update_post_meta( $post_id, 'ip_address', $ip );
+                if ( ! empty( $_FILES['cdc_soa_file']['name'] ) && $cid ) {
+                        $year = sanitize_text_field( wp_unslash( $_POST['cdc_soa_year'] ?? \CouncilDebtCounters\Docs_Manager::current_financial_year() ) );
+                        $type = sanitize_key( wp_unslash( $_POST['cdc_soa_type'] ?? 'draft_statement_of_accounts' ) );
+                        if ( in_array( $type, \CouncilDebtCounters\Docs_Manager::DOC_TYPES, true ) ) {
+                                \CouncilDebtCounters\Docs_Manager::upload_document( $_FILES['cdc_soa_file'], $type, $cid, $year );
+                        }
+                }
+                set_transient( $limit_key, time(), MINUTE_IN_SECONDS * 2 );
 
 		$admins  = get_option( 'admin_email' );
 		$subject = __( 'New figure submission', 'council-debt-counters' );
@@ -165,12 +192,12 @@ class Figure_Submission_Form {
 			wp_send_json_success( __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ) );
 	}
 
-	public static function render_form( $atts = array() ) {
-		$council_id = self::get_council_id_from_atts( $atts );
-		if ( isset( $_GET['submitted'] ) ) {
-			return '<div class="alert alert-success">' . esc_html__( 'Thank you for your submission.', 'council-debt-counters' ) . '</div>';
-		}
-		$site_key = get_option( 'cdc_recaptcha_site_key', '' );
+        public static function render_form( $atts = array() ) {
+                $council_id = self::get_council_id_from_atts( $atts );
+                if ( isset( $_GET['submitted'] ) ) {
+                        return '<div class="alert alert-success">' . esc_html__( 'Thank you for your submission.', 'council-debt-counters' ) . '</div>';
+                }
+                $site_key = get_option( 'cdc_recaptcha_site_key', '' );
 		if ( $site_key ) {
 				wp_enqueue_script( 'google-recaptcha', 'https://www.google.com/recaptcha/enterprise.js?render=' . $site_key, array(), '1.0', true );
 		}
@@ -188,9 +215,25 @@ class Figure_Submission_Form {
 						'submitting' => __( 'Submitting', 'council-debt-counters' ),
 					)
 				);
-				ob_start();
-				$fields = Custom_Fields::get_fields();
-				$inputs = array();
+                                ob_start();
+                                $fields = Custom_Fields::get_fields();
+                $show_upload = false;
+                if ( $council_id ) {
+                        $docs = Docs_Manager::list_documents( $council_id );
+                        if ( empty( $docs ) ) {
+                                $show_upload = true;
+                        } else {
+                                $recent = Docs_Manager::financial_years( 2 );
+                                foreach ( $docs as $d ) {
+                                        if ( in_array( $d->doc_type, Docs_Manager::DOC_TYPES, true ) && in_array( $d->financial_year, $recent, true ) ) {
+                                                $show_upload = false;
+                                                break;
+                                        }
+                                        $show_upload = true;
+                                }
+                        }
+                }
+                                $inputs = array();
 		foreach ( $fields as $f ) {
 			if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
 						$tab = Custom_Fields::get_field_tab( $f->name );
@@ -220,13 +263,34 @@ class Figure_Submission_Form {
 								<label for="cdc_note" class="form-label"><?php esc_html_e( 'Note (optional)', 'council-debt-counters' ); ?></label>
 								<textarea class="form-control" id="cdc_note" name="cdc_note"></textarea>
 						</div>
-			<div class="mb-3">
-				<label for="cdc_email" class="form-label"><?php esc_html_e( 'Email (optional)', 'council-debt-counters' ); ?></label>
-				<input type="email" class="form-control" id="cdc_email" name="cdc_email" />
-			</div>
-						<?php if ( $site_key ) : ?>
-								<input type="hidden" name="g-recaptcha-response" />
-						<?php endif; ?>
+                        <div class="mb-3">
+                                <label for="cdc_email" class="form-label"><?php esc_html_e( 'Email (optional)', 'council-debt-counters' ); ?></label>
+                                <input type="email" class="form-control" id="cdc_email" name="cdc_email" />
+                        </div>
+                        <?php if ( $show_upload ) : ?>
+                        <div class="mb-3">
+                                <label for="cdc_soa_file" class="form-label"><?php esc_html_e( 'Upload Statement of Accounts (PDF)', 'council-debt-counters' ); ?></label>
+                                <input type="file" id="cdc_soa_file" name="cdc_soa_file" accept="application/pdf" class="form-control" />
+                                <div class="row mt-2">
+                                        <div class="col">
+                                                <select name="cdc_soa_type" class="form-select">
+                                                        <option value="draft_statement_of_accounts"><?php esc_html_e( 'Draft', 'council-debt-counters' ); ?></option>
+                                                        <option value="audited_statement_of_accounts"><?php esc_html_e( 'Audited', 'council-debt-counters' ); ?></option>
+                                                </select>
+                                        </div>
+                                        <div class="col">
+                                                <select name="cdc_soa_year" class="form-select">
+                                                        <?php foreach ( Docs_Manager::financial_years( 5 ) as $y ) : ?>
+                                                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                        <?php endforeach; ?>
+                                                </select>
+                                        </div>
+                                </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ( $site_key ) : ?>
+                                        <input type="hidden" name="g-recaptcha-response" />
+                        <?php endif; ?>
 						<button type="submit" class="btn btn-primary">
 								<?php esc_html_e( 'Submit', 'council-debt-counters' ); ?>
 						</button>
@@ -246,6 +310,35 @@ class Figure_Submission_Form {
 						?>
 				</p>
 				<?php
-				return ob_get_clean();
-	}
+                                return ob_get_clean();
+        }
+
+        private static function ip_blocked( string $ip ): bool {
+                $list = explode( "\n", (string) get_option( 'cdc_blocked_ips', '' ) );
+                $ip    = trim( $ip );
+                foreach ( $list as $item ) {
+                        $item = trim( $item );
+                        if ( '' === $item ) {
+                                continue;
+                        }
+                        if ( $item === $ip ) {
+                                return true;
+                        }
+                        if ( strpos( $item, '/' ) !== false && filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                                if ( self::ip_in_range( $ip, $item ) ) {
+                                        return true;
+                                }
+                        }
+                }
+                return false;
+        }
+
+        private static function ip_in_range( string $ip, string $range ): bool {
+                list( $subnet, $bits ) = explode( '/', $range, 2 );
+                $ip = ip2long( $ip );
+                $subnet = ip2long( $subnet );
+                $mask = -1 << ( 32 - (int) $bits );
+                $subnet &= $mask;
+                return ( $ip & $mask ) === $subnet;
+        }
 }
