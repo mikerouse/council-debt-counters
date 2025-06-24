@@ -1,6 +1,6 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) exit;
 $enabled = (array) get_option( 'cdc_enabled_counters', [] );
+$titles  = (array) get_option( 'cdc_counter_titles', [] );
 $types = [
     'debt' => __( 'Debt', 'council-debt-counters' ),
     'spending' => __( 'Spending', 'council-debt-counters' ),
@@ -19,12 +19,24 @@ $types = [
             <tr>
                 <th scope="row"><?php esc_html_e( 'Enabled Counters', 'council-debt-counters' ); ?></th>
                 <td>
-                    <?php foreach ( $types as $key => $label ) : ?>
-                        <label style="display:block;margin-bottom:4px;">
-                            <input type="checkbox" name="cdc_enabled_counters[]" value="<?php echo esc_attr( $key ); ?>" <?php checked( in_array( $key, $enabled, true ) ); ?> />
-                            <?php echo esc_html( $label ); ?>
-                        </label>
-                    <?php endforeach; ?>
+                    <table class="widefat striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e( 'Enable', 'council-debt-counters' ); ?></th>
+                                <th><?php esc_html_e( 'Tab', 'council-debt-counters' ); ?></th>
+                                <th><?php esc_html_e( 'Counter Title', 'council-debt-counters' ); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ( $types as $key => $label ) : ?>
+                                <tr>
+                                    <td><input type="checkbox" name="cdc_enabled_counters[]" value="<?php echo esc_attr( $key ); ?>" <?php checked( in_array( $key, $enabled, true ) ); ?> /></td>
+                                    <td><?php echo esc_html( $label ); ?></td>
+                                    <td><input type="text" name="cdc_counter_titles[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( $titles[ $key ] ?? $label ); ?>" class="regular-text" /></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </td>
             </tr>
             <tr>

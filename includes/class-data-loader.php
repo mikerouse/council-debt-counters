@@ -245,9 +245,10 @@ class Data_Loader {
 			'cdc_recaptcha_site_key'      => get_option( 'cdc_recaptcha_site_key', '' ),
 			'cdc_recaptcha_secret_key'    => get_option( 'cdc_recaptcha_secret_key', '' ),
 			'cdc_openai_model'            => get_option( 'cdc_openai_model', 'gpt-3.5-turbo' ),
-			'cdc_enabled_counters'        => get_option( 'cdc_enabled_counters', array() ),
-			'cdc_log_level'               => get_option( 'cdc_log_level', 'standard' ),
-		);
+                        'cdc_enabled_counters'        => get_option( 'cdc_enabled_counters', array() ),
+                        'cdc_counter_titles'          => get_option( 'cdc_counter_titles', array() ),
+                        'cdc_log_level'               => get_option( 'cdc_log_level', 'standard' ),
+                );
 		return wp_json_encode( $options );
 	}
 
