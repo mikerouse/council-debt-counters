@@ -55,25 +55,29 @@ class Figure_Submission_Form {
 	}
 
 	private static function process_submission() {
-		if ( empty( $_POST['cdc_fig_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['cdc_fig_nonce'] ) ), 'cdc_fig' ) ) {
-			return new \WP_Error( 'invalid', __( 'Security check failed.', 'council-debt-counters' ) );
-		}
+                if ( empty( $_POST['cdc_fig_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['cdc_fig_nonce'] ) ), 'cdc_fig' ) ) {
+                        return new \WP_Error( 'invalid', __( 'Security check failed.', 'council-debt-counters' ) );
+                }
                 $ip        = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+                Error_Logger::log_debug( 'Processing figure submission from ' . $ip );
                 if ( self::ip_blocked( $ip ) ) {
+                        Error_Logger::log_info( 'Blocked IP attempted submission: ' . $ip );
                         return new \WP_Error( 'blocked', __( 'Submissions from your IP address are blocked.', 'council-debt-counters' ) );
                 }
                 $limit_key = 'cdc_fig_limit_' . md5( $ip );
                 $last      = get_transient( $limit_key );
                 if ( $last && ( time() - (int) $last ) < MINUTE_IN_SECONDS * 2 ) {
+                        Error_Logger::log_info( 'Rate limit triggered for IP ' . $ip );
                         return new \WP_Error( 'rate_limited', __( 'Your IP address submitted a correction recently. Please wait two minutes before trying again.', 'council-debt-counters' ) );
                 }
 		$site_key   = get_option( 'cdc_recaptcha_site_key', '' );
 		$secret_key = get_option( 'cdc_recaptcha_secret_key', '' );
 		if ( $site_key && $secret_key ) {
 			$token = sanitize_text_field( wp_unslash( $_POST['g-recaptcha-response'] ?? '' ) );
-			if ( empty( $token ) ) {
-				return new \WP_Error( 'recaptcha', __( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
-			}
+                        if ( empty( $token ) ) {
+                                Error_Logger::log_error( 'reCAPTCHA token missing for IP ' . $ip );
+                                return new \WP_Error( 'recaptcha', __( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
+                        }
 			$verify = wp_remote_post(
 				'https://www.google.com/recaptcha/api/siteverify',
 				array(
@@ -85,11 +89,12 @@ class Figure_Submission_Form {
 					'timeout' => 15,
 				)
 			);
-			$body   = json_decode( wp_remote_retrieve_body( $verify ), true );
-			if ( empty( $body['success'] ) ) {
-				return new \WP_Error( 'recaptcha', __( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
-			}
-		}
+                        $body   = json_decode( wp_remote_retrieve_body( $verify ), true );
+                        if ( empty( $body['success'] ) ) {
+                                Error_Logger::log_error( 'reCAPTCHA failure for IP ' . $ip );
+                                return new \WP_Error( 'recaptcha', __( 'reCAPTCHA verification failed.', 'council-debt-counters' ) );
+                        }
+                }
                 $cid                   = isset( $_POST['cdc_council_id'] ) ? intval( $_POST['cdc_council_id'] ) : 0;
                 if ( $cid ) {
                         $existing = get_posts(
@@ -104,15 +109,17 @@ class Figure_Submission_Form {
                                 )
                         );
                         if ( count( $existing ) >= 5 ) {
+                                Error_Logger::log_info( 'Submission limit reached for IP ' . $ip . ' on council ' . $cid );
                                 return new \WP_Error( 'limit_reached', __( 'Thanks for your help! Please contact us to become a registered data contributor.', 'council-debt-counters' ) );
                         }
                 }
-		$note                  = sanitize_textarea_field( wp_unslash( $_POST['cdc_note'] ?? '' ) );
-		$email                 = sanitize_email( wp_unslash( $_POST['cdc_email'] ?? '' ) );
-				$figures       = $_POST['cdc_figures'] ?? array();
-				$sources       = $_POST['cdc_sources'] ?? array();
-				$clean         = array();
-				$clean_sources = array();
+                $note                  = sanitize_textarea_field( wp_unslash( $_POST['cdc_note'] ?? '' ) );
+                $email                 = sanitize_email( wp_unslash( $_POST['cdc_email'] ?? '' ) );
+                $figures       = $_POST['cdc_figures'] ?? array();
+                $sources       = $_POST['cdc_sources'] ?? array();
+                $clean         = array();
+                $clean_sources = array();
+                $has_file      = ! empty( $_FILES['cdc_soa_file']['name'] ) && ! empty( $_FILES['cdc_soa_file']['tmp_name'] );
 		foreach ( $figures as $key => $val ) {
 						$val = str_replace( array( ',', '£', '$' ), '', $val );
 			if ( '' === $val ) {
@@ -123,9 +130,10 @@ class Figure_Submission_Form {
 						$clean_sources[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $sources[ $key ] ) );
 			}
 		}
-		if ( empty( $clean ) || 0 === $cid ) {
-						return new \WP_Error( 'invalid', __( 'Submission incomplete.', 'council-debt-counters' ) );
-		}
+                if ( ( empty( $clean ) && ! $has_file ) || 0 === $cid ) {
+                        Error_Logger::log_error( 'Figure submission incomplete from ' . $ip );
+                        return new \WP_Error( 'invalid', __( 'Submission incomplete.', 'council-debt-counters' ) );
+                }
 
 		$post_id = wp_insert_post(
 			array(
@@ -147,7 +155,8 @@ class Figure_Submission_Form {
                                 update_post_meta( $post_id, 'contact_email', $email );
                 }
                 update_post_meta( $post_id, 'ip_address', $ip );
-                if ( ! empty( $_FILES['cdc_soa_file']['name'] ) && $cid ) {
+                if ( $has_file && $cid ) {
+                        Error_Logger::log_debug( 'SoA uploaded via correction form from ' . $ip );
                         $year = sanitize_text_field( wp_unslash( $_POST['cdc_soa_year'] ?? \CouncilDebtCounters\Docs_Manager::current_financial_year() ) );
                         $type = sanitize_key( wp_unslash( $_POST['cdc_soa_type'] ?? 'draft_statement_of_accounts' ) );
                         if ( in_array( $type, \CouncilDebtCounters\Docs_Manager::DOC_TYPES, true ) ) {
@@ -161,36 +170,41 @@ class Figure_Submission_Form {
 				/* translators: %s: Council title */
 				$message = sprintf( __( 'New figures submitted for %s', 'council-debt-counters' ), get_the_title( $cid ) );
 		wp_mail( $admins, $subject, $message );
-		Error_Logger::log_info( 'Figure submission saved with ID ' . $post_id );
-		return $post_id;
+                Error_Logger::log_info( 'Figure submission saved with ID ' . $post_id . ' from ' . $ip );
+                return $post_id;
 	}
 
-	public static function maybe_handle_submission() {
-		if ( empty( $_POST['cdc_fig_nonce'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
-				return;
-		}
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-			return;
-		}
-			$result = self::process_submission();
-		if ( is_wp_error( $result ) ) {
-			wp_die( esc_html( $result->get_error_message() ) );
-		}
-			wp_safe_redirect( add_query_arg( 'submitted', '1', wp_get_referer() ) );
-			exit;
-	}
+        public static function maybe_handle_submission() {
+                if ( empty( $_POST['cdc_fig_nonce'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+                                return;
+                }
+                if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+                        return;
+                }
+                Error_Logger::log_debug( 'Handling standard figure submission' );
+                $result = self::process_submission();
+                if ( is_wp_error( $result ) ) {
+                        Error_Logger::log_error( 'Figure submission error: ' . $result->get_error_message() );
+                        wp_die( esc_html( $result->get_error_message() ) );
+                }
+                Error_Logger::log_info( 'Figure submission submitted via form with ID ' . $result );
+                wp_safe_redirect( add_query_arg( 'submitted', '1', wp_get_referer() ) );
+                exit;
+        }
 
 		/**
 		* Handle AJAX submissions.
 		*/
-	public static function ajax_submission() {
-			$result = self::process_submission();
-		if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message() );
-		}
+        public static function ajax_submission() {
+                $result = self::process_submission();
+                if ( is_wp_error( $result ) ) {
+                        Error_Logger::log_error( 'Figure submission AJAX error: ' . $result->get_error_message() );
+                        wp_send_json_error( $result->get_error_message() );
+                }
 
-			wp_send_json_success( __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ) );
-	}
+                Error_Logger::log_info( 'Figure submission submitted via AJAX with ID ' . $result );
+                wp_send_json_success( __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ) );
+        }
 
         public static function render_form( $atts = array() ) {
                 $council_id = self::get_council_id_from_atts( $atts );
