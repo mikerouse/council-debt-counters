@@ -24,6 +24,9 @@ class FakeWpdb {
             $this->fields[$data['id']] = $data;
         } else {
             $data['id'] = $this->value_auto++;
+            if (!isset($data['financial_year'])) {
+                $data['financial_year'] = \CouncilDebtCounters\Docs_Manager::current_financial_year();
+            }
             $this->values[$data['id']] = $data;
         }
     }
@@ -60,17 +63,17 @@ class FakeWpdb {
     }
 
     public function get_var($query) {
-        if (preg_match('/SELECT id FROM \w*' . Custom_Fields::TABLE_VALUES . ' WHERE council_id = (\d+) AND field_id = (\d+)/', $query, $m)) {
+        if (preg_match("/SELECT id FROM \w*" . Custom_Fields::TABLE_VALUES . " WHERE council_id = (\\d+) AND field_id = (\\d+)(?: AND financial_year = '([^']+)')?/", $query, $m)) {
             foreach ($this->values as $row) {
-                if ($row['council_id'] == $m[1] && $row['field_id'] == $m[2]) {
+                if ($row['council_id'] == $m[1] && $row['field_id'] == $m[2] && (!isset($m[3]) || $row['financial_year'] == $m[3])) {
                     return $row['id'];
                 }
             }
             return null;
         }
-        if (preg_match('/SELECT value FROM \w*' . Custom_Fields::TABLE_VALUES . ' WHERE council_id = (\d+) AND field_id = (\d+)/', $query, $m)) {
+        if (preg_match("/SELECT value FROM \w*" . Custom_Fields::TABLE_VALUES . " WHERE council_id = (\\d+) AND field_id = (\\d+)(?: AND financial_year = '([^']+)')?/", $query, $m)) {
             foreach ($this->values as $row) {
-                if ($row['council_id'] == $m[1] && $row['field_id'] == $m[2]) {
+                if ($row['council_id'] == $m[1] && $row['field_id'] == $m[2] && (!isset($m[3]) || $row['financial_year'] == $m[3])) {
                     return $row['value'];
                 }
             }
@@ -100,5 +103,15 @@ class CustomFieldsTest extends TestCase {
 
         $this->assertTrue(Custom_Fields::update_value(1, 'test_field', $object));
         $this->assertEquals($object, Custom_Fields::get_value(1, 'test_field'));
+    }
+
+    public function test_values_are_separate_per_year() {
+        Custom_Fields::add_field('year_field', 'Year Field', 'text');
+
+        $this->assertTrue(Custom_Fields::update_value(1, 'year_field', 'old', '2022/23'));
+        $this->assertTrue(Custom_Fields::update_value(1, 'year_field', 'new', '2023/24'));
+
+        $this->assertSame('old', Custom_Fields::get_value(1, 'year_field', '2022/23'));
+        $this->assertSame('new', Custom_Fields::get_value(1, 'year_field', '2023/24'));
     }
 }

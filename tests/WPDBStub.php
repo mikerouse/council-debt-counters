@@ -27,21 +27,23 @@ class WPDBStub {
     }
 
     public function get_var($query) {
-        if (preg_match("/SELECT id FROM {$this->prefix}" . \CouncilDebtCounters\Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+)/i", $query, $m)) {
+        if (preg_match("/SELECT id FROM {$this->prefix}" . \CouncilDebtCounters\Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+)(?: AND financial_year = '([^']+)')?/i", $query, $m)) {
             $cid = (int)$m[1];
             $fid = (int)$m[2];
+            $year = $m[3] ?? null;
             foreach ($this->values as $v) {
-                if ($v['council_id'] == $cid && $v['field_id'] == $fid) {
+                if ($v['council_id'] == $cid && $v['field_id'] == $fid && ($year === null || $v['financial_year'] === $year)) {
                     return $v['id'];
                 }
             }
             return null;
         }
-        if (preg_match("/SELECT value FROM {$this->prefix}" . \CouncilDebtCounters\Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+)/i", $query, $m)) {
+        if (preg_match("/SELECT value FROM {$this->prefix}" . \CouncilDebtCounters\Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+)(?: AND financial_year = '([^']+)')?/i", $query, $m)) {
             $cid = (int)$m[1];
             $fid = (int)$m[2];
+            $year = $m[3] ?? null;
             foreach ($this->values as $v) {
-                if ($v['council_id'] == $cid && $v['field_id'] == $fid) {
+                if ($v['council_id'] == $cid && $v['field_id'] == $fid && ($year === null || $v['financial_year'] === $year)) {
                     return $v['value'];
                 }
             }
@@ -58,6 +60,9 @@ class WPDBStub {
         }
         if (strpos($table, \CouncilDebtCounters\Custom_Fields::TABLE_VALUES) !== false) {
             $data['id'] = $this->nextValueId++;
+            if (!isset($data['financial_year'])) {
+                $data['financial_year'] = \CouncilDebtCounters\Docs_Manager::current_financial_year();
+            }
             $this->values[$data['id']] = $data;
             return 1;
         }
