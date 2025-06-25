@@ -12,6 +12,7 @@
             if(y===window.cdcYear.current){ opt.selected=true; }
             select.appendChild(opt);
         });
+
         // When a year is selected fetch new HTML for the page
         select.addEventListener('change', function(){
             // Basic loading overlay so the user knows we're fetching data
