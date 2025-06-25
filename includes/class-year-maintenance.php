@@ -33,6 +33,9 @@ class Year_Maintenance {
             $val = Custom_Fields::get_value( $id, 'current_liabilities', $year );
             if ( '' === $val || null === $val ) {
                 update_post_meta( $id, 'cdc_under_review', '1' );
+                if ( 'under_review' === get_post_status( $id ) ) {
+                    wp_update_post( [ 'ID' => $id, 'post_status' => 'publish' ] );
+                }
             } else {
                 delete_post_meta( $id, 'cdc_under_review' );
             }
