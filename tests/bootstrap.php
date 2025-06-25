@@ -79,3 +79,59 @@ function update_option($option, $value) {
     $options_store[$option] = $value;
     return true;
 }
+
+// Minimal WordPress function stubs used by the plugin during tests.
+function get_post_type($post = null) {
+    return 'council';
+}
+function get_post_status($post = null) {
+    return 'publish';
+}
+function get_post($id) {
+    return (object) ['ID' => $id, 'post_type' => 'council'];
+}
+function get_permalink($id = 0) {
+    return '';
+}
+function wp_enqueue_style() {}
+function wp_enqueue_script() {}
+function wp_register_style() {}
+function wp_register_script() {}
+function wp_add_inline_style() {}
+function wp_localize_script() {}
+function add_action() {}
+function add_shortcode() {}
+function esc_html($t){return $t;}
+function esc_attr($t){return $t;}
+function esc_html_e($t,$d=null){echo $t;}
+function __($t,$d=null){return $t;}
+function sanitize_key($t){return $t;}
+function sanitize_text_field($t){return $t;}
+function sanitize_html_class($t){return $t;}
+function check_ajax_referer($a,$b=null,$die=true){}
+function wp_send_json_success($data=null){return $data;}
+function wp_send_json_error($data=null,$code=400){return $data;}
+function wp_create_nonce($action){return 'nonce';}
+function admin_url($path=''){return $path;}
+// Simple storage for post meta used in tests.
+$post_meta_store = [];
+function get_post_meta($id, $key = '', $single = false){
+    global $post_meta_store;
+    if($key === ''){ return $post_meta_store[$id] ?? []; }
+    $val = $post_meta_store[$id][$key] ?? null;
+    if($single){ return $val; }
+    return [$val];
+}
+function update_post_meta($id,$key,$value){
+    global $post_meta_store;
+    $post_meta_store[$id][$key] = $value;
+    return true;
+}
+function delete_post_meta($id,$key){
+    global $post_meta_store;
+    unset($post_meta_store[$id][$key]);
+    return true;
+}
+function number_format_i18n($number, $decimals = 0){
+    return number_format($number, $decimals);
+}
