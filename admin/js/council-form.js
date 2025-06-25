@@ -29,6 +29,8 @@
         var statusSelect = document.getElementById('cdc-post-status');
         var assignee = document.querySelector('select[name="assigned_user"]');
         var uploadBtn = document.getElementById('cdc-upload-doc');
+        var yearInput = document.getElementById('cdc-financial-year');
+        var yearSelects = document.querySelectorAll('.cdc-year-select');
         var msgArea = document.getElementById('cdc-status-msg');
         function flash(msg){
             if(!msgArea) return;
@@ -178,6 +180,42 @@
         if (leaseField) leaseField.addEventListener('input', updateAll);
         if (interestField) interestField.addEventListener('input', updateAll);
         updateAll();
+
+        function loadYear(year){
+            if(!cdcToolbarData.id) return;
+            var overlay=document.createElement('div');
+            overlay.className='cdc-loading-overlay';
+            var content=document.querySelector('.tab-content');
+            if(content){ content.style.position='relative'; content.appendChild(overlay); }
+            var data=new FormData();
+            data.append('action','cdc_load_council_year');
+            data.append('nonce', cdcToolbarData.nonce);
+            data.append('council_id', cdcToolbarData.id);
+            data.append('year', year);
+            fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                .then(function(r){return r.json();})
+                .then(function(res){
+                    if(content) content.removeChild(overlay);
+                    if(res.success && res.data){
+                        for(var k in res.data){
+                            var inp=form.querySelector('[data-cdc-field="'+k+'"]');
+                            if(inp){ inp.value=res.data[k]; inp.dispatchEvent(new Event('input')); }
+                        }
+                        updateAll();
+                    }
+                })
+                .catch(function(){ if(content) content.removeChild(overlay); });
+        }
+
+        if(yearSelects){
+            yearSelects.forEach(function(sel){
+                sel.addEventListener('change',function(){
+                    yearSelects.forEach(function(s){ if(s!==sel) s.value=sel.value; });
+                    if(yearInput) yearInput.value=sel.value;
+                    loadYear(sel.value);
+                });
+            });
+        }
 
         function handleNaToggle(name){
             var input=document.querySelector('[data-cdc-field="'+name+'"]');

@@ -14,3 +14,16 @@
 #cdc-upload-overlay p { margin-top: 10px; font-size: 16px; }
 #cdc-upload-overlay .progress { width: 80%; height: 8px; margin-top: 8px; }
 #cdc-upload-overlay .progress-bar { transition: width 0.5s linear; }
+
+.cdc-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}

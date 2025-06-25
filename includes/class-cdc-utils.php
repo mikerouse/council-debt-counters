@@ -36,4 +36,14 @@ class CDC_Utils {
 
         return $id;
     }
+
+    /**
+     * Return a list of financial years starting from the current year.
+     *
+     * @param int $count Number of past years to include.
+     * @return array<string>
+     */
+    public static function financial_years( int $count = 10 ): array {
+        return Docs_Manager::financial_years( $count );
+    }
 }

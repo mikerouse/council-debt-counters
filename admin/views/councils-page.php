@@ -4,8 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 
-$req_action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : '';
-$council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
+$req_action  = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : '';
+$council_id  = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
+$current_year = isset( $_GET['year'] ) ? sanitize_text_field( $_GET['year'] ) : \CouncilDebtCounters\Docs_Manager::current_financial_year();
 
 if ( 'delete' === $req_action && $council_id ) {
 		check_admin_referer( 'cdc_delete_council_' . $council_id );
@@ -71,9 +72,10 @@ if ( 'edit' === $req_action ) {
 	?>
 	<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="cdc_save_council">
-		<?php wp_nonce_field( 'cdc_save_council' ); ?>
-				<input type="hidden" name="post_id" value="<?php echo esc_attr( $council_id ); ?>">
-		<ul class="nav nav-tabs" role="tablist">
+                <?php wp_nonce_field( 'cdc_save_council' ); ?>
+                <input type="hidden" name="post_id" value="<?php echo esc_attr( $council_id ); ?>">
+                <input type="hidden" id="cdc-financial-year" name="cdc_financial_year" value="<?php echo esc_attr( $current_year ); ?>">
+                <ul class="nav nav-tabs" role="tablist">
 			<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button" role="tab"><?php esc_html_e( 'General', 'council-debt-counters' ); ?></button></li>
 			<?php
 			foreach ( $enabled as $tab_key ) :
@@ -89,14 +91,22 @@ if ( 'edit' === $req_action ) {
 				<!-- Whistleblower reports moved to dedicated admin page -->
 		</ul>
 		<div class="tab-content pt-3">
-			<div class="tab-pane fade show active" id="tab-general" role="tabpanel">
-				<table class="form-table" role="presentation">
+                        <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
+                                <div class="mb-3">
+                                        <label for="cdc-year-general" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                        <select id="cdc-year-general" class="form-select cdc-year-select">
+                                                <?php foreach ( \CouncilDebtCounters\CDC_Utils::financial_years() as $y ) : ?>
+                                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $current_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                <?php endforeach; ?>
+                                        </select>
+                                </div>
+                                <table class="form-table" role="presentation">
 				<?php
 				$council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
 $council_locations = array( 'England', 'Wales', 'Scotland', 'Northern Ireland' );
 $no_accounts       = $council_id ? get_post_meta( $council_id, 'cdc_no_accounts', true ) : '';
-foreach ( $groups['general'] as $field ) :
-                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                foreach ( $groups['general'] as $field ) :
+                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name, $current_year ) : '';
                                                 if ( ! $council_id && $field->required && in_array( $field->type, array( 'number', 'money' ), true ) ) {
                                                         $val = '0';
                                                 }
@@ -244,8 +254,16 @@ $readonly = true;
 				$tab_fields = $groups[ $tab_key ] ?? array();
 				$na_tab_val = $council_id ? get_post_meta( $council_id, 'cdc_na_tab_' . $tab_key, true ) : '';
 				?>
-				<div class="tab-pane" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
-					<div class="d-flex justify-content-end">
+                                <div class="tab-pane" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
+                                        <div class="mb-3">
+                                                <label for="cdc-year-<?php echo esc_attr( $tab_key ); ?>" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                                <select id="cdc-year-<?php echo esc_attr( $tab_key ); ?>" class="form-select cdc-year-select">
+                                                        <?php foreach ( \CouncilDebtCounters\CDC_Utils::financial_years() as $y ) : ?>
+                                                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $current_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                        <?php endforeach; ?>
+                                                </select>
+                                        </div>
+                                        <div class="d-flex justify-content-end">
 						<div class="form-check">
 							<input class="form-check-input" type="checkbox" id="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>" name="cdc_na_tab[<?php echo esc_attr( $tab_key ); ?>]" value="1" <?php checked( $na_tab_val, '1' ); ?>>
 							<label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php esc_html_e( 'All N/A', 'council-debt-counters' ); ?></label>
@@ -254,8 +272,8 @@ $readonly = true;
 					<table class="form-table">
 						<tbody>
 							<?php
-							foreach ( $tab_fields as $field ) :
-								$val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                                        foreach ( $tab_fields as $field ) :
+                                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name, $current_year ) : '';
 								$input_type  = 'text' === $field->type ? 'text' : 'number';
 								$is_required = (bool) $field->required;
 								$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
@@ -314,12 +332,20 @@ $readonly = true;
 			endforeach;
 			?>
 			<?php if ( $docs_field ) : ?>
-			<div class="tab-pane fade" id="tab-docs" role="tabpanel">
-				<table class="form-table" role="presentation">
+                        <div class="tab-pane fade" id="tab-docs" role="tabpanel">
+                                <div class="mb-3">
+                                        <label for="cdc-year-docs" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                        <select id="cdc-year-docs" class="form-select cdc-year-select">
+                                                <?php foreach ( \CouncilDebtCounters\CDC_Utils::financial_years() as $y ) : ?>
+                                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $current_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                <?php endforeach; ?>
+                                        </select>
+                                </div>
+                                <table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="cdc-soa"><?php echo esc_html( $docs_field->label ); ?></label></th>
 						<td>
-														<?php $val = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, 'statement_of_accounts' ) : ''; ?>
+                                                                               <?php $val = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, 'statement_of_accounts', $current_year ) : ''; ?>
 <?php if ( $val ) : ?>
         <p><a href="<?php echo esc_url( plugins_url( 'docs/' . $val, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View selected statement', 'council-debt-counters' ); ?></a></p>
 <?php endif; ?>
