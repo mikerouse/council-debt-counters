@@ -41,6 +41,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-figure-submission-ips
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-dashboard-widget.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-shortcode-playground.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-search.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-year-selector.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-stats-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-sharing-meta.php';
 
@@ -80,8 +81,9 @@ add_action(
 		\CouncilDebtCounters\Whistleblower_Form::init();
 		\CouncilDebtCounters\Whistleblower_Reports_Page::init();
 		\CouncilDebtCounters\Admin_Dashboard_Widget::init();
-		\CouncilDebtCounters\Shortcode_Playground::init();
-		\CouncilDebtCounters\Council_Search::init();
+                \CouncilDebtCounters\Shortcode_Playground::init();
+                \CouncilDebtCounters\Council_Search::init();
+                \CouncilDebtCounters\Year_Selector::init();
                 \CouncilDebtCounters\Stats_Page::init();
                 \CouncilDebtCounters\Figure_Submission_Form::init();
                 \CouncilDebtCounters\Figure_Submissions_Page::init();

@@ -110,7 +110,6 @@ class Custom_Fields {
             id bigint(20) NOT NULL AUTO_INCREMENT,
             council_id bigint(20) NOT NULL,
             field_id mediumint(9) NOT NULL,
-            financial_year varchar(9) NOT NULL,
             value longtext NULL,
             financial_year varchar(9) NOT NULL DEFAULT '" . CDC_Utils::current_financial_year() . "',
             PRIMARY KEY  (id),
@@ -128,6 +127,37 @@ class Custom_Fields {
         // Ensure legacy interest fields are merged even if the plugin is
         // updated without reactivation.
         self::migrate_interest_paid_field();
+        self::backfill_2023_financial_year();
+    }
+
+    /**
+     * Copy existing values from 2025/26 into the 2023/24 year if needed.
+     */
+    private static function backfill_2023_financial_year() {
+        if ( '1' === get_option( 'cdc_backfill_2023', '0' ) ) {
+            return;
+        }
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_VALUES;
+        $from  = '2025/26';
+        $to    = '2023/24';
+        // Only insert rows that don't already exist for 2023/24.
+        $wpdb->query( $wpdb->prepare(
+            "INSERT INTO $table (council_id, field_id, financial_year, value)
+             SELECT v.council_id, v.field_id, %s, v.value
+             FROM $table v
+             WHERE v.financial_year = %s
+             AND NOT EXISTS (
+                 SELECT 1 FROM $table t
+                 WHERE t.council_id = v.council_id
+                   AND t.field_id = v.field_id
+                   AND t.financial_year = %s
+             )",
+            $to,
+            $from,
+            $to
+        ) );
+        update_option( 'cdc_backfill_2023', '1' );
     }
 
     /**
@@ -161,6 +191,7 @@ class Custom_Fields {
         self::ensure_default_fields();
         self::ensure_default_tabs();
         self::migrate_interest_paid_field();
+        self::backfill_2023_financial_year();
     }
 
     /**
