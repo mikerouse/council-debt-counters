@@ -111,6 +111,7 @@ class Custom_Fields {
             council_id bigint(20) NOT NULL,
             field_id mediumint(9) NOT NULL,
             value longtext NULL,
+            financial_year varchar(9) NOT NULL DEFAULT '" . CDC_Utils::current_financial_year() . "',
             PRIMARY KEY  (id),
             KEY council_id (council_id),
             KEY field_id (field_id)
@@ -139,6 +140,16 @@ class Custom_Fields {
             $columns = $wpdb->get_col( 'DESC ' . $fields_table, 0 );
             if ( ! in_array( 'required', $columns, true ) ) {
                 $wpdb->query( 'ALTER TABLE ' . $fields_table . ' ADD required tinyint(1) NOT NULL DEFAULT 0' );
+            }
+        }
+
+        $values_table = $wpdb->prefix . self::TABLE_VALUES;
+        if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $values_table ) ) === $values_table ) {
+            $v_columns = $wpdb->get_col( 'DESC ' . $values_table, 0 );
+            if ( ! in_array( 'financial_year', $v_columns, true ) ) {
+                $year = CDC_Utils::current_financial_year();
+                $wpdb->query( "ALTER TABLE $values_table ADD financial_year varchar(9) NOT NULL DEFAULT '$year'" );
+                $wpdb->query( "UPDATE $values_table SET financial_year = '2023/24'" );
             }
         }
 
