@@ -1,5 +1,15 @@
-.cdc-counter-wrapper { text-align:center; margin-bottom:1rem; }
-.cdc-counter-title { font-weight:600; margin-bottom:0.25rem; }
+.cdc-counter-wrapper {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+.cdc-counter-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    text-align: center;
+}
+.cdc-counter-title .cdc-info-btn {
+    margin-left: 0.5rem;
+}
 .cdc-counter {
     letter-spacing: 2px;
     font-size: 1em;
@@ -7,9 +17,16 @@
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.4s ease, transform 0.4s ease;
+    font-variant-numeric: tabular-nums;
+    display: inline-block;
+    min-width: 10ch;
 }
 
 .cdc-share-buttons {
+    text-align: center;
+}
+
+.cdc-year-selector {
     text-align: center;
 }
 
