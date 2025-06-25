@@ -155,15 +155,15 @@ $readonly = true;
 <div class="input-group">
     <span class="input-group-text">&pound;</span>
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" data-initial-required="<?php echo $is_required ? '1' : '0'; ?>" type="number" step="0.01" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
-    <?php if ( ! $readonly ) : ?>
-    <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
+    <?php if ( ! $readonly && $field->name !== 'total_debt' ) : ?>
+        <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
         <div class="input-group-text">
-                <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
-                        <label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
-                </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
+                <label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
+            </div>
         </div>
-    <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
+        <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
     <?php endif; ?>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
@@ -173,15 +173,15 @@ $readonly = true;
 <?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
 <div class="input-group">
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" data-initial-required="<?php echo $is_required ? '1' : '0'; ?>" type="<?php echo esc_attr( $input_type ); ?>" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
-    <?php if ( ! $readonly ) : ?>
-    <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
+    <?php if ( ! $readonly && $field->name !== 'total_debt' ) : ?>
+        <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
         <div class="input-group-text">
                 <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
                         <label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
                 </div>
         </div>
-    <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
+        <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
     <?php endif; ?>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
