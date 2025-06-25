@@ -96,9 +96,9 @@ class Data_Loader {
                                 \CouncilDebtCounters\Custom_Fields::update_value( $post_id, $field, $value, CDC_Utils::current_financial_year() );
                         }
 
-			if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
-				Council_Post_Type::calculate_total_debt( $post_id );
-			}
+                        if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
+                                Council_Post_Type::calculate_total_debt( $post_id, CDC_Utils::current_financial_year() );
+                        }
 
 			++$count;
 		}
@@ -164,9 +164,9 @@ class Data_Loader {
                                 Custom_Fields::update_value( $post_id, $field, $value, CDC_Utils::current_financial_year() );
 			}
 
-			if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
-				Council_Post_Type::calculate_total_debt( $post_id );
-			}
+                        if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
+                                Council_Post_Type::calculate_total_debt( $post_id, CDC_Utils::current_financial_year() );
+                        }
 
 			++$count;
 		}
@@ -395,9 +395,9 @@ class Data_Loader {
                         Custom_Fields::update_value( $post_id, $field, $value, CDC_Utils::current_financial_year() );
                 }
 
-		if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
-			Council_Post_Type::calculate_total_debt( $post_id );
-		}
+                if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
+                        Council_Post_Type::calculate_total_debt( $post_id, CDC_Utils::current_financial_year() );
+                }
 
 		wp_send_json_success( array( 'id' => $post_id ) );
 	}

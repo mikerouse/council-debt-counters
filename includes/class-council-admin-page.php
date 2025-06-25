@@ -141,13 +141,16 @@ class Council_Admin_Page {
             delete_post_meta( $post_id, 'cdc_under_review' );
         }
 
-        $na_flags = $_POST['cdc_na'] ?? array();
+        $na_flags  = $_POST['cdc_na'] ?? array();
+        $tab_years = $_POST['cdc_tab_year'] ?? array();
         foreach ( $fields as $field ) {
             if ( $field->name === 'total_debt' || $field->name === 'statement_of_accounts' ) {
                 continue;
             }
             $value = $_POST['cdc_fields'][ $field->id ] ?? '';
-            Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ), CDC_Utils::current_financial_year() );
+            $tab   = Custom_Fields::get_field_tab( $field->name );
+            $year  = isset( $tab_years[ $tab ] ) ? sanitize_text_field( $tab_years[ $tab ] ) : CDC_Utils::current_financial_year();
+            Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ), $year );
             $meta_key = 'cdc_na_' . $field->name;
             if ( isset( $na_flags[ $field->name ] ) ) {
                 update_post_meta( $post_id, $meta_key, '1' );
@@ -155,6 +158,10 @@ class Council_Admin_Page {
                 delete_post_meta( $post_id, $meta_key );
             }
         }
+        // Ensure calculated field never marked as N/A
+        delete_post_meta( $post_id, 'cdc_na_total_debt' );
+        $debt_year = isset( $tab_years['debt'] ) ? sanitize_text_field( $tab_years['debt'] ) : CDC_Utils::current_financial_year();
+        Council_Post_Type::calculate_total_debt( $post_id, $debt_year );
 
         $na_tabs = $_POST['cdc_na_tab'] ?? array();
         $enabled = (array) get_option( 'cdc_enabled_counters', array() );

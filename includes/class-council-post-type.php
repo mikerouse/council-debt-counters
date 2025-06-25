@@ -70,12 +70,14 @@ class Council_Post_Type {
     }
 
 
-    public static function calculate_total_debt( $post_id ) {
+    public static function calculate_total_debt( $post_id, string $year = '' ) {
         if ( get_post_type( $post_id ) !== 'council' ) {
             return;
         }
         // Get all relevant fields
-        $year = CDC_Utils::current_financial_year();
+        if ( empty( $year ) ) {
+            $year = CDC_Utils::current_financial_year();
+        }
         $current_liabilities = (float) Custom_Fields::get_value( $post_id, 'current_liabilities', $year );
         $long_term  = (float) Custom_Fields::get_value( $post_id, 'long_term_liabilities', $year );
         $lease_pfi  = (float) Custom_Fields::get_value( $post_id, 'finance_lease_pfi_liabilities', $year );
