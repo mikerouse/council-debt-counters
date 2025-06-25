@@ -134,33 +134,60 @@ class Shortcode_Renderer {
                 // If the raw value is £0.00, we should double check with the backend to ensure we have the correct value
                 if ( '0.00' === $raw_value || '0' === $raw_value ) {
                         global $wpdb;
-                        $meta_key = $wpdb->esc_like( $field ) . '_';
-                        $year = CDC_Utils::current_financial_year();
-                        // Try to get the meta value for the current year, fallback to meta without year if not found
-                        $backend_value = $wpdb->get_var( $wpdb->prepare(
-                                        "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND (meta_key = %s OR meta_key = %s) ORDER BY meta_key = %s DESC LIMIT 1",
-                                        $id,
-                                        $field . '_' . $year,
-                                        $field,
-                                        $field . '_' . $year
-                        ) );
-                        if ( '' === $backend_value || null === $backend_value ) {
-                                // If the backend value is also empty, we show a warning message
+                        $year        = CDC_Utils::current_financial_year();
+                        Error_Logger::log_debug( 'Zero value detected for ' . $field . ' on council ' . $id . ' for ' . $year );
+
+                        // Directly query the custom field values table in case get_value() failed
+                        $fields_table = $wpdb->prefix . Custom_Fields::TABLE_FIELDS;
+                        $values_table = $wpdb->prefix . Custom_Fields::TABLE_VALUES;
+                        $field_id     = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $fields_table WHERE name = %s", $field ) );
+                        $db_value     = '';
+                        $sql          = '';
+                        if ( $field_id ) {
+                                $sql      = $wpdb->prepare( "SELECT value FROM $values_table WHERE council_id = %d AND field_id = %d AND financial_year = %s", $id, $field_id, $year );
+                                Error_Logger::log_debug( 'Custom table query: ' . $sql );
+                                $db_value = $wpdb->get_var( $sql );
+                                Error_Logger::log_debug( 'Custom table result: ' . var_export( $db_value, true ) );
+                        }
+
+                        // Query the postmeta table as used by the backend edit screen
+                        $meta_sql      = $wpdb->prepare(
+                                "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND (meta_key = %s OR meta_key = %s) ORDER BY meta_key = %s DESC LIMIT 1",
+                                $id,
+                                $field . '_' . $year,
+                                $field,
+                                $field . '_' . $year
+                        );
+                        Error_Logger::log_debug( 'Postmeta query: ' . $meta_sql );
+                        $backend_value = $wpdb->get_var( $meta_sql );
+                        Error_Logger::log_debug( 'Postmeta result: ' . var_export( $backend_value, true ) );
+
+                        // Send an email to the site administrator with the troubleshooting details
+                        $admins  = get_option( 'admin_email' );
+                        $subject = __( 'CDC zero value troubleshooting', 'council-debt-counters' );
+                        $message = "Zero value detected for field {$field} on council ID {$id} for {$year}.\n";
+                        $message .= "Custom field SQL: {$sql}\nResult: " . var_export( $db_value, true ) . "\n";
+                        $message .= "Postmeta SQL: {$meta_sql}\nResult: " . var_export( $backend_value, true ) . "\n";
+                        wp_mail( $admins, $subject, $message );
+
+                        if ( '' !== $db_value && null !== $db_value ) {
+                                $raw_value = $db_value;
+                        } elseif ( '' !== $backend_value && null !== $backend_value ) {
+                                $raw_value = $backend_value;
+                        } else {
                                 $label = $field;
                                 return sprintf(
-                                '<div class="alert alert-danger">%s</div>',
-                                esc_html(
-                                        sprintf(
-                                        /* translators: %s: Field label */
-                                                __( 'No %s figure found', 'council-debt-counters' ),
-                                                $label
+                                        '<div class="alert alert-danger">%s</div>',
+                                        esc_html(
+                                                sprintf(
+                                                /* translators: %s: Field label */
+                                                        __( 'No %s figure found', 'council-debt-counters' ),
+                                                        $label
+                                                )
                                         )
-                                )
                                 );
-                        };
-                        // If the backend value is not empty, we use that as the raw value
-                        $raw_value = $backend_value;
-                }
+                        }
+               }
 
                 // If we do have a figure, but the council has been taken over, we show the last figure as a static value (such as the outgoing council's debt)
                 if ( $parent ) {
