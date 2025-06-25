@@ -259,15 +259,26 @@ class Figure_Submission_Form {
                                 }
                         }
                 }
-                                $inputs = array();
-		foreach ( $fields as $f ) {
-			if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
-						$tab = Custom_Fields::get_field_tab( $f->name );
-				if ( in_array( $tab, array( 'debt', 'spending', 'income', 'deficit', 'interest', 'reserves', 'consultancy' ), true ) ) {
-					$inputs[] = $f;
-				}
-			}
-		}
+                $inputs  = array();
+                $exclude = array(
+                        // These fields are calculated internally or currently hidden from user submissions.
+                        'total_debt',
+                        'annual_deficit',
+                        'minimum_revenue_provision',
+                        'manual_debt_entry',
+                        'consultancy_spend',
+                );
+                foreach ( $fields as $f ) {
+                        if ( in_array( $f->name, $exclude, true ) ) {
+                                continue;
+                        }
+                        if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
+                                $tab = Custom_Fields::get_field_tab( $f->name );
+                                if ( in_array( $tab, array( 'debt', 'spending', 'income', 'deficit', 'interest', 'reserves', 'consultancy' ), true ) ) {
+                                        $inputs[] = $f;
+                                }
+                        }
+                }
 		?>
                                <form method="post" class="cdc-fig-form">
                                                <?php wp_nonce_field( 'cdc_fig', 'cdc_fig_nonce' ); ?>
@@ -284,20 +295,31 @@ class Figure_Submission_Form {
                                                        </select>
                                                </div>
                                                <?php foreach ( $inputs as $field ) : ?>
-								<div class="mb-3">
-										<label for="fig-<?php echo esc_attr( $field->name ); ?>" class="form-label"><?php echo esc_html( $field->label ); ?></label>
-										<div class="input-group">
-												<span class="input-group-text">&pound;</span>
-												<input type="text" inputmode="decimal" class="form-control" id="fig-<?php echo esc_attr( $field->name ); ?>" name="cdc_figures[<?php echo esc_attr( $field->name ); ?>]" />
-										</div>
+                                                               <div class="mb-3">
+                                                                              <?php
+                                                                              $label = $field->label;
+                                                                              if ( 'annual_spending' === $field->name ) {
+                                                                                      $label = __( 'Total Annual Expenditure', 'council-debt-counters' );
+                                                                              }
+                                                                              ?>
+                                                                              <label for="fig-<?php echo esc_attr( $field->name ); ?>" class="form-label"><?php echo esc_html( $label ); ?></label>
+                                                                              <div class="input-group">
+                                                                                      <span class="input-group-text">&pound;</span>
+                                                                                      <input type="text" inputmode="decimal" class="form-control" id="fig-<?php echo esc_attr( $field->name ); ?>" name="cdc_figures[<?php echo esc_attr( $field->name ); ?>]" />
+                                                                              </div>
                                        <?php if ( ! $no_sources ) : ?>
                                        <input type="text" class="form-control mt-1" id="src-<?php echo esc_attr( $field->name ); ?>" name="cdc_sources[<?php echo esc_attr( $field->name ); ?>]" placeholder="<?php esc_attr_e( 'Source for this figure', 'council-debt-counters' ); ?>" />
                                        <?php endif; ?>
                                        <div class="form-text">
                                        <?php esc_html_e( 'Please enter the full figure (e.g. 283000000, not 283,000).', 'council-debt-counters' ); ?>
                                        </div>
-								</div>
-						<?php endforeach; ?>
+                                       <?php if ( 'annual_spending' === $field->name ) : ?>
+                                       <div class="form-text">
+                                       <?php esc_html_e( 'This is the gross expenditure figure taken from the comprehensive income and expenditure statement.', 'council-debt-counters' ); ?>
+                                       </div>
+                                       <?php endif; ?>
+                                                               </div>
+                                               <?php endforeach; ?>
 						<div class="mb-3">
 								<label for="cdc_note" class="form-label"><?php esc_html_e( 'Note (optional)', 'council-debt-counters' ); ?></label>
 								<textarea class="form-control" id="cdc_note" name="cdc_note"></textarea>
