@@ -140,7 +140,7 @@ class Council_Admin_Page {
                 continue;
             }
             $value = $_POST['cdc_fields'][ $field->id ] ?? '';
-            Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ) );
+            Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ), CDC_Utils::current_financial_year() );
             $meta_key = 'cdc_na_' . $field->name;
             if ( isset( $na_flags[ $field->name ] ) ) {
                 update_post_meta( $post_id, $meta_key, '1' );
@@ -160,7 +160,7 @@ class Council_Admin_Page {
             }
         }
 
-        $soa_value = Custom_Fields::get_value( $post_id, 'statement_of_accounts' );
+        $soa_value = Custom_Fields::get_value( $post_id, 'statement_of_accounts', CDC_Utils::current_financial_year() );
         $soa_year  = sanitize_text_field( $_POST['statement_of_accounts_year'] ?? Docs_Manager::current_financial_year() );
         $soa_type  = sanitize_key( $_POST['statement_of_accounts_type'] ?? 'draft_statement_of_accounts' );
         if ( ! in_array( $soa_type, Docs_Manager::DOC_TYPES, true ) ) {
@@ -185,7 +185,7 @@ class Council_Admin_Page {
         }
 
         if ( $soa_value ) {
-            Custom_Fields::update_value( $post_id, 'statement_of_accounts', $soa_value );
+            Custom_Fields::update_value( $post_id, 'statement_of_accounts', $soa_value, CDC_Utils::current_financial_year() );
         }
 
         if ( isset( $_POST['assigned_user'] ) ) {
@@ -208,8 +208,8 @@ class Council_Admin_Page {
                 $name = get_the_title( $parent );
                 $link = get_permalink( $parent );
                 $msg  = sprintf( __( 'This council is now part of <a href="%s">%s</a>', 'council-debt-counters' ), esc_url( $link ), $name );
-                Custom_Fields::update_value( $post_id, 'status_message', $msg );
-                Custom_Fields::update_value( $post_id, 'status_message_type', 'info' );
+                Custom_Fields::update_value( $post_id, 'status_message', $msg, CDC_Utils::current_financial_year() );
+                Custom_Fields::update_value( $post_id, 'status_message_type', 'info', CDC_Utils::current_financial_year() );
             } else {
                 delete_post_meta( $post_id, 'cdc_parent_council' );
             }
@@ -217,7 +217,7 @@ class Council_Admin_Page {
 
         if ( isset( $_POST['cdc_no_accounts'] ) ) {
             update_post_meta( $post_id, 'cdc_no_accounts', '1' );
-            Custom_Fields::update_value( $post_id, 'status_message_type', 'danger' );
+            Custom_Fields::update_value( $post_id, 'status_message_type', 'danger', CDC_Utils::current_financial_year() );
         } else {
             delete_post_meta( $post_id, 'cdc_no_accounts' );
         }

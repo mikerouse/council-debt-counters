@@ -65,7 +65,7 @@ class Shortcode_Renderer {
                 if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
                         return '';
                 }
-               $raw_value = Custom_Fields::get_value( $id, $field );
+               $raw_value = Custom_Fields::get_value( $id, $field, CDC_Utils::current_financial_year() );
                $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
                $na_tab    = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
                $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
@@ -251,12 +251,12 @@ class Shortcode_Renderer {
                        return '<div class="cdc-counter-static display-4 fw-bold">&pound;??.??</div>';
                }
 
-               $total  = Custom_Fields::get_value( $id, 'total_debt' );
+               $total  = Custom_Fields::get_value( $id, 'total_debt', CDC_Utils::current_financial_year() );
                if ( ! $total ) {
                        $total = 0;
                }
                $parent = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
-            $interest          = (float) Custom_Fields::get_value( $id, 'interest_paid' );
+            $interest          = (float) Custom_Fields::get_value( $id, 'interest_paid', CDC_Utils::current_financial_year() );
                 $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
                 // Council balance sheets cover the year ending 31 March.
@@ -292,20 +292,21 @@ class Shortcode_Renderer {
                 );
 
                 // Get band property counts
+                $year  = CDC_Utils::current_financial_year();
                 $bands = array(
-                        'A' => (int) Custom_Fields::get_value( $id, 'band_a_properties' ),
-                        'B' => (int) Custom_Fields::get_value( $id, 'band_b_properties' ),
-                        'C' => (int) Custom_Fields::get_value( $id, 'band_c_properties' ),
-                        'D' => (int) Custom_Fields::get_value( $id, 'band_d_properties' ),
-                        'E' => (int) Custom_Fields::get_value( $id, 'band_e_properties' ),
-                        'F' => (int) Custom_Fields::get_value( $id, 'band_f_properties' ),
-                        'G' => (int) Custom_Fields::get_value( $id, 'band_g_properties' ),
-                        'H' => (int) Custom_Fields::get_value( $id, 'band_h_properties' ),
+                        'A' => (int) Custom_Fields::get_value( $id, 'band_a_properties', $year ),
+                        'B' => (int) Custom_Fields::get_value( $id, 'band_b_properties', $year ),
+                        'C' => (int) Custom_Fields::get_value( $id, 'band_c_properties', $year ),
+                        'D' => (int) Custom_Fields::get_value( $id, 'band_d_properties', $year ),
+                        'E' => (int) Custom_Fields::get_value( $id, 'band_e_properties', $year ),
+                        'F' => (int) Custom_Fields::get_value( $id, 'band_f_properties', $year ),
+                        'G' => (int) Custom_Fields::get_value( $id, 'band_g_properties', $year ),
+                        'H' => (int) Custom_Fields::get_value( $id, 'band_h_properties', $year ),
                 );
 
-                $population = (int) Custom_Fields::get_value( $id, 'population' );
+                $population = (int) Custom_Fields::get_value( $id, 'population', $year );
 
-                $reserves = (float) Custom_Fields::get_value( $id, 'usable_reserves' );
+                $reserves = (float) Custom_Fields::get_value( $id, 'usable_reserves', $year );
                 $reserves_ratio = ( $reserves > 0 && $total > 0 ) ? round( ( $reserves / $total ) * 100, 1 ) : null;
 
                 $debt_repayment_explainer = __( 'Growth uses the annual interest figure from the latest accounts. Actual borrowing and repayments may differ.', 'council-debt-counters' );
@@ -443,8 +444,9 @@ class Shortcode_Renderer {
                 }
 
                 $name     = get_the_title( $id );
-                $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid' );
-                $debt      = (float) Custom_Fields::get_value( $id, 'total_debt' );
+                $year      = CDC_Utils::current_financial_year();
+                $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid', $year );
+                $debt      = (float) Custom_Fields::get_value( $id, 'total_debt', $year );
                 $permalink = get_permalink( $id );
 
                 if ( $interest > 0 ) {
@@ -490,8 +492,9 @@ class Shortcode_Renderer {
                         return '';
                 }
 
-                $message = Custom_Fields::get_value( $id, 'status_message' );
-                $type    = Custom_Fields::get_value( $id, 'status_message_type' );
+                $year    = CDC_Utils::current_financial_year();
+                $message = Custom_Fields::get_value( $id, 'status_message', $year );
+                $type    = Custom_Fields::get_value( $id, 'status_message_type', $year );
 
                 if ( ! is_string( $message ) || '' === trim( $message ) ) {
                         return '';
@@ -514,7 +517,7 @@ class Shortcode_Renderer {
                         return '';
                 }
 
-                $annual  = Custom_Fields::get_total_value( $field );
+                $annual  = Custom_Fields::get_total_value( $field, CDC_Utils::current_financial_year() );
                 $rate    = Counter_Manager::per_second_rate( $annual );
                 $current = $rate * Counter_Manager::seconds_since_fy_start();
 
@@ -612,8 +615,9 @@ class Shortcode_Renderer {
                         if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
                                 continue;
                         }
-                        $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt' );
-                        $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid' );
+                        $year  = CDC_Utils::current_financial_year();
+                        $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt', $year );
+                        $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid', $year );
                 }
           
                 $count = count( array_filter( $posts, function( $cid ) {
@@ -706,13 +710,14 @@ class Shortcode_Renderer {
                                 continue;
                         }
                         $data = array();
-                        $debt      = (float) Custom_Fields::get_value( $id, 'total_debt' );
-                        $population = (float) Custom_Fields::get_value( $id, 'population' );
-                        $reserves  = (float) Custom_Fields::get_value( $id, 'usable_reserves' );
-                        $spending  = (float) Custom_Fields::get_value( $id, 'annual_spending' );
-                        $income    = (float) Custom_Fields::get_value( $id, 'total_income' );
-                        $deficit   = (float) Custom_Fields::get_value( $id, 'annual_deficit' );
-                        $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid' );
+                        $year      = CDC_Utils::current_financial_year();
+                        $debt      = (float) Custom_Fields::get_value( $id, 'total_debt', $year );
+                        $population = (float) Custom_Fields::get_value( $id, 'population', $year );
+                        $reserves  = (float) Custom_Fields::get_value( $id, 'usable_reserves', $year );
+                        $spending  = (float) Custom_Fields::get_value( $id, 'annual_spending', $year );
+                        $income    = (float) Custom_Fields::get_value( $id, 'total_income', $year );
+                        $deficit   = (float) Custom_Fields::get_value( $id, 'annual_deficit', $year );
+                        $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid', $year );
 
                         switch ( $type ) {
                                 case 'highest_debt':

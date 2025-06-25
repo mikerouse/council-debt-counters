@@ -93,7 +93,7 @@ class Data_Loader {
                                 if ( $info && in_array( $info->type, array( 'number', 'money' ), true ) ) {
                                         $value = str_replace( ',', '', $value );
                                 }
-                                \CouncilDebtCounters\Custom_Fields::update_value( $post_id, $field, $value );
+                                \CouncilDebtCounters\Custom_Fields::update_value( $post_id, $field, $value, CDC_Utils::current_financial_year() );
                         }
 
 			if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
@@ -161,7 +161,7 @@ class Data_Loader {
 				if ( '' === $value ) {
 					continue;
 				}
-				Custom_Fields::update_value( $post_id, $field, $value );
+                                Custom_Fields::update_value( $post_id, $field, $value, CDC_Utils::current_financial_year() );
 			}
 
 			if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
@@ -213,7 +213,7 @@ class Data_Loader {
 				if ( 'council_name' === $f->name ) {
 					continue;
 				}
-				$row[ $f->name ] = Custom_Fields::get_value( $c->ID, $f->name );
+                                $row[ $f->name ] = Custom_Fields::get_value( $c->ID, $f->name, CDC_Utils::current_financial_year() );
 			}
 			$rows[] = $row;
 		}
@@ -392,7 +392,7 @@ class Data_Loader {
                         if ( $info && in_array( $info->type, array( 'number', 'money' ), true ) ) {
                                 $value = str_replace( ',', '', $value );
                         }
-                        Custom_Fields::update_value( $post_id, $field, $value );
+                        Custom_Fields::update_value( $post_id, $field, $value, CDC_Utils::current_financial_year() );
                 }
 
 		if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {

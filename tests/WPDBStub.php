@@ -27,12 +27,34 @@ class WPDBStub {
     }
 
     public function get_var($query) {
+        if (preg_match("/SELECT id FROM {$this->prefix}" . \CouncilDebtCounters\Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+) AND financial_year = '([^']+)'/i", $query, $m)) {
+            $cid = (int)$m[1];
+            $fid = (int)$m[2];
+            $fy  = $m[3];
+            foreach ($this->values as $v) {
+                if ($v['council_id'] == $cid && $v['field_id'] == $fid && $v['financial_year'] === $fy) {
+                    return $v['id'];
+                }
+            }
+            return null;
+        }
         if (preg_match("/SELECT id FROM {$this->prefix}" . \CouncilDebtCounters\Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+)/i", $query, $m)) {
             $cid = (int)$m[1];
             $fid = (int)$m[2];
             foreach ($this->values as $v) {
                 if ($v['council_id'] == $cid && $v['field_id'] == $fid) {
                     return $v['id'];
+                }
+            }
+            return null;
+        }
+        if (preg_match("/SELECT value FROM {$this->prefix}" . \CouncilDebtCounters\Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+) AND financial_year = '([^']+)'/i", $query, $m)) {
+            $cid = (int)$m[1];
+            $fid = (int)$m[2];
+            $fy  = $m[3];
+            foreach ($this->values as $v) {
+                if ($v['council_id'] == $cid && $v['field_id'] == $fid && $v['financial_year'] === $fy) {
+                    return $v['value'];
                 }
             }
             return null;

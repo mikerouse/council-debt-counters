@@ -96,7 +96,7 @@ if ( 'edit' === $req_action ) {
 $council_locations = array( 'England', 'Wales', 'Scotland', 'Northern Ireland' );
 $no_accounts       = $council_id ? get_post_meta( $council_id, 'cdc_no_accounts', true ) : '';
 foreach ( $groups['general'] as $field ) :
-                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name, \CouncilDebtCounters\CDC_Utils::current_financial_year() ) : '';
                                                 if ( ! $council_id && $field->required && in_array( $field->type, array( 'number', 'money' ), true ) ) {
                                                         $val = '0';
                                                 }
@@ -255,7 +255,7 @@ $readonly = true;
 						<tbody>
 							<?php
 							foreach ( $tab_fields as $field ) :
-								$val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name ) : '';
+                                                                $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name, \CouncilDebtCounters\CDC_Utils::current_financial_year() ) : '';
 								$input_type  = 'text' === $field->type ? 'text' : 'number';
 								$is_required = (bool) $field->required;
 								$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
@@ -319,7 +319,7 @@ $readonly = true;
 					<tr>
 						<th scope="row"><label for="cdc-soa"><?php echo esc_html( $docs_field->label ); ?></label></th>
 						<td>
-														<?php $val = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, 'statement_of_accounts' ) : ''; ?>
+                                               <?php $val = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, 'statement_of_accounts', \CouncilDebtCounters\CDC_Utils::current_financial_year() ) : ''; ?>
 <?php if ( $val ) : ?>
         <p><a href="<?php echo esc_url( plugins_url( 'docs/' . $val, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View selected statement', 'council-debt-counters' ); ?></a></p>
 <?php endif; ?>
