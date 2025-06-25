@@ -107,6 +107,18 @@ $types = [
                 </td>
             </tr>
             <tr>
+                <th scope="row"><label for="cdc_default_financial_year"><?php esc_html_e( 'Default Financial Year', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <?php $def_year = get_option( 'cdc_default_financial_year', '2023/24' ); ?>
+                    <select name="cdc_default_financial_year" id="cdc_default_financial_year">
+                        <?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+                            <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $def_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description"><?php esc_html_e( 'Used when no year is selected in the admin interface.', 'council-debt-counters' ); ?></p>
+                </td>
+            </tr>
+            <tr>
                 <th scope="row"><?php esc_html_e( 'Default Sharing Thumbnail', 'council-debt-counters' ); ?></th>
                 <td>
                     <?php $thumb = absint( get_option( 'cdc_default_sharing_thumbnail', 0 ) ); ?>
