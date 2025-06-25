@@ -154,7 +154,7 @@ class Figure_Submissions_Page {
                                         </tr>
 				</thead>
 				<tbody>
-				<?php foreach ( $subs as $s ) : ?>
+                                        <?php foreach ( $subs as $s ) : ?>
                                         <?php $cid  = (int) get_post_meta( $s->ID, 'council_id', true ); ?>
                                         <?php $figs = get_post_meta( $s->ID, 'figures', true ); ?>
                                         <?php $yr   = get_post_meta( $s->ID, 'financial_year', true ); ?>
@@ -171,15 +171,18 @@ class Figure_Submissions_Page {
 							}
 							?>
 						</td>
-						<td>
-														<?php if ( 'publish' !== $s->post_status ) : ?>
-																<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::SLUG . '&submission=' . $s->ID ) ); ?>" class="button"><?php esc_html_e( 'Review', 'council-debt-counters' ); ?></a>
-																<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=cdc_fig_approve&id=' . $s->ID ), 'cdc_fig_action' ) ); ?>" class="button"><?php esc_html_e( 'Approve', 'council-debt-counters' ); ?></a>
-																<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=cdc_fig_reject&id=' . $s->ID ), 'cdc_fig_action' ) ); ?>" class="button"><?php esc_html_e( 'Reject', 'council-debt-counters' ); ?></a>
-														<?php else : ?>
-																<?php esc_html_e( 'Approved', 'council-debt-counters' ); ?>
-														<?php endif; ?>
-						</td>
+                                                <td>
+                                                       <?php $auto = get_post_meta( $s->ID, 'auto_approved', true ); ?>
+                                                                               <?php if ( $auto ) : ?>
+                                                                               <?php esc_html_e( 'Auto Approved', 'council-debt-counters' ); ?>
+                                                                               <?php elseif ( 'publish' !== $s->post_status ) : ?>
+                                                                               <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::SLUG . '&submission=' . $s->ID ) ); ?>" class="button"><?php esc_html_e( 'Review', 'council-debt-counters' ); ?></a>
+                                                                               <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=cdc_fig_approve&id=' . $s->ID ), 'cdc_fig_action' ) ); ?>" class="button"><?php esc_html_e( 'Approve', 'council-debt-counters' ); ?></a>
+                                                                               <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=cdc_fig_reject&id=' . $s->ID ), 'cdc_fig_action' ) ); ?>" class="button"><?php esc_html_e( 'Reject', 'council-debt-counters' ); ?></a>
+                                                                               <?php else : ?>
+                                                                               <?php esc_html_e( 'Approved', 'council-debt-counters' ); ?>
+                                                                               <?php endif; ?>
+                                               </td>
 					</tr>
 				<?php endforeach; ?>
 				</tbody>
