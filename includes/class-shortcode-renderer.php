@@ -69,7 +69,10 @@ class Shortcode_Renderer {
                $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
                $na_tab    = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
                $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
-               if ( $na_tab || $na_field ) {
+               if ( $na_tab ) {
+                       return '';
+               }
+               if ( $na_field ) {
                        $obj   = Custom_Fields::get_field_by_name( $field );
                        $label = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
                        $map   = [
@@ -128,16 +131,18 @@ class Shortcode_Renderer {
                 $collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
                 ob_start();
                 ?>
-                <div class="cdc-counter-title text-center"><?php echo esc_html( $title ); ?></div>
-                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
-                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
-                                &hellip;
-                        </div>
+                <div class="cdc-counter-title text-center">
+                        <?php echo esc_html( $title ); ?>
                         <?php if ( $with_details ) : ?>
-                                <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                                <button class="btn btn-link p-0 ms-1 cdc-info-btn" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                                         <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                                 </button>
                         <?php endif; ?>
+                </div>
+                <div class="cdc-counter-wrapper text-center mb-3">
+                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+                                &hellip;
+                        </div>
                 </div>
                 <?php if ( $with_details ) : ?>
                         <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
@@ -159,6 +164,7 @@ class Shortcode_Renderer {
 
         public static function init() {
                 add_shortcode( 'council_counter', array( __CLASS__, 'render_counter' ) );
+                add_shortcode( 'council_counters', array( __CLASS__, 'render_council_counters' ) );
                 add_shortcode( 'spending_counter', array( __CLASS__, 'render_spending_counter' ) );
                 add_shortcode( 'deficit_counter', array( __CLASS__, 'render_deficit_counter' ) );
                 add_shortcode( 'interest_counter', array( __CLASS__, 'render_interest_counter' ) );
@@ -179,6 +185,8 @@ class Shortcode_Renderer {
                 add_action( 'wp_ajax_nopriv_cdc_log_js', array( __CLASS__, 'ajax_log_js' ) );
                 add_action( 'wp_ajax_cdc_log_share', array( __CLASS__, 'ajax_log_share' ) );
                 add_action( 'wp_ajax_nopriv_cdc_log_share', array( __CLASS__, 'ajax_log_share' ) );
+                add_action( 'wp_ajax_cdc_render_counters', array( __CLASS__, 'ajax_render_counters' ) );
+                add_action( 'wp_ajax_nopriv_cdc_render_counters', array( __CLASS__, 'ajax_render_counters' ) );
         }
 
         public static function register_assets() {
@@ -209,6 +217,8 @@ class Shortcode_Renderer {
                 wp_register_style( 'bootstrap-5', $bootstrap_css, array(), '5.3.1' );
                 wp_register_script( 'bootstrap-5', $bootstrap_js, array(), '5.3.1', true );
                 wp_register_script( 'font-awesome-kit', $fa_script, array(), null, false );
+                wp_register_script( 'cdc-council-counters', plugins_url( 'public/js/council-counters.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
+                wp_localize_script( 'cdc-council-counters', 'cdcCounters', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ) ) );
         wp_localize_script(
                         'cdc-counter-animations',
                         'CDC_LOGGER',
@@ -244,11 +254,7 @@ class Shortcode_Renderer {
 
                $na_tab = get_post_meta( $id, 'cdc_na_tab_debt', true );
                if ( $na_tab ) {
-                       wp_enqueue_style( 'bootstrap-5' );
-                       wp_enqueue_style( 'cdc-counter' );
-                       wp_enqueue_style( 'cdc-counter-font' );
-                       wp_enqueue_script( 'font-awesome-kit' );
-                       return '<div class="cdc-counter-static display-4 fw-bold">&pound;??.??</div>';
+                       return '';
                }
 
                $total  = Custom_Fields::get_value( $id, 'total_debt', CDC_Utils::current_financial_year() );
@@ -317,11 +323,11 @@ class Shortcode_Renderer {
                 ?>
                 <div class="cdc-counter-title text-center">
                         <?php echo esc_html( $title ); ?>
-                        <button class="btn btn-link p-0 pb-1" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                        <button class="btn btn-link p-0 pb-1 cdc-info-btn" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                                 <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
                 </div>
-                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
+                <div class="cdc-counter-wrapper text-center mb-3">
                         <div id="<?php echo esc_attr( 'cdc-counter-' . $id . '-debt' ); ?>" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
                         </div>
@@ -539,11 +545,11 @@ class Shortcode_Renderer {
                 ?>
                 <div class="cdc-counter-title text-center">
                         <?php echo esc_html( $title ); ?>
-                        <button class="btn btn-link p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                        <button class="btn btn-link p-0 ms-2 cdc-info-btn" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                                 <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
                 </div>
-                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
+                <div class="cdc-counter-wrapper text-center mb-3">
                         <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
                                 &hellip;
                         </div>
@@ -649,11 +655,11 @@ class Shortcode_Renderer {
                 ?>
                 <div class="cdc-counter-title text-center">
                         <?php echo esc_html( $title ); ?>
-                        <button class="btn btn-link p-0 pb-1" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
+                        <button class="btn btn-link p-0 pb-1 cdc-info-btn" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr( $collapse_id ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $collapse_id ); ?>">
                                 <i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
                         </button>
                 </div>
-                <div class="cdc-counter-wrapper text-center mb-3 d-flex align-items-center justify-content-center">
+                <div class="cdc-counter-wrapper text-center mb-3">
                         <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
                                 &hellip;
                         </div>
@@ -812,6 +818,94 @@ class Shortcode_Renderer {
                         echo '</tbody></table>';
                 }
                 return ob_get_clean();
+        }
+
+        private static function render_counters_markup( int $id, string $year ) {
+                $GLOBALS['cdc_selected_year'] = $year;
+                $enabled = (array) get_option( 'cdc_enabled_counters', array() );
+                $html    = '';
+                foreach ( $enabled as $type ) {
+                        switch ( $type ) {
+                                case 'debt':
+                                        $html .= self::render_counter( array( 'id' => $id ) );
+                                        break;
+                                case 'spending':
+                                        $html .= self::render_spending_counter( array( 'id' => $id ) );
+                                        break;
+                                case 'income':
+                                        $html .= self::render_revenue_counter( array( 'id' => $id ) );
+                                        break;
+                                case 'deficit':
+                                        $html .= self::render_deficit_counter( array( 'id' => $id ) );
+                                        break;
+                                case 'interest':
+                                        $html .= self::render_interest_counter( array( 'id' => $id ) );
+                                        break;
+                                default:
+                                        $html .= self::render_custom_counter( array( 'id' => $id, 'type' => $type ) );
+                        }
+                }
+                unset( $GLOBALS['cdc_selected_year'] );
+                return $html;
+        }
+
+        public static function render_council_counters( $atts ) {
+                $id = CDC_Utils::resolve_council_id( $atts );
+                if ( 0 === $id ) {
+                        return '';
+                }
+
+                $year   = get_post_meta( $id, 'cdc_default_financial_year', true );
+                if ( ! $year ) {
+                        $year = CDC_Utils::current_financial_year();
+                }
+
+                wp_enqueue_style( 'bootstrap-5' );
+                wp_enqueue_style( 'cdc-counter' );
+                wp_enqueue_style( 'cdc-counter-font' );
+                wp_enqueue_script( 'bootstrap-5' );
+                wp_enqueue_script( 'cdc-counter-animations' );
+                wp_enqueue_script( 'font-awesome-kit' );
+                wp_enqueue_script( 'cdc-council-counters' );
+
+                $nonce = wp_create_nonce( Year_Selector::NONCE );
+
+                ob_start();
+                ?>
+                <div class="cdc-council-counters" data-council-id="<?php echo esc_attr( $id ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>" data-ajax-url="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>">
+                        <div class="cdc-year-selector mb-3 text-center">
+                                <label for="cdc-year-select-<?php echo esc_attr( $id ); ?>" class="me-2"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                <select id="cdc-year-select-<?php echo esc_attr( $id ); ?>" class="form-select d-inline w-auto cdc-year-select">
+                                        <?php foreach ( CDC_Utils::council_years( $id ) as $y ) : ?>
+                                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                        <?php endforeach; ?>
+                                </select>
+                        </div>
+                        <div class="cdc-counters-container text-center">
+                                <?php echo self::render_counters_markup( $id, $year ); ?>
+                        </div>
+                </div>
+                <?php
+                return ob_get_clean();
+        }
+
+        public static function ajax_render_counters() {
+                check_ajax_referer( Year_Selector::NONCE, 'nonce' );
+                $post_id = intval( $_POST['post_id'] ?? 0 );
+                $year    = sanitize_text_field( $_POST['year'] ?? '' );
+                if ( ! $post_id || '' === $year ) {
+                        wp_send_json_error( array( 'message' => __( 'Invalid request.', 'council-debt-counters' ) ), 400 );
+                }
+                $post = get_post( $post_id );
+                if ( ! $post || 'council' !== $post->post_type ) {
+                        wp_send_json_error( array( 'message' => __( 'Not found.', 'council-debt-counters' ) ), 404 );
+                }
+                $allowed = CDC_Utils::council_years( $post_id );
+                if ( ! in_array( $year, $allowed, true ) ) {
+                        wp_send_json_error( array( 'message' => __( 'Invalid year.', 'council-debt-counters' ) ), 400 );
+                }
+                $html = self::render_counters_markup( $post_id, $year );
+                wp_send_json_success( array( 'html' => $html ) );
         }
 
         public static function ajax_log_js() {

@@ -115,6 +115,7 @@ class Figure_Submission_Form {
                 }
                 $note                  = sanitize_textarea_field( wp_unslash( $_POST['cdc_note'] ?? '' ) );
                 $email                 = sanitize_email( wp_unslash( $_POST['cdc_email'] ?? '' ) );
+                $fig_year      = sanitize_text_field( wp_unslash( $_POST['cdc_fig_year'] ?? \CouncilDebtCounters\Docs_Manager::current_financial_year() ) );
                 $figures       = $_POST['cdc_figures'] ?? array();
                 $sources       = $_POST['cdc_sources'] ?? array();
                 $clean         = array();
@@ -155,6 +156,7 @@ class Figure_Submission_Form {
                                 update_post_meta( $post_id, 'contact_email', $email );
                 }
                 update_post_meta( $post_id, 'ip_address', $ip );
+                update_post_meta( $post_id, 'financial_year', $fig_year );
                 if ( $has_file && $cid ) {
                         Error_Logger::log_debug( 'SoA uploaded via correction form from ' . $ip );
                         $year = sanitize_text_field( wp_unslash( $_POST['cdc_soa_year'] ?? \CouncilDebtCounters\Docs_Manager::current_financial_year() ) );
@@ -257,10 +259,18 @@ class Figure_Submission_Form {
 			}
 		}
 		?>
-				<form method="post" class="cdc-fig-form">
-						<?php wp_nonce_field( 'cdc_fig', 'cdc_fig_nonce' ); ?>
-						<input type="hidden" name="cdc_council_id" value="<?php echo esc_attr( $council_id ); ?>" />
-						<?php foreach ( $inputs as $field ) : ?>
+                               <form method="post" class="cdc-fig-form">
+                                               <?php wp_nonce_field( 'cdc_fig', 'cdc_fig_nonce' ); ?>
+                                               <input type="hidden" name="cdc_council_id" value="<?php echo esc_attr( $council_id ); ?>" />
+                                               <div class="mb-3">
+                                                       <label for="cdc_fig_year" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                                       <select name="cdc_fig_year" id="cdc_fig_year" class="form-select">
+                                                               <?php foreach ( Docs_Manager::financial_years() as $y ) : ?>
+                                                                       <option value="<?php echo esc_attr( $y ); ?>" <?php selected( Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                               <?php endforeach; ?>
+                                                       </select>
+                                               </div>
+                                               <?php foreach ( $inputs as $field ) : ?>
 								<div class="mb-3">
 										<label for="fig-<?php echo esc_attr( $field->name ); ?>" class="form-label"><?php echo esc_html( $field->label ); ?></label>
 										<div class="input-group">
@@ -282,9 +292,9 @@ class Figure_Submission_Form {
                                 <input type="email" class="form-control" id="cdc_email" name="cdc_email" />
                         </div>
                         <?php if ( $show_upload ) : ?>
-                        <div class="mb-3">
-                                <label for="cdc_soa_file" class="form-label"><?php esc_html_e( 'Upload Statement of Accounts (PDF)', 'council-debt-counters' ); ?></label>
-                                <input type="file" id="cdc_soa_file" name="cdc_soa_file" accept="application/pdf" class="form-control" />
+                       <div class="mb-3">
+                               <label for="cdc_soa_file" class="form-label"><?php esc_html_e( 'Upload Statement of Accounts (PDF, optional)', 'council-debt-counters' ); ?></label>
+                               <input type="file" id="cdc_soa_file" name="cdc_soa_file" accept="application/pdf" class="form-control" />
                                 <div class="row mt-2">
                                         <div class="col">
                                                 <select name="cdc_soa_type" class="form-select">

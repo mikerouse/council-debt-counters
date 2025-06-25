@@ -232,6 +232,31 @@ $readonly = true;
 </label>
 </td>
 </tr>
+<tr>
+<th scope="row"><label for="cdc-default-year"><?php esc_html_e( 'Default Financial Year', 'council-debt-counters' ); ?></label></th>
+<td>
+<?php $def_year_local = $council_id ? get_post_meta( $council_id, 'cdc_default_financial_year', true ) : ''; ?>
+<select name="cdc_default_financial_year" id="cdc-default-year" class="form-select">
+<?php foreach ( \CouncilDebtCounters\CDC_Utils::council_years( $council_id ) as $y ) : ?>
+<option value="<?php echo esc_attr( $y ); ?>" <?php selected( $def_year_local ? $def_year_local : get_option( 'cdc_default_financial_year', '2023/24' ), $y ); ?>><?php echo esc_html( $y ); ?></option>
+<?php endforeach; ?>
+</select>
+<p class="description"><?php esc_html_e( 'Shown by default on this council\'s page.', 'council-debt-counters' ); ?></p>
+</td>
+</tr>
+<tr>
+<th scope="row"><?php esc_html_e( 'Enabled Financial Years', 'council-debt-counters' ); ?></th>
+<td>
+<?php $enabled_years = $council_id ? (array) get_post_meta( $council_id, 'cdc_enabled_years', true ) : array(); ?>
+<?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="cdc-year-<?php echo esc_attr( $y ); ?>" name="cdc_enabled_years[]" value="<?php echo esc_attr( $y ); ?>" <?php checked( empty( $enabled_years ) || in_array( $y, $enabled_years, true ) ); ?> />
+        <label for="cdc-year-<?php echo esc_attr( $y ); ?>" class="form-check-label"><?php echo esc_html( $y ); ?></label>
+    </div>
+<?php endforeach; ?>
+<p class="description"><?php esc_html_e( 'Unchecked years will not be selectable on the front-end or in these tabs.', 'council-debt-counters' ); ?></p>
+</td>
+</tr>
 </table>
 </div>
 <?php endif; ?>
@@ -249,14 +274,14 @@ $readonly = true;
                                                 <div>
                                                         <label for="cdc-year-<?php echo esc_attr( $tab_key ); ?>" class="form-label me-2"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
                                                         <select class="form-select cdc-year-select d-inline w-auto" id="cdc-year-<?php echo esc_attr( $tab_key ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>">
-                                                                <?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+                                                                <?php foreach ( \CouncilDebtCounters\CDC_Utils::council_years( $council_id ) as $y ) : ?>
                                                                         <option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\CDC_Utils::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
                                                                 <?php endforeach; ?>
                                                         </select>
                                                 </div>
                                                 <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" id="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>" name="cdc_na_tab[<?php echo esc_attr( $tab_key ); ?>]" value="1" <?php checked( $na_tab_val, '1' ); ?>>
-                                                        <label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php esc_html_e( 'All N/A', 'council-debt-counters' ); ?></label>
+                                                        <label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php esc_html_e( 'Turn off this counter', 'council-debt-counters' ); ?></label>
                                                 </div>
                                         </div>
                                         <table class="form-table">
@@ -344,7 +369,7 @@ $readonly = true;
         <p class="description mt-2">
                 <label for="cdc-soa-year" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
                 <select id="cdc-soa-year" name="statement_of_accounts_year" class="form-select">
-                        <?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+                        <?php foreach ( \CouncilDebtCounters\CDC_Utils::council_years( $council_id ) as $y ) : ?>
                         <option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
                         <?php endforeach; ?>
                 </select>
@@ -384,9 +409,9 @@ $readonly = true;
 							<td><?php echo esc_html( $d->filename ); ?></td>
 							<td>
 								<select name="docs[<?php echo esc_attr( $d->id ); ?>][financial_year]">
-									<?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
-										<option value="<?php echo esc_attr( $y ); ?>" <?php selected( $d->financial_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
-									<?php endforeach; ?>
+                                                                    <?php foreach ( \CouncilDebtCounters\CDC_Utils::council_years( $council_id ) as $y ) : ?>
+                                                                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $d->financial_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                                    <?php endforeach; ?>
 								</select>
 							</td>
 							<td>

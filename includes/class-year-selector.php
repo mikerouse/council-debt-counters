@@ -50,7 +50,7 @@ class Year_Selector {
             'ajaxUrl' => admin_url( 'admin-ajax.php' ),
             'nonce'   => wp_create_nonce( self::NONCE ),
             'postId'  => get_the_ID(),
-            'years'   => Docs_Manager::financial_years(),
+            'years'   => CDC_Utils::council_years( get_the_ID() ),
             'current' => CDC_Utils::current_financial_year(),
         ] );
         $selector  = '<div class="cdc-year-selector mb-3"><label for="cdc-year-select" class="me-2">' . esc_html__( 'Financial Year', 'council-debt-counters' ) . '</label>';
