@@ -1,6 +1,8 @@
 <?php
 namespace CouncilDebtCounters;
 
+use CouncilDebtCounters\CDC_Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -10,14 +12,19 @@ class Counter_Manager {
     /**
      * Seconds since the start of the current financial year (1 April).
      */
-    public static function seconds_since_fy_start() : int {
-        $year = date( 'Y' );
-        $now  = time();
-        $start = strtotime( "$year-04-01" );
-        if ( $now < $start ) {
-            $start = strtotime( ( $year - 1 ) . '-04-01' );
+    public static function seconds_since_fy_start( string $year = '' ) : int {
+        if ( '' === $year ) {
+            $year = CDC_Utils::current_financial_year();
         }
-        return max( 0, $now - $start );
+        list( $start_year ) = explode( '/', $year );
+        $start_year = (int) $start_year;
+
+        $now   = time();
+        $start = strtotime( $start_year . '-04-01' );
+        $end   = strtotime( ( $start_year + 1 ) . '-04-01' );
+
+        $elapsed = max( 0, $now - $start );
+        return min( $elapsed, $end - $start );
     }
 
     /**

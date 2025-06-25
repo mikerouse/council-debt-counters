@@ -76,10 +76,11 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
 
 ## Available Shortcodes
 
-- `[council_counter id="…"]` – Animated per-council figures.  
-- `[total_debt_counter]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals.  
-- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.  
-- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables.  
+- `[council_counter id="…"]` – Animated per-council figures.
+- `[total_debt_counter]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals.
+- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.
+- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables.
+- All counter shortcodes accept a `year="YYYY/YY"` attribute to display figures for a specific financial year. Defaults to the current one.
 
 ---
 

@@ -60,12 +60,13 @@ class Shortcode_Renderer {
        }
 
 
-        private static function render_annual_counter( int $id, string $field, string $type = '', bool $with_details = true ) {
+        private static function render_annual_counter( int $id, string $field, string $type = '', bool $with_details = true, string $year = '' ) {
                 $enabled = (array) get_option( 'cdc_enabled_counters', array() );
                 if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
                         return '';
                 }
-               $raw_value = Custom_Fields::get_value( $id, $field );
+               $year      = $year ?: CDC_Utils::current_financial_year();
+               $raw_value = Custom_Fields::get_value_for_year( $id, $field, $year );
                $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
                $na_tab    = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
                $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
@@ -111,7 +112,7 @@ class Shortcode_Renderer {
                }
                 $annual  = (float) $raw_value;
                 $rate    = Counter_Manager::per_second_rate( $annual );
-                $current = $rate * Counter_Manager::seconds_since_fy_start();
+                $current = $rate * Counter_Manager::seconds_since_fy_start( $year );
 
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
@@ -385,40 +386,45 @@ class Shortcode_Renderer {
         }
 
         public static function render_spending_counter( $atts ) {
-                $id = CDC_Utils::resolve_council_id( $atts );
+                $id   = CDC_Utils::resolve_council_id( $atts );
+                $year = sanitize_text_field( $atts['year'] ?? '' );
                 if ( 0 === $id ) {
                         return '';
                 }
-                return self::render_annual_counter( $id, 'annual_spending', 'spending' );
+                return self::render_annual_counter( $id, 'annual_spending', 'spending', true, $year );
         }
 
         public static function render_deficit_counter( $atts ) {
-                $id = CDC_Utils::resolve_council_id( $atts );
+                $id   = CDC_Utils::resolve_council_id( $atts );
+                $year = sanitize_text_field( $atts['year'] ?? '' );
                 if ( 0 === $id ) {
                         return '';
                 }
-                return self::render_annual_counter( $id, 'annual_deficit', 'deficit' );
+                return self::render_annual_counter( $id, 'annual_deficit', 'deficit', true, $year );
         }
 
         public static function render_interest_counter( $atts ) {
-                $id = CDC_Utils::resolve_council_id( $atts );
+                $id   = CDC_Utils::resolve_council_id( $atts );
+                $year = sanitize_text_field( $atts['year'] ?? '' );
                 if ( 0 === $id ) {
                         return '';
                 }
-                return self::render_annual_counter( $id, 'interest_paid', 'interest' );
+                return self::render_annual_counter( $id, 'interest_paid', 'interest', true, $year );
         }
 
         public static function render_revenue_counter( $atts ) {
-                $id = CDC_Utils::resolve_council_id( $atts );
+                $id   = CDC_Utils::resolve_council_id( $atts );
+                $year = sanitize_text_field( $atts['year'] ?? '' );
                 if ( 0 === $id ) {
                         return '';
                 }
-                return self::render_annual_counter( $id, 'total_income', 'income' );
+                return self::render_annual_counter( $id, 'total_income', 'income', true, $year );
         }
 
         public static function render_custom_counter( $atts ) {
                 $id   = CDC_Utils::resolve_council_id( $atts );
                 $type = sanitize_key( $atts['type'] ?? '' );
+                $year = sanitize_text_field( $atts['year'] ?? '' );
                 if ( 0 === $id || '' === $type ) {
                         return '';
                 }
@@ -433,7 +439,7 @@ class Shortcode_Renderer {
                 if ( ! isset( $map[ $type ] ) ) {
                         return '';
                 }
-                return self::render_annual_counter( $id, $map[ $type ], $type );
+                return self::render_annual_counter( $id, $map[ $type ], $type, true, $year );
         }
 
         public static function render_share_buttons( $atts ) {
@@ -508,15 +514,16 @@ class Shortcode_Renderer {
          * @param string $type
          * @return bool|string
          */
-        private static function render_total_annual_counter( string $field, string $type = '' ) {
+        private static function render_total_annual_counter( string $field, string $type = '', string $year = '' ) {
                 $enabled = (array) get_option( 'cdc_enabled_counters', array() );
                 if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
                         return '';
                 }
 
-                $annual  = Custom_Fields::get_total_value( $field );
+                $year    = $year ?: CDC_Utils::current_financial_year();
+                $annual  = Custom_Fields::get_total_value_for_year( $field, $year );
                 $rate    = Counter_Manager::per_second_rate( $annual );
-                $current = $rate * Counter_Manager::seconds_since_fy_start();
+                $current = $rate * Counter_Manager::seconds_since_fy_start( $year );
 
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
@@ -563,24 +570,29 @@ class Shortcode_Renderer {
                 return ob_get_clean();
         }
 
-        public static function render_total_spending_counter() {
-                return self::render_total_annual_counter( 'annual_spending', 'spending' );
+        public static function render_total_spending_counter( $atts = [] ) {
+                $year = sanitize_text_field( $atts['year'] ?? '' );
+                return self::render_total_annual_counter( 'annual_spending', 'spending', $year );
         }
 
-        public static function render_total_deficit_counter() {
-                return self::render_total_annual_counter( 'annual_deficit', 'deficit' );
+        public static function render_total_deficit_counter( $atts = [] ) {
+                $year = sanitize_text_field( $atts['year'] ?? '' );
+                return self::render_total_annual_counter( 'annual_deficit', 'deficit', $year );
         }
 
-        public static function render_total_interest_counter() {
-                return self::render_total_annual_counter( 'interest_paid', 'interest' );
+        public static function render_total_interest_counter( $atts = [] ) {
+                $year = sanitize_text_field( $atts['year'] ?? '' );
+                return self::render_total_annual_counter( 'interest_paid', 'interest', $year );
         }
 
-        public static function render_total_revenue_counter() {
-                return self::render_total_annual_counter( 'total_income', 'income' );
+        public static function render_total_revenue_counter( $atts = [] ) {
+                $year = sanitize_text_field( $atts['year'] ?? '' );
+                return self::render_total_annual_counter( 'total_income', 'income', $year );
         }
 
         public static function render_total_custom_counter( $atts ) {
                 $type = sanitize_key( $atts['type'] ?? '' );
+                $year = sanitize_text_field( $atts['year'] ?? '' );
                 $map = array(
                         'reserves'    => 'usable_reserves',
                         'spending'    => 'annual_spending',
@@ -592,14 +604,16 @@ class Shortcode_Renderer {
                 if ( ! isset( $map[ $type ] ) ) {
                         return '';
                 }
-                return self::render_total_annual_counter( $map[ $type ], $type );
+                return self::render_total_annual_counter( $map[ $type ], $type, $year );
         }
 
-        public static function render_total_debt_counter() {
+        public static function render_total_debt_counter( $atts = [] ) {
                 $enabled = (array) get_option( 'cdc_enabled_counters', array() );
                 if ( ! in_array( 'debt', $enabled, true ) ) {
                         return '';
                 }
+
+                $year = sanitize_text_field( $atts['year'] ?? '' );
 
                 $posts = get_posts([
                         'post_type'   => 'council',
@@ -622,13 +636,13 @@ class Shortcode_Renderer {
 
                 $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
-                $year     = gmdate( 'Y' );
+                $year_str  = $year ?: CDC_Utils::current_financial_year();
+                list( $start_year ) = explode( '/', $year_str );
+                $start_year       = (int) $start_year;
                 $now      = time();
-                $fy_start = strtotime( "$year-04-01" );
-                if ( $now < $fy_start ) {
-                        $fy_start = strtotime( ( $year - 1 ) . '-04-01' );
-                }
-                $elapsed_seconds = max( 0, $now - $fy_start );
+                $fy_start = strtotime( $start_year . '-04-01' );
+                $end      = strtotime( ( $start_year + 1 ) . '-04-01' );
+                $elapsed_seconds = max( 0, min( $now, $end ) - $fy_start );
                 $start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
 
                 wp_enqueue_style( 'bootstrap-5' );

@@ -36,4 +36,14 @@ class CDC_Utils {
 
         return $id;
     }
+
+    /**
+     * Get the current financial year in "YYYY/YY" format.
+     */
+    public static function current_financial_year(): string {
+        $year  = (int) gmdate( 'Y' );
+        $start = ( gmdate( 'n' ) < 4 ) ? $year - 1 : $year;
+        $end   = $start + 1;
+        return sprintf( '%d/%02d', $start, $end % 100 );
+    }
 }

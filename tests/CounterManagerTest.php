@@ -13,7 +13,9 @@ class CounterManagerTest extends TestCase
         if ($now < $start) {
             $start = strtotime(($year - 1) . '-04-01');
         }
-        $expected = max(0, $now - $start);
+        $end = strtotime((date('Y', $start) + 1) . '-04-01');
+        $elapsed = max(0, $now - $start);
+        $expected = min($elapsed, $end - $start);
         $this->assertSame($expected, Counter_Manager::seconds_since_fy_start());
     }
 }
