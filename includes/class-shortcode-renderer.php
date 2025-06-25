@@ -130,6 +130,38 @@ class Shortcode_Renderer {
                                 )
                         );
                 }
+
+                // If the raw value is £0.00, we should double check with the backend to ensure we have the correct value
+                if ( '0.00' === $raw_value || '0' === $raw_value ) {
+                        global $wpdb;
+                        $meta_key = $wpdb->esc_like( $field ) . '_';
+                        $year = CDC_Utils::current_financial_year();
+                        // Try to get the meta value for the current year, fallback to meta without year if not found
+                        $backend_value = $wpdb->get_var( $wpdb->prepare(
+                                        "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND (meta_key = %s OR meta_key = %s) ORDER BY meta_key = %s DESC LIMIT 1",
+                                        $id,
+                                        $field . '_' . $year,
+                                        $field,
+                                        $field . '_' . $year
+                        ) );
+                        if ( '' === $backend_value || null === $backend_value ) {
+                                // If the backend value is also empty, we show a warning message
+                                $label = $field;
+                                return sprintf(
+                                '<div class="alert alert-danger">%s</div>',
+                                esc_html(
+                                        sprintf(
+                                        /* translators: %s: Field label */
+                                                __( 'No %s figure found', 'council-debt-counters' ),
+                                                $label
+                                        )
+                                )
+                                );
+                        };
+                        // If the backend value is not empty, we use that as the raw value
+                        $raw_value = $backend_value;
+                }
+
                 // If we do have a figure, but the council has been taken over, we show the last figure as a static value (such as the outgoing council's debt)
                 if ( $parent ) {
                         return '<div class="cdc-counter-static fw-bold">£' . esc_html( number_format_i18n( (float) $raw_value, 2 ) ) . '</div>';
