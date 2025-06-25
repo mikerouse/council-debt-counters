@@ -66,7 +66,10 @@ class Shortcode_Renderer {
                 if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
                         return '';
                 }
-               $raw_value = Custom_Fields::get_value( $id, $field, CDC_Utils::current_financial_year() );
+                if ( CDC_Utils::is_under_review( $id ) ) {
+                        return '';
+                }
+                $raw_value = Custom_Fields::get_value( $id, $field, CDC_Utils::current_financial_year() );
                $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
                $na_tab    = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
                $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
@@ -241,9 +244,12 @@ class Shortcode_Renderer {
                        ),
                        $atts
                );
-              $id   = CDC_Utils::resolve_council_id( $atts );
+               $id   = CDC_Utils::resolve_council_id( $atts );
                $type = sanitize_key( $atts['type'] );
                if ( 0 === $id ) {
+                       return '';
+               }
+               if ( CDC_Utils::is_under_review( $id ) ) {
                        return '';
                }
                 if ( '' !== $type && 'debt' !== $type ) {
@@ -520,8 +526,7 @@ class Shortcode_Renderer {
                        return '';
                }
 
-               $flag = get_post_meta( $id, 'cdc_under_review', true );
-               if ( '1' !== $flag ) {
+               if ( ! CDC_Utils::is_under_review( $id ) ) {
                        return '';
                }
 
@@ -894,10 +899,13 @@ class Shortcode_Renderer {
         }
 
         public static function render_council_counters( $atts ) {
-                $id = CDC_Utils::resolve_council_id( $atts );
-                if ( 0 === $id ) {
-                        return '';
-                }
+               $id = CDC_Utils::resolve_council_id( $atts );
+               if ( 0 === $id ) {
+                       return '';
+               }
+               if ( CDC_Utils::is_under_review( $id ) ) {
+                       return self::render_missing_prompt( [ 'id' => $id ] );
+               }
 
                 $year   = get_post_meta( $id, 'cdc_default_financial_year', true );
                 if ( ! $year ) {

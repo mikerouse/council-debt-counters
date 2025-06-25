@@ -86,4 +86,21 @@ class CDC_Utils {
 
         return array_values( array_intersect( $years, $enabled ) );
     }
+
+    /**
+     * Determine if a council is marked as under review.
+     *
+     * @param int $council_id Council post ID.
+     * @return bool Whether the council is under review.
+     */
+    public static function is_under_review( int $council_id ): bool {
+        if ( ! $council_id ) {
+            return false;
+        }
+
+        $status = get_post_status( $council_id );
+        $flag   = get_post_meta( $council_id, 'cdc_under_review', true );
+
+        return ( 'under_review' === $status || '1' === $flag );
+    }
 }
