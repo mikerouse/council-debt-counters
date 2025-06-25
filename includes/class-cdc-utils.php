@@ -58,4 +58,32 @@ class CDC_Utils {
         $end   = $start + 1;
         return sprintf( '%d/%02d', $start, $end % 100 );
     }
+
+    /**
+     * Get the financial years enabled for a council.
+     *
+     * @param int $council_id Council post ID. Defaults to current post if viewing a council.
+     * @return array List of enabled year strings.
+     */
+    public static function council_years( int $council_id = 0 ) : array {
+        if ( 0 === $council_id && function_exists( '\is_singular' ) && \is_singular( 'council' ) ) {
+            $council_id = get_the_ID();
+        }
+
+        $years = [];
+        if ( class_exists( '\\CouncilDebtCounters\\Docs_Manager' ) && method_exists( '\\CouncilDebtCounters\\Docs_Manager', 'financial_years' ) ) {
+            $years = Docs_Manager::financial_years();
+        }
+
+        if ( ! $council_id ) {
+            return $years;
+        }
+
+        $enabled = get_post_meta( $council_id, 'cdc_enabled_years', true );
+        if ( ! is_array( $enabled ) || empty( $enabled ) ) {
+            return $years;
+        }
+
+        return array_values( array_intersect( $years, $enabled ) );
+    }
 }

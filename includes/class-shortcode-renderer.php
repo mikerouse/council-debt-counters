@@ -875,7 +875,7 @@ class Shortcode_Renderer {
                         <div class="cdc-year-selector mb-3">
                                 <label for="cdc-year-select-<?php echo esc_attr( $id ); ?>" class="me-2"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
                                 <select id="cdc-year-select-<?php echo esc_attr( $id ); ?>" class="form-select d-inline w-auto cdc-year-select">
-                                        <?php foreach ( Docs_Manager::financial_years() as $y ) : ?>
+                                        <?php foreach ( CDC_Utils::council_years( $id ) as $y ) : ?>
                                                 <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $year, $y ); ?>><?php echo esc_html( $y ); ?></option>
                                         <?php endforeach; ?>
                                 </select>
@@ -898,6 +898,10 @@ class Shortcode_Renderer {
                 $post = get_post( $post_id );
                 if ( ! $post || 'council' !== $post->post_type ) {
                         wp_send_json_error( array( 'message' => __( 'Not found.', 'council-debt-counters' ) ), 404 );
+                }
+                $allowed = CDC_Utils::council_years( $post_id );
+                if ( ! in_array( $year, $allowed, true ) ) {
+                        wp_send_json_error( array( 'message' => __( 'Invalid year.', 'council-debt-counters' ) ), 400 );
                 }
                 $html = self::render_counters_markup( $post_id, $year );
                 wp_send_json_success( array( 'html' => $html ) );
