@@ -540,7 +540,32 @@ class Shortcode_Renderer {
                        $replacement = (string) $calc_total;
                }
 
+               if ( '' !== $replacement && is_numeric( $replacement ) ) {
+                       self::reconcile_zero_value( $id, $field, $year, $replacement, $lines );
+               }
+
                return [ $replacement, implode( "\n", $lines ) ];
+       }
+
+       /**
+        * Update stored values when a valid replacement is found to maintain a single source of truth.
+        *
+        * @param int    $id    Council post ID.
+        * @param string $field Field name.
+        * @param string $year  Financial year.
+        * @param string $value Replacement value.
+        * @param array  $lines Log lines for debugging.
+        */
+       private static function reconcile_zero_value( int $id, string $field, string $year, string $value, array &$lines ) : void {
+               $current = Custom_Fields::get_value( $id, $field, $year );
+               if ( (string) $current !== (string) $value ) {
+                       $lines[] = 'Reconciled stored value from ' . var_export( $current, true ) . ' to ' . $value . '.';
+                       Custom_Fields::update_value( $id, $field, $value, $year );
+                       update_post_meta( $id, $field . '_' . $year, $value );
+                       update_post_meta( $id, $field, $value );
+               } else {
+                       $lines[] = 'Stored value already matches replacement.';
+               }
        }
 
         /**
