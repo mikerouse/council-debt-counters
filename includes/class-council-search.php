@@ -55,7 +55,7 @@ class Council_Search {
         Stats_Page::log_search( $query );
         $args = [
             'post_type'      => 'council',
-            'post_status'    => 'publish',
+            'post_status'    => [ 'publish', 'under_review' ],
             'posts_per_page' => -1,
             's'              => $query,
             'orderby'        => 'title',
