@@ -156,9 +156,6 @@ $readonly = true;
     <span class="input-group-text">&pound;</span>
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" data-initial-required="<?php echo $is_required ? '1' : '0'; ?>" type="number" step="0.01" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
     <?php if ( ! $readonly ) : ?>
-    <?php if ( ! $readonly ) : ?>
-    <?php if ( ! $readonly ) : ?>
-    <?php if ( ! $readonly ) : ?>
     <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
         <div class="input-group-text">
                 <div class="form-check">
@@ -167,9 +164,6 @@ $readonly = true;
                 </div>
         </div>
     <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
-    <?php endif; ?>
-    <?php endif; ?>
-    <?php endif; ?>
     <?php endif; ?>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
