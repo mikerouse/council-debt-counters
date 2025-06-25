@@ -110,11 +110,13 @@ class Custom_Fields {
             id bigint(20) NOT NULL AUTO_INCREMENT,
             council_id bigint(20) NOT NULL,
             field_id mediumint(9) NOT NULL,
+            financial_year varchar(9) NOT NULL,
             value longtext NULL,
             financial_year varchar(9) NOT NULL DEFAULT '" . CDC_Utils::current_financial_year() . "',
             PRIMARY KEY  (id),
             KEY council_id (council_id),
-            KEY field_id (field_id)
+            KEY field_id (field_id),
+            KEY financial_year (financial_year)
         ) $charset_collate;";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -145,11 +147,10 @@ class Custom_Fields {
 
         $values_table = $wpdb->prefix . self::TABLE_VALUES;
         if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $values_table ) ) === $values_table ) {
-            $v_columns = $wpdb->get_col( 'DESC ' . $values_table, 0 );
-            if ( ! in_array( 'financial_year', $v_columns, true ) ) {
-                $year = CDC_Utils::current_financial_year();
-                $wpdb->query( "ALTER TABLE $values_table ADD financial_year varchar(9) NOT NULL DEFAULT '$year'" );
-                $wpdb->query( "UPDATE $values_table SET financial_year = '2023/24'" );
+            $columns = $wpdb->get_col( 'DESC ' . $values_table, 0 );
+            if ( ! in_array( 'financial_year', $columns, true ) ) {
+                $wpdb->query( "ALTER TABLE $values_table ADD financial_year varchar(9) NOT NULL DEFAULT '" . CDC_Utils::current_financial_year() . "'" );
+                $wpdb->query( "ALTER TABLE $values_table ADD KEY financial_year (financial_year)" );
             }
         }
 
@@ -316,32 +317,39 @@ class Custom_Fields {
         }
     }
 
-    public static function get_value( int $council_id, string $name ) {
+    public static function get_value( int $council_id, string $name, string $financial_year = '' ) {
+        if ( empty( $financial_year ) ) {
+            $financial_year = CDC_Utils::current_financial_year();
+        }
         $field = self::get_field_by_name( $name );
         if ( ! $field ) {
             return '';
         }
         global $wpdb;
-        $raw = $wpdb->get_var( $wpdb->prepare( 'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d', $council_id, $field->id ) );
+        $raw = $wpdb->get_var( $wpdb->prepare( 'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d AND financial_year = %s', $council_id, $field->id, $financial_year ) );
         return maybe_unserialize( $raw );
     }
 
-    public static function update_value( int $council_id, string $name, $value ) {
+    public static function update_value( int $council_id, string $name, $value, string $financial_year = '' ) {
+        if ( empty( $financial_year ) ) {
+            $financial_year = CDC_Utils::current_financial_year();
+        }
         $field = self::get_field_by_name( $name );
         if ( ! $field ) {
             return false;
         }
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE_VALUES;
-        $existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . $table . ' WHERE council_id = %d AND field_id = %d', $council_id, $field->id ) );
+        $existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . $table . ' WHERE council_id = %d AND field_id = %d AND financial_year = %s', $council_id, $field->id, $financial_year ) );
         if ( $existing ) {
             $wpdb->update( $table, [ 'value' => maybe_serialize( $value ) ], [ 'id' => $existing ], [ '%s' ], [ '%d' ] );
         } else {
             $wpdb->insert( $table, [
                 'council_id' => $council_id,
                 'field_id'   => $field->id,
+                'financial_year' => $financial_year,
                 'value'      => maybe_serialize( $value ),
-            ], [ '%d', '%d', '%s' ] );
+            ], [ '%d', '%d', '%s', '%s' ] );
         }
         return true;
     }
@@ -349,7 +357,10 @@ class Custom_Fields {
     /**
      * Get the summed value of a field across all councils.
      */
-    public static function get_total_value( string $name ) : float {
+    public static function get_total_value( string $name, string $financial_year = '' ) : float {
+        if ( empty( $financial_year ) ) {
+            $financial_year = CDC_Utils::current_financial_year();
+        }
         $field = self::get_field_by_name( $name );
         if ( ! $field ) {
             return 0.0;
@@ -364,7 +375,7 @@ class Custom_Fields {
             if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
                 continue;
             }
-            $val = self::get_value( (int) $id, $name );
+            $val = self::get_value( (int) $id, $name, $financial_year );
             if ( is_numeric( $val ) ) {
                 $total += (float) $val;
             }
@@ -397,7 +408,7 @@ class Custom_Fields {
                     self::add_field( $key, $label, $type );
                 }
 
-                self::update_value( $post->ID, $key, $value );
+                self::update_value( $post->ID, $key, $value, CDC_Utils::current_financial_year() );
             }
         }
     }

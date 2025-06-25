@@ -344,8 +344,9 @@ class Docs_Manager {
         check_admin_referer( 'cdc_confirm_ai_figures' );
         $cid = intval( $_POST['council_id'] );
         $figures = (array) ( $_POST['figures'] ?? [] );
+        $year = CDC_Utils::current_financial_year();
         foreach ( $figures as $field => $value ) {
-            Custom_Fields::update_value( $cid, sanitize_key( $field ), sanitize_text_field( $value ) );
+            Custom_Fields::update_value( $cid, sanitize_key( $field ), sanitize_text_field( $value ), $year );
         }
         if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
             Council_Post_Type::calculate_total_debt( $cid );

@@ -38,9 +38,12 @@ class CDC_Utils {
     }
 
     /**
-     * Return the current financial year in the format YYYY/YY.
+     * Get the current financial year in YYYY/YY format.
      */
     public static function current_financial_year(): string {
+        if ( class_exists( '\\CouncilDebtCounters\\Docs_Manager' ) && method_exists( '\\CouncilDebtCounters\\Docs_Manager', 'current_financial_year' ) ) {
+            return Docs_Manager::current_financial_year();
+        }
         $year  = (int) date( 'Y' );
         $start = ( date( 'n' ) < 4 ) ? $year - 1 : $year;
         $end   = $start + 1;

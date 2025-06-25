@@ -43,9 +43,10 @@ class Figure_Submissions_Page {
 		$cid     = (int) get_post_meta( $id, 'council_id', true );
 		$figures = get_post_meta( $id, 'figures', true );
 		if ( is_array( $figures ) && 0 !== $cid ) {
-			foreach ( $figures as $key => $val ) {
-					Custom_Fields::update_value( $cid, $key, $val );
-			}
+                        $year = CDC_Utils::current_financial_year();
+                        foreach ( $figures as $key => $val ) {
+                                        Custom_Fields::update_value( $cid, $key, $val, $year );
+                        }
 			wp_update_post(
 				array(
 					'ID'          => $id,
@@ -84,13 +85,14 @@ class Figure_Submissions_Page {
 			$figures = (array) get_post_meta( $id, 'figures', true );
 			$choices = $_POST['use'] ?? array();
 			$changed = array();
-		if ( $cid ) {
-			foreach ( $figures as $key => $val ) {
-				if ( isset( $choices[ $key ] ) && 'submitted' === $choices[ $key ] ) {
-					Custom_Fields::update_value( $cid, $key, $val );
-					$changed[] = $key;
-				}
-			}
+                if ( $cid ) {
+                        $year = CDC_Utils::current_financial_year();
+                        foreach ( $figures as $key => $val ) {
+                                if ( isset( $choices[ $key ] ) && 'submitted' === $choices[ $key ] ) {
+                                        Custom_Fields::update_value( $cid, $key, $val, $year );
+                                        $changed[] = $key;
+                                }
+                        }
 				wp_update_post(
 					array(
 						'ID'          => $id,
@@ -214,7 +216,7 @@ class Figure_Submissions_Page {
 										if ( $field ) {
 												$label = $field->label;
 										}
-											$current = $cid ? Custom_Fields::get_value( $cid, $key ) : '';
+                                                                               $current = $cid ? Custom_Fields::get_value( $cid, $key, CDC_Utils::current_financial_year() ) : '';
 											$source  = $sources[ $key ] ?? '';
 										?>
 												<tr>
