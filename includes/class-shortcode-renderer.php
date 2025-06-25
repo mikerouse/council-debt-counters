@@ -61,65 +61,88 @@ class Shortcode_Renderer {
        }
 
 
+        /**
+         * Render an annual counter for a specific type of financial data relating to a council.
+         * @param int $id
+         * @param string $field
+         * @param string $type
+         * @param bool $with_details
+         * @return bool|string
+         */
         private static function render_annual_counter( int $id, string $field, string $type = '', bool $with_details = true ) {
+                // Check if the tab is enabled and don't show the counter if it is not
                 $enabled = (array) get_option( 'cdc_enabled_counters', array() );
                 if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
                         return '';
                 }
+                // Check if the council is under review and don't show the counter if it is
                 if ( CDC_Utils::is_under_review( $id ) ) {
                         return '';
                 }
+                // Get the raw value for the field
                 $raw_value = Custom_Fields::get_value( $id, $field, CDC_Utils::current_financial_year() );
-               $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
-               $na_tab    = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
-               $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
-               if ( $na_tab ) {
-                       return '';
-               }
-               if ( $na_field ) {
-                       $obj   = Custom_Fields::get_field_by_name( $field );
-                       $label = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-                       $map   = [
-                               'debt'        => __( 'Debt figures not available', 'council-debt-counters' ),
-                               'spending'    => __( 'Spending figures not available', 'council-debt-counters' ),
-                               'income'      => __( 'Income figures not available', 'council-debt-counters' ),
-                               'deficit'     => __( 'Deficit figures not available', 'council-debt-counters' ),
-                               'interest'    => __( 'Interest payments not available', 'council-debt-counters' ),
-                               'reserves'    => __( 'Reserves figures not available', 'council-debt-counters' ),
-                               'consultancy' => __( 'Consultancy spend figures not available', 'council-debt-counters' ),
-                       ];
-                       $msg = $map[ $type ] ?? sprintf( __( '%s not available', 'council-debt-counters' ), $label );
-                       return '<div class="alert alert-warning">' . esc_html( $msg ) . '</div>';
-               }
-               if ( '' === $raw_value || null === $raw_value ) {
-                       if ( $parent ) {
-                               return '<div class="alert alert-warning">' . esc_html__( 'No longer applicable', 'council-debt-counters' ) . '</div>';
-                       }
-                       $label = $field;
-                       $obj   = Custom_Fields::get_field_by_name( $field );
-                       if ( $obj && ! empty( $obj->label ) ) {
-                               $label = $obj->label;
-                       } else {
-                               $label = ucwords( str_replace( '_', ' ', $label ) );
-                       }
-                       return sprintf(
-                               '<div class="alert alert-danger">%s</div>',
-                               esc_html(
-                                       sprintf(
-                                       /* translators: %s: Field label */
-                                               __( 'No %s figure found for this council. Please set this value in the admin area.', 'council-debt-counters' ),
-                                               $label
-                                       )
-                               )
-                       );
-               }
-               if ( $parent ) {
-                       return '<div class="cdc-counter-static fw-bold">£' . esc_html( number_format_i18n( (float) $raw_value, 2 ) ) . '</div>';
-               }
+                // Get a parent council ID if this is a child council (if the council is a child it means the council has been taken over and no longer exists)
+                $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
+                // If the tab is set to 'Do not show this counter' we don't need to show this counter
+                $dont_show_this_counter = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
+                if ( $dont_show_this_counter ) {
+                        return '';
+                }
+                // If the field is not set, check if it is marked as not applicable (this is for cases where we can't find the figure or the council doesn't report it but it's still a valid field)
+                $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
+                if ( $na_field ) {
+                        // If the field is marked as not applicable, we show a warning message
+                        $obj   = Custom_Fields::get_field_by_name( $field );
+                        $label = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
+                        $map   = [
+                                'debt'        => __( 'Debt figures not available', 'council-debt-counters' ),
+                                'spending'    => __( 'Expenditure figures not available', 'council-debt-counters' ),
+                                'income'      => __( 'Income figures not available', 'council-debt-counters' ),
+                                'deficit'     => __( 'Reported deficit figures not available', 'council-debt-counters' ),
+                                'interest'    => __( 'Interest payments not available', 'council-debt-counters' ),
+                                'reserves'    => __( 'Reserves figures not available', 'council-debt-counters' ),
+                                'consultancy' => __( 'Consultancy spend figures not available', 'council-debt-counters' ),
+                        ];
+                        $msg = $map[ $type ] ?? sprintf( __( '%s not available', 'council-debt-counters' ), $label );
+                        return '<div class="alert alert-warning m-1">' . esc_html( $msg ) . '</div>';
+                }
+                // If the raw value is empty or null, we show a warning message
+                if ( '' === $raw_value || null === $raw_value ) {
+                        // If there is no figure because the council has been taken over
+                        if ( $parent ) {
+                                return '<div class="alert alert-info">' . esc_html__( 'No Longer Exists', 'council-debt-counters' ) . '</div>';
+                        }
+                        $label = $field;
+                        $obj   = Custom_Fields::get_field_by_name( $field );
+                        if ( $obj && ! empty( $obj->label ) ) {
+                                $label = $obj->label;
+                        } else {
+                                $label = ucwords( str_replace( '_', ' ', $label ) );
+                        }
+                        return sprintf(
+                                '<div class="alert alert-danger">%s</div>',
+                                esc_html(
+                                        sprintf(
+                                        /* translators: %s: Field label */
+                                                __( 'No %s figure found', 'council-debt-counters' ),
+                                                $label
+                                        )
+                                )
+                        );
+                }
+                // If we do have a figure, but the council has been taken over, we show the last figure as a static value (such as the outgoing council's debt)
+                if ( $parent ) {
+                        return '<div class="cdc-counter-static fw-bold">£' . esc_html( number_format_i18n( (float) $raw_value, 2 ) ) . '</div>';
+                }
+
+                // The annual figure is assumed to be spread evenly over the financial year, which starts on 1 April.
                 $annual  = (float) $raw_value;
+                // The rate of increase per second is calculated from the annual figure spread over the seconds in the financial year.
                 $rate    = Counter_Manager::per_second_rate( $annual );
+                // The current value is the rate of growth multiplied by the number of seconds since the start of the financial year.
                 $current = $rate * Counter_Manager::seconds_since_fy_start();
 
+                // Enqueue the necessary styles and scripts
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
                 wp_enqueue_style( 'cdc-counter-font' );
@@ -127,12 +150,14 @@ class Shortcode_Renderer {
                 wp_enqueue_script( 'bootstrap-5' );
                 wp_enqueue_script( 'cdc-counter-animations' );
 
+                // Prepare the counter ID, class, label, and title (e.g. "Debt", "Spending", etc.)
                 $counter_id    = 'cdc-counter-' . $id . '-' . sanitize_html_class( $field );
                 $counter_class = 'cdc-counter-' . sanitize_html_class( $field );
                 $obj           = Custom_Fields::get_field_by_name( $field );
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-               $title         = self::counter_title( $type ?: $field );
+                $title         = self::counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
+                // Prepare the HTML output for the counter
                 ob_start();
                 ?>
                 <div class="cdc-counter-title text-center">
@@ -236,6 +261,11 @@ class Shortcode_Renderer {
                 );
         }
 
+       /**
+        *  Render a shortcode for displaying a council counter.
+        * @param mixed $atts
+        * @return bool|string
+        */
        public static function render_counter( $atts ) {
                $atts = shortcode_atts(
                        array(
