@@ -1,3 +1,10 @@
+#cdc-toolbar {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+}
+
 #cdc-toolbar .btn {
     white-space: nowrap;
 }

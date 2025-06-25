@@ -161,7 +161,16 @@ class Figure_Submission_Form {
                 if ( $auto && $cid ) {
                         foreach ( $clean as $key => $val ) {
                                 Custom_Fields::update_value( $cid, $key, $val, $fig_year );
+                                delete_post_meta( $cid, 'cdc_na_' . $key );
+                                $tab = Custom_Fields::get_field_tab( $key );
+                                delete_post_meta( $cid, 'cdc_na_tab_' . $tab );
                         }
+                        foreach ( (array) get_option( 'cdc_enabled_counters', array() ) as $tab_key ) {
+                                delete_post_meta( $cid, 'cdc_na_tab_' . $tab_key );
+                        }
+                        wp_update_post( [ 'ID' => $cid, 'post_status' => 'publish' ] );
+                        delete_post_meta( $cid, 'cdc_under_review' );
+
                         wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
                         update_post_meta( $post_id, 'auto_approved', '1' );
                 }
@@ -213,7 +222,11 @@ class Figure_Submission_Form {
                 }
 
                 Error_Logger::log_info( 'Figure submission submitted via AJAX with ID ' . $result );
-                wp_send_json_success( __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ) );
+                $msg = __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' );
+                if ( ! empty( $_POST['cdc_auto_approve'] ) ) {
+                        $msg = __( 'Thank you for submitting these figures. Please allow a few minutes for them to be published', 'council-debt-counters' );
+                }
+                wp_send_json_success( $msg );
         }
 
        public static function render_form( $atts = array() ) {
@@ -230,17 +243,21 @@ class Figure_Submission_Form {
 				wp_enqueue_style( 'bootstrap-5' );
 				wp_enqueue_script( 'bootstrap-5' );
 				wp_enqueue_script( 'cdc-figure-form', plugins_url( 'public/js/figure-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), array(), '0.1.0', true );
-				wp_localize_script(
-					'cdc-figure-form',
-					'cdcFig',
-					array(
-						'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-						'siteKey'    => $site_key,
-						'success'    => __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ),
-						'failure'    => __( 'Submission failed. Please try again.', 'council-debt-counters' ),
-						'submitting' => __( 'Submitting', 'council-debt-counters' ),
-					)
-				);
+                                $success_msg = __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' );
+                                if ( $auto_approve ) {
+                                        $success_msg = __( 'Thank you for submitting these figures. Please allow a few minutes for them to be published', 'council-debt-counters' );
+                                }
+                                wp_localize_script(
+                                        'cdc-figure-form',
+                                        'cdcFig',
+                                        array(
+                                                'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+                                                'siteKey'    => $site_key,
+                                                'success'    => $success_msg,
+                                                'failure'    => __( 'Submission failed. Please try again.', 'council-debt-counters' ),
+                                                'submitting' => __( 'Submitting', 'council-debt-counters' ),
+                                        )
+                                );
                                 ob_start();
                                 $fields = Custom_Fields::get_fields();
                 $show_upload = false;

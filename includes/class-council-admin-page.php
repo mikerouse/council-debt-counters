@@ -135,6 +135,11 @@ class Council_Admin_Page {
         } else {
             $post_id = wp_insert_post( [ 'post_type' => 'council', 'post_status' => $status, 'post_title' => $title ] );
         }
+        if ( 'under_review' === $status ) {
+            update_post_meta( $post_id, 'cdc_under_review', '1' );
+        } else {
+            delete_post_meta( $post_id, 'cdc_under_review' );
+        }
 
         $na_flags = $_POST['cdc_na'] ?? array();
         foreach ( $fields as $field ) {
@@ -282,6 +287,11 @@ class Council_Admin_Page {
                 $status = 'publish';
             }
             wp_update_post( [ 'ID' => $post_id, 'post_status' => $status ] );
+            if ( 'under_review' === $status ) {
+                update_post_meta( $post_id, 'cdc_under_review', '1' );
+            } else {
+                delete_post_meta( $post_id, 'cdc_under_review' );
+            }
             $message_parts[] = __( 'Status updated.', 'council-debt-counters' );
         }
 
