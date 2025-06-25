@@ -44,6 +44,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-council-search.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-year-selector.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-stats-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-sharing-meta.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-year-maintenance.php';
 
 register_activation_hook(
 	__FILE__,
@@ -89,7 +90,8 @@ add_action(
                 \CouncilDebtCounters\Figure_Submissions_Page::init();
                 \CouncilDebtCounters\Figure_Submission_IPs_Page::init();
                 \CouncilDebtCounters\Sharing_Meta::init();
-	}
+                \CouncilDebtCounters\Year_Maintenance::init();
+        }
 );
 
 /**

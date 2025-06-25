@@ -3,6 +3,7 @@ namespace CouncilDebtCounters;
 
 use CouncilDebtCounters\Custom_Fields;
 use CouncilDebtCounters\CDC_Utils;
+use CouncilDebtCounters\Figure_Submission_Form;
 
 if ( ! defined( 'ABSPATH' ) ) {
         exit;
@@ -179,6 +180,7 @@ class Shortcode_Renderer {
                 add_shortcode( 'cdc_leaderboard', array( __CLASS__, 'render_leaderboard' ) );
                 add_shortcode( 'cdc_share_buttons', array( __CLASS__, 'render_share_buttons' ) );
                 add_shortcode( 'council_status', array( __CLASS__, 'render_status_message' ) );
+                add_shortcode( 'missing_data_prompt', array( __CLASS__, 'render_missing_prompt' ) );
                 add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
                 add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
                 add_action( 'wp_ajax_cdc_log_js', array( __CLASS__, 'ajax_log_js' ) );
@@ -219,6 +221,7 @@ class Shortcode_Renderer {
                 wp_register_script( 'font-awesome-kit', $fa_script, array(), null, false );
                 wp_register_script( 'cdc-council-counters', plugins_url( 'public/js/council-counters.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
                 wp_localize_script( 'cdc-council-counters', 'cdcCounters', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ) ) );
+                wp_register_script( 'cdc-fig-modal', plugins_url( 'public/js/figure-form-modal.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
         wp_localize_script(
                         'cdc-counter-animations',
                         'CDC_LOGGER',
@@ -492,7 +495,7 @@ class Shortcode_Renderer {
                 return ob_get_clean();
         }
 
-        public static function render_status_message( $atts ) {
+       public static function render_status_message( $atts ) {
                 $id = CDC_Utils::resolve_council_id( $atts );
                 if ( 0 === $id ) {
                         return '';
@@ -509,6 +512,47 @@ class Shortcode_Renderer {
                 $type = in_array( $type, array( 'info', 'warning', 'danger' ), true ) ? $type : 'info';
 
                return sprintf( '<div class="alert alert-%1$s" role="status">%2$s</div>', esc_attr( $type ), wp_kses_post( $message ) );
+       }
+
+       public static function render_missing_prompt( $atts ) {
+               $id = CDC_Utils::resolve_council_id( $atts );
+               if ( 0 === $id ) {
+                       return '';
+               }
+
+               $flag = get_post_meta( $id, 'cdc_under_review', true );
+               if ( '1' !== $flag ) {
+                       return '';
+               }
+
+               wp_enqueue_style( 'bootstrap-5' );
+               wp_enqueue_script( 'bootstrap-5' );
+               wp_enqueue_script( 'cdc-figure-form' );
+               wp_enqueue_script( 'cdc-fig-modal' );
+
+               $form = Figure_Submission_Form::render_form( [ 'id' => $id, 'no_sources' => true, 'auto_approve' => true ] );
+
+               ob_start();
+               ?>
+               <div class="alert alert-info">
+                       <?php esc_html_e( 'This council is awaiting review. Help us build the UK\'s only public database of key financial figures for local government.', 'council-debt-counters' ); ?>
+                       <a href="#" class="cdc-open-fig-modal ms-1"><?php esc_html_e( 'Click or tap here to submit the figures for this council', 'council-debt-counters' ); ?></a>
+               </div>
+               <div class="modal fade" id="cdc-fig-modal" tabindex="-1" aria-hidden="true">
+                       <div class="modal-dialog modal-dialog-centered">
+                               <div class="modal-content">
+                                       <div class="modal-header">
+                                               <h5 class="modal-title"><?php esc_html_e( 'Submit Figures', 'council-debt-counters' ); ?></h5>
+                                               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                       </div>
+                                       <div class="modal-body">
+                                               <?php echo $form; ?>
+                                       </div>
+                               </div>
+                       </div>
+               </div>
+               <?php
+               return ob_get_clean();
        }
 
         /**
