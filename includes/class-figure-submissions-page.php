@@ -40,10 +40,13 @@ class Figure_Submissions_Page {
 		if ( ! $post || Figure_Submission_Form::CPT !== $post->post_type ) {
 				wp_die( esc_html__( 'Submission not found.', 'council-debt-counters' ) );
 		}
-		$cid     = (int) get_post_meta( $id, 'council_id', true );
-		$figures = get_post_meta( $id, 'figures', true );
-		if ( is_array( $figures ) && 0 !== $cid ) {
-                        $year = CDC_Utils::current_financial_year();
+                $cid     = (int) get_post_meta( $id, 'council_id', true );
+                $figures = get_post_meta( $id, 'figures', true );
+                if ( is_array( $figures ) && 0 !== $cid ) {
+                        $year = get_post_meta( $id, 'financial_year', true );
+                        if ( '' === $year ) {
+                                $year = CDC_Utils::current_financial_year();
+                        }
                         foreach ( $figures as $key => $val ) {
                                         Custom_Fields::update_value( $cid, $key, $val, $year );
                         }
@@ -86,7 +89,10 @@ class Figure_Submissions_Page {
 			$choices = $_POST['use'] ?? array();
 			$changed = array();
                 if ( $cid ) {
-                        $year = CDC_Utils::current_financial_year();
+                        $year = get_post_meta( $id, 'financial_year', true );
+                        if ( '' === $year ) {
+                                $year = CDC_Utils::current_financial_year();
+                        }
                         foreach ( $figures as $key => $val ) {
                                 if ( isset( $choices[ $key ] ) && 'submitted' === $choices[ $key ] ) {
                                         Custom_Fields::update_value( $cid, $key, $val, $year );
@@ -139,23 +145,26 @@ class Figure_Submissions_Page {
 			<?php else : ?>
 			<table class="widefat fixed striped">
 				<thead>
-					<tr>
-						<th><?php esc_html_e( 'Date', 'council-debt-counters' ); ?></th>
-						<th><?php esc_html_e( 'Council', 'council-debt-counters' ); ?></th>
-						<th><?php esc_html_e( 'Figures', 'council-debt-counters' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
-					</tr>
+                                        <tr>
+                                                <th><?php esc_html_e( 'Date', 'council-debt-counters' ); ?></th>
+                                                <th><?php esc_html_e( 'Council', 'council-debt-counters' ); ?></th>
+                                                <th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th>
+                                                <th><?php esc_html_e( 'Figures', 'council-debt-counters' ); ?></th>
+                                                <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
+                                        </tr>
 				</thead>
 				<tbody>
 				<?php foreach ( $subs as $s ) : ?>
-					<?php $cid = (int) get_post_meta( $s->ID, 'council_id', true ); ?>
-					<?php $figs = get_post_meta( $s->ID, 'figures', true ); ?>
-					<tr>
-						<td><?php echo esc_html( get_the_date( '', $s ) ); ?></td>
-						<td><?php echo $cid ? esc_html( get_the_title( $cid ) ) : ''; ?></td>
-						<td>
-							<?php
-							if ( is_array( $figs ) ) {
+                                        <?php $cid  = (int) get_post_meta( $s->ID, 'council_id', true ); ?>
+                                        <?php $figs = get_post_meta( $s->ID, 'figures', true ); ?>
+                                        <?php $yr   = get_post_meta( $s->ID, 'financial_year', true ); ?>
+                                        <tr>
+                                                <td><?php echo esc_html( get_the_date( '', $s ) ); ?></td>
+                                                <td><?php echo $cid ? esc_html( get_the_title( $cid ) ) : ''; ?></td>
+                                                <td><?php echo esc_html( $yr ); ?></td>
+                                                <td>
+                                                        <?php
+                                                        if ( is_array( $figs ) ) {
 								foreach ( $figs as $k => $v ) {
 									echo '<div>' . esc_html( $k . ': ' . $v ) . '</div>';
 								}
@@ -188,13 +197,15 @@ class Figure_Submissions_Page {
 		}
 			$cid     = (int) get_post_meta( $id, 'council_id', true );
 			$figures = (array) get_post_meta( $id, 'figures', true );
-			$sources = (array) get_post_meta( $id, 'sources', true );
-			$ip      = get_post_meta( $id, 'ip_address', true );
+                        $sources = (array) get_post_meta( $id, 'sources', true );
+                        $ip      = get_post_meta( $id, 'ip_address', true );
+                        $yr      = get_post_meta( $id, 'financial_year', true );
 		?>
 				<div class="wrap">
 						<h1><?php esc_html_e( 'Review Submission', 'council-debt-counters' ); ?></h1>
 						<p><strong><?php esc_html_e( 'Council:', 'council-debt-counters' ); ?></strong> <?php echo $cid ? esc_html( get_the_title( $cid ) ) : esc_html__( 'Unknown', 'council-debt-counters' ); ?></p>
-						<p><strong><?php esc_html_e( 'IP Address:', 'council-debt-counters' ); ?></strong> <?php echo esc_html( $ip ); ?></p>
+                                                <p><strong><?php esc_html_e( 'IP Address:', 'council-debt-counters' ); ?></strong> <?php echo esc_html( $ip ); ?></p>
+                                                <p><strong><?php esc_html_e( 'Financial Year:', 'council-debt-counters' ); ?></strong> <?php echo esc_html( $yr ); ?></p>
 						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 								<input type="hidden" name="action" value="cdc_fig_review" />
 								<input type="hidden" name="id" value="<?php echo esc_attr( $id ); ?>" />
@@ -216,7 +227,7 @@ class Figure_Submissions_Page {
 										if ( $field ) {
 												$label = $field->label;
 										}
-                                                                               $current = $cid ? Custom_Fields::get_value( $cid, $key, CDC_Utils::current_financial_year() ) : '';
+                                                                               $current = $cid ? Custom_Fields::get_value( $cid, $key, $yr ?: CDC_Utils::current_financial_year() ) : '';
 											$source  = $sources[ $key ] ?? '';
 										?>
 												<tr>

@@ -115,6 +115,7 @@ class Figure_Submission_Form {
                 }
                 $note                  = sanitize_textarea_field( wp_unslash( $_POST['cdc_note'] ?? '' ) );
                 $email                 = sanitize_email( wp_unslash( $_POST['cdc_email'] ?? '' ) );
+                $fig_year      = sanitize_text_field( wp_unslash( $_POST['cdc_fig_year'] ?? \CouncilDebtCounters\Docs_Manager::current_financial_year() ) );
                 $figures       = $_POST['cdc_figures'] ?? array();
                 $sources       = $_POST['cdc_sources'] ?? array();
                 $clean         = array();
@@ -155,6 +156,7 @@ class Figure_Submission_Form {
                                 update_post_meta( $post_id, 'contact_email', $email );
                 }
                 update_post_meta( $post_id, 'ip_address', $ip );
+                update_post_meta( $post_id, 'financial_year', $fig_year );
                 if ( $has_file && $cid ) {
                         Error_Logger::log_debug( 'SoA uploaded via correction form from ' . $ip );
                         $year = sanitize_text_field( wp_unslash( $_POST['cdc_soa_year'] ?? \CouncilDebtCounters\Docs_Manager::current_financial_year() ) );
@@ -280,6 +282,14 @@ class Figure_Submission_Form {
                         <div class="mb-3">
                                 <label for="cdc_email" class="form-label"><?php esc_html_e( 'Email (optional)', 'council-debt-counters' ); ?></label>
                                 <input type="email" class="form-control" id="cdc_email" name="cdc_email" />
+                        </div>
+                        <div class="mb-3">
+                                <label for="cdc_fig_year" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                <select name="cdc_fig_year" id="cdc_fig_year" class="form-select">
+                                        <?php foreach ( Docs_Manager::financial_years() as $y ) : ?>
+                                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( Docs_Manager::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                        <?php endforeach; ?>
+                                </select>
                         </div>
                         <?php if ( $show_upload ) : ?>
                         <div class="mb-3">
