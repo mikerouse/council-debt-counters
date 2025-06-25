@@ -69,7 +69,10 @@ class Shortcode_Renderer {
                $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
                $na_tab    = $type ? get_post_meta( $id, 'cdc_na_tab_' . $type, true ) : '';
                $na_field  = get_post_meta( $id, 'cdc_na_' . $field, true );
-               if ( $na_tab || $na_field ) {
+               if ( $na_tab ) {
+                       return '';
+               }
+               if ( $na_field ) {
                        $obj   = Custom_Fields::get_field_by_name( $field );
                        $label = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
                        $map   = [
@@ -251,11 +254,7 @@ class Shortcode_Renderer {
 
                $na_tab = get_post_meta( $id, 'cdc_na_tab_debt', true );
                if ( $na_tab ) {
-                       wp_enqueue_style( 'bootstrap-5' );
-                       wp_enqueue_style( 'cdc-counter' );
-                       wp_enqueue_style( 'cdc-counter-font' );
-                       wp_enqueue_script( 'font-awesome-kit' );
-                       return '<div class="cdc-counter-static display-4 fw-bold">&pound;??.??</div>';
+                       return '';
                }
 
                $total  = Custom_Fields::get_value( $id, 'total_debt', CDC_Utils::current_financial_year() );
