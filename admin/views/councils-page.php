@@ -245,13 +245,21 @@ $readonly = true;
 				$na_tab_val = $council_id ? get_post_meta( $council_id, 'cdc_na_tab_' . $tab_key, true ) : '';
 				?>
 				<div class="tab-pane" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
-					<div class="d-flex justify-content-end">
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>" name="cdc_na_tab[<?php echo esc_attr( $tab_key ); ?>]" value="1" <?php checked( $na_tab_val, '1' ); ?>>
-							<label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php esc_html_e( 'All N/A', 'council-debt-counters' ); ?></label>
-						</div>
-					</div>
-					<table class="form-table">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                        <label for="cdc-year-<?php echo esc_attr( $tab_key ); ?>" class="form-label me-2"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
+                                                        <select class="form-select cdc-year-select d-inline w-auto" id="cdc-year-<?php echo esc_attr( $tab_key ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>">
+                                                                <?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+                                                                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\CDC_Utils::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                                                <?php endforeach; ?>
+                                                        </select>
+                                                </div>
+                                                <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>" name="cdc_na_tab[<?php echo esc_attr( $tab_key ); ?>]" value="1" <?php checked( $na_tab_val, '1' ); ?>>
+                                                        <label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php esc_html_e( 'All N/A', 'council-debt-counters' ); ?></label>
+                                                </div>
+                                        </div>
+                                        <table class="form-table">
 						<tbody>
 							<?php
 							foreach ( $tab_fields as $field ) :

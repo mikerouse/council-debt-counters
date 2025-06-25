@@ -146,6 +146,14 @@ class Settings_Page {
                 );
                 register_setting(
                         'cdc_settings',
+                        'cdc_default_financial_year',
+                        array(
+                                'type'    => 'string',
+                                'default' => '2023/24',
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
                         'cdc_default_sharing_thumbnail',
                         array(
                                 'type'              => 'integer',

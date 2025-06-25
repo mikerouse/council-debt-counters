@@ -129,6 +129,44 @@
         }
         updateTabState();
 
+        // When a year is picked, pull the values for that year and
+        // update all fields on the selected tab.
+        document.querySelectorAll('.cdc-year-select').forEach(function(sel){
+            sel.addEventListener('change', function(){
+                var tab = sel.getAttribute('data-tab');
+                var overlay = document.createElement('div');
+                overlay.id = 'cdc-year-overlay';
+                overlay.innerHTML = '<span class="spinner is-active"></span>';
+                document.body.appendChild(overlay);
+                var data = new FormData();
+                data.append('action','cdc_get_year_values');
+                data.append('post_id', cdcToolbarData.id);
+                data.append('tab', tab);
+                data.append('year', sel.value);
+                data.append('nonce', cdcToolbarData.nonce);
+                fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                    .then(function(r){return r.json();})
+                    .then(function(res){
+                        if(res.success && res.data){
+                            Object.keys(res.data.values).forEach(function(name){
+                                var input=document.querySelector('#tab-'+tab+' [data-cdc-field="'+name+'"]');
+                                if(input){
+                                    input.value=res.data.values[name];
+                                    input.dispatchEvent(new Event('input'));
+                                }
+                                var cb=document.getElementById('cdc-na-'+name);
+                                if(cb){
+                                    cb.checked=res.data.na[name]=='1';
+                                    cb.dispatchEvent(new Event('change'));
+                                }
+                            });
+                        }
+                        overlay.remove();
+                    })
+                    .catch(function(){ overlay.remove(); });
+            });
+        });
+
         document.querySelectorAll('input[type="number"]').forEach(function(field) {
             // Only add helper if field represents a monetary value
             var meta = field.getAttribute('data-cdc-field') || '';
