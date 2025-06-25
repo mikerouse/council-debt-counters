@@ -60,10 +60,26 @@ class FakeWpdb {
     }
 
     public function get_var($query) {
+        if (preg_match('/SELECT id FROM \w*' . Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+) AND financial_year = '([^']+)'/", $query, $m)) {
+            foreach ($this->values as $row) {
+                if ($row['council_id'] == $m[1] && $row['field_id'] == $m[2] && $row['financial_year'] === $m[3]) {
+                    return $row['id'];
+                }
+            }
+            return null;
+        }
         if (preg_match('/SELECT id FROM \w*' . Custom_Fields::TABLE_VALUES . ' WHERE council_id = (\d+) AND field_id = (\d+)/', $query, $m)) {
             foreach ($this->values as $row) {
                 if ($row['council_id'] == $m[1] && $row['field_id'] == $m[2]) {
                     return $row['id'];
+                }
+            }
+            return null;
+        }
+        if (preg_match('/SELECT value FROM \w*' . Custom_Fields::TABLE_VALUES . " WHERE council_id = (\d+) AND field_id = (\d+) AND financial_year = '([^']+)'/", $query, $m)) {
+            foreach ($this->values as $row) {
+                if ($row['council_id'] == $m[1] && $row['field_id'] == $m[2] && $row['financial_year'] === $m[3]) {
+                    return $row['value'];
                 }
             }
             return null;
@@ -95,10 +111,12 @@ class CustomFieldsTest extends TestCase {
         $array = ['foo' => 'bar'];
         $object = (object)['baz' => 123];
 
-        $this->assertTrue(Custom_Fields::update_value(1, 'test_field', $array));
-        $this->assertSame($array, Custom_Fields::get_value(1, 'test_field'));
+        $year = \CouncilDebtCounters\CDC_Utils::current_financial_year();
 
-        $this->assertTrue(Custom_Fields::update_value(1, 'test_field', $object));
-        $this->assertEquals($object, Custom_Fields::get_value(1, 'test_field'));
+        $this->assertTrue(Custom_Fields::update_value(1, 'test_field', $array, $year));
+        $this->assertSame($array, Custom_Fields::get_value(1, 'test_field', $year));
+
+        $this->assertTrue(Custom_Fields::update_value(1, 'test_field', $object, $year));
+        $this->assertEquals($object, Custom_Fields::get_value(1, 'test_field', $year));
     }
 }

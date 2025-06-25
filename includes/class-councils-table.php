@@ -64,7 +64,7 @@ class Councils_Table extends \WP_List_Table {
     }
 
     protected function column_population( $item ) {
-        $pop = (int) Custom_Fields::get_value( $item->ID, 'population' );
+        $pop = (int) Custom_Fields::get_value( $item->ID, 'population', CDC_Utils::current_financial_year() );
         return $pop ? number_format_i18n( $pop ) : '&mdash;';
     }
 
@@ -88,11 +88,11 @@ class Councils_Table extends \WP_List_Table {
             $ids = array_map( 'intval', (array) $_POST['council'] );
             foreach ( $ids as $id ) {
                 $title = get_the_title( $id );
-                $meta  = Custom_Fields::get_value( $id, 'council_name' );
+                $meta  = Custom_Fields::get_value( $id, 'council_name', CDC_Utils::current_financial_year() );
                 if ( empty( $title ) && ! empty( $meta ) ) {
                     wp_update_post( [ 'ID' => $id, 'post_title' => $meta ] );
                 } elseif ( empty( $meta ) && ! empty( $title ) ) {
-                    Custom_Fields::update_value( $id, 'council_name', $title );
+                    Custom_Fields::update_value( $id, 'council_name', $title, CDC_Utils::current_financial_year() );
                 }
             }
             add_settings_error( 'cdc_messages', 'cdc_repair', __( 'Repair completed.', 'council-debt-counters' ), 'updated' );
@@ -156,8 +156,9 @@ class Councils_Table extends \WP_List_Table {
             usort(
                 $posts,
                 function ( $a, $b ) use ( $order ) {
-                    $val_a = (int) Custom_Fields::get_value( $a->ID, 'population' );
-                    $val_b = (int) Custom_Fields::get_value( $b->ID, 'population' );
+                    $year  = CDC_Utils::current_financial_year();
+                    $val_a = (int) Custom_Fields::get_value( $a->ID, 'population', $year );
+                    $val_b = (int) Custom_Fields::get_value( $b->ID, 'population', $year );
                     return 'asc' === $order ? $val_a <=> $val_b : $val_b <=> $val_a;
                 }
             );
