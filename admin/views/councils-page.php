@@ -232,6 +232,18 @@ $readonly = true;
 </label>
 </td>
 </tr>
+<tr>
+<th scope="row"><label for="cdc-default-year"><?php esc_html_e( 'Default Financial Year', 'council-debt-counters' ); ?></label></th>
+<td>
+<?php $def_year_local = $council_id ? get_post_meta( $council_id, 'cdc_default_financial_year', true ) : ''; ?>
+<select name="cdc_default_financial_year" id="cdc-default-year" class="form-select">
+<?php foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) : ?>
+<option value="<?php echo esc_attr( $y ); ?>" <?php selected( $def_year_local ? $def_year_local : get_option( 'cdc_default_financial_year', '2023/24' ), $y ); ?>><?php echo esc_html( $y ); ?></option>
+<?php endforeach; ?>
+</select>
+<p class="description"><?php esc_html_e( 'Shown by default on this council\'s page.', 'council-debt-counters' ); ?></p>
+</td>
+</tr>
 </table>
 </div>
 <?php endif; ?>
@@ -256,7 +268,7 @@ $readonly = true;
                                                 </div>
                                                 <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" id="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>" name="cdc_na_tab[<?php echo esc_attr( $tab_key ); ?>]" value="1" <?php checked( $na_tab_val, '1' ); ?>>
-                                                        <label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php esc_html_e( 'All N/A', 'council-debt-counters' ); ?></label>
+                                                        <label class="form-check-label" for="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>"><?php esc_html_e( 'Turn off this counter', 'council-debt-counters' ); ?></label>
                                                 </div>
                                         </div>
                                         <table class="form-table">

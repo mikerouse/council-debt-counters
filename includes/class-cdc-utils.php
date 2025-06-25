@@ -44,6 +44,12 @@ class CDC_Utils {
         if ( isset( $GLOBALS['cdc_selected_year'] ) && preg_match( '/^\d{4}\/\d{2}$/', $GLOBALS['cdc_selected_year'] ) ) {
             return $GLOBALS['cdc_selected_year'];
         }
+        if ( function_exists( '\is_singular' ) && \is_singular( 'council' ) ) {
+            $year = get_post_meta( get_the_ID(), 'cdc_default_financial_year', true );
+            if ( $year ) {
+                return $year;
+            }
+        }
         if ( class_exists( '\\CouncilDebtCounters\\Docs_Manager' ) && method_exists( '\\CouncilDebtCounters\\Docs_Manager', 'current_financial_year' ) ) {
             return Docs_Manager::current_financial_year();
         }

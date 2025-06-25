@@ -224,6 +224,10 @@ class Council_Admin_Page {
             delete_post_meta( $post_id, 'cdc_no_accounts' );
         }
 
+        if ( isset( $_POST['cdc_default_financial_year'] ) ) {
+            update_post_meta( $post_id, 'cdc_default_financial_year', sanitize_text_field( $_POST['cdc_default_financial_year'] ) );
+        }
+
         // Document edits or deletions from the Documents tab
         if ( isset( $_POST['update_doc'] ) && isset( $_POST['docs'][ $_POST['update_doc'] ] ) ) {
             $doc_id = intval( $_POST['update_doc'] );
