@@ -353,7 +353,7 @@ class Docs_Manager {
             Custom_Fields::update_value( $cid, sanitize_key( $field ), sanitize_text_field( $value ), $year );
         }
         if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
-            Council_Post_Type::calculate_total_debt( $cid );
+            Council_Post_Type::calculate_total_debt( $cid, $year );
         }
         $all = get_option( 'cdc_ai_suggestions', [] );
         unset( $all[ $cid ] );

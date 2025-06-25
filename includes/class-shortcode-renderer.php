@@ -130,6 +130,38 @@ class Shortcode_Renderer {
                                 )
                         );
                 }
+
+                // If the raw value is £0.00, we should double check with the backend to ensure we have the correct value
+                if ( '0.00' === $raw_value || '0' === $raw_value ) {
+                        global $wpdb;
+                        $meta_key = $wpdb->esc_like( $field ) . '_';
+                        $year = CDC_Utils::current_financial_year();
+                        // Try to get the meta value for the current year, fallback to meta without year if not found
+                        $backend_value = $wpdb->get_var( $wpdb->prepare(
+                                        "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND (meta_key = %s OR meta_key = %s) ORDER BY meta_key = %s DESC LIMIT 1",
+                                        $id,
+                                        $field . '_' . $year,
+                                        $field,
+                                        $field . '_' . $year
+                        ) );
+                        if ( '' === $backend_value || null === $backend_value ) {
+                                // If the backend value is also empty, we show a warning message
+                                $label = $field;
+                                return sprintf(
+                                '<div class="alert alert-danger">%s</div>',
+                                esc_html(
+                                        sprintf(
+                                        /* translators: %s: Field label */
+                                                __( 'No %s figure found', 'council-debt-counters' ),
+                                                $label
+                                        )
+                                )
+                                );
+                        };
+                        // If the backend value is not empty, we use that as the raw value
+                        $raw_value = $backend_value;
+                }
+
                 // If we do have a figure, but the council has been taken over, we show the last figure as a static value (such as the outgoing council's debt)
                 if ( $parent ) {
                         return '<div class="cdc-counter-static fw-bold">£' . esc_html( number_format_i18n( (float) $raw_value, 2 ) ) . '</div>';
@@ -169,7 +201,7 @@ class Shortcode_Renderer {
                         <?php endif; ?>
                 </div>
                 <div class="cdc-counter-wrapper text-center mb-3">
-                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£" data-cid="<?php echo esc_attr( $id ); ?>" data-field="<?php echo esc_attr( $field ); ?>" data-year="<?php echo esc_attr( CDC_Utils::current_financial_year() ); ?>">
                                 &hellip;
                         </div>
                 </div>
@@ -217,6 +249,8 @@ class Shortcode_Renderer {
                 add_action( 'wp_ajax_nopriv_cdc_log_share', array( __CLASS__, 'ajax_log_share' ) );
                 add_action( 'wp_ajax_cdc_render_counters', array( __CLASS__, 'ajax_render_counters' ) );
                 add_action( 'wp_ajax_nopriv_cdc_render_counters', array( __CLASS__, 'ajax_render_counters' ) );
+                add_action( 'wp_ajax_cdc_get_counter_value', array( __CLASS__, 'ajax_get_counter_value' ) );
+                add_action( 'wp_ajax_nopriv_cdc_get_counter_value', array( __CLASS__, 'ajax_get_counter_value' ) );
         }
 
         public static function register_assets() {
@@ -249,6 +283,7 @@ class Shortcode_Renderer {
                 wp_register_script( 'font-awesome-kit', $fa_script, array(), null, false );
                 wp_register_script( 'cdc-council-counters', plugins_url( 'public/js/council-counters.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
                 wp_localize_script( 'cdc-council-counters', 'cdcCounters', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ) ) );
+                wp_localize_script( 'cdc-counter-animations', 'cdcCounters', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ) ) );
                 wp_register_script( 'cdc-fig-modal', plugins_url( 'public/js/figure-form-modal.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
         wp_localize_script(
                         'cdc-counter-animations',
@@ -850,5 +885,20 @@ class Shortcode_Renderer {
                         Stats_Page::log_share( $id );
                 }
                 wp_die();
+        }
+
+        public static function ajax_get_counter_value() {
+                $id    = intval( $_POST['id'] ?? 0 );
+                $field = sanitize_key( $_POST['field'] ?? '' );
+                $year  = sanitize_text_field( $_POST['year'] ?? '' );
+                if ( ! $id || '' === $field || '' === $year ) {
+                        wp_send_json_error( array( 'message' => __( 'Invalid request.', 'council-debt-counters' ) ), 400 );
+                }
+                $post = get_post( $id );
+                if ( ! $post || 'council' !== $post->post_type ) {
+                        wp_send_json_error( array( 'message' => __( 'Not found.', 'council-debt-counters' ) ), 404 );
+                }
+                $value = Custom_Fields::get_value( $id, $field, $year );
+                wp_send_json_success( array( 'value' => $value ) );
         }
 }

@@ -1,6 +1,6 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+        exit;
 }
 
 
@@ -8,10 +8,10 @@ $req_action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) 
 $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
 
 if ( 'delete' === $req_action && $council_id ) {
-		check_admin_referer( 'cdc_delete_council_' . $council_id );
-		wp_delete_post( $council_id, true );
-		echo '<div class="alert alert-success"><p>' . esc_html__( 'Council deleted.', 'council-debt-counters' ) . '</p></div>';
-		$req_action = '';
+                check_admin_referer( 'cdc_delete_council_' . $council_id );
+                wp_delete_post( $council_id, true );
+                echo '<div class="alert alert-success"><p>' . esc_html__( 'Council deleted.', 'council-debt-counters' ) . '</p></div>';
+                $req_action = '';
 }
 
 if ( 'edit' === $req_action ) {
@@ -48,10 +48,10 @@ if ( 'edit' === $req_action ) {
         $fields  = \CouncilDebtCounters\Custom_Fields::get_fields();
         $enabled = (array) get_option( 'cdc_enabled_counters', array() );
         $groups  = array( 'general' => array() );
-	foreach ( $enabled as $e ) {
-		$groups[ $e ] = array();
-	}
-	$docs_field = null;
+        foreach ( $enabled as $e ) {
+                $groups[ $e ] = array();
+        }
+        $docs_field = null;
         foreach ( $fields as $field ) {
                 if ( 'statement_of_accounts' === $field->name ) {
                         $docs_field = $field;
@@ -62,32 +62,32 @@ if ( 'edit' === $req_action ) {
                 } else {
                         $groups['general'][] = $field; }
         }
-		$docs = $council_id ? \CouncilDebtCounters\Docs_Manager::list_documents( $council_id ) : array();
-	?>
-	<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-		<input type="hidden" name="action" value="cdc_save_council">
-		<?php wp_nonce_field( 'cdc_save_council' ); ?>
-				<input type="hidden" name="post_id" value="<?php echo esc_attr( $council_id ); ?>">
-		<ul class="nav nav-tabs" role="tablist">
-			<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button" role="tab"><?php esc_html_e( 'General', 'council-debt-counters' ); ?></button></li>
-			<?php
-			foreach ( $enabled as $tab_key ) :
-				if ( empty( $groups[ $tab_key ] ) ) {
-								continue;}
-				?>
-								<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-<?php echo esc_attr( $tab_key ); ?>" type="button" role="tab"><?php echo esc_html( ucfirst( $tab_key ) ); ?></button></li>
-						<?php endforeach; ?>
+                $docs = $council_id ? \CouncilDebtCounters\Docs_Manager::list_documents( $council_id ) : array();
+        ?>
+        <form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                <input type="hidden" name="action" value="cdc_save_council">
+                <?php wp_nonce_field( 'cdc_save_council' ); ?>
+                                <input type="hidden" name="post_id" value="<?php echo esc_attr( $council_id ); ?>">
+                <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button" role="tab"><?php esc_html_e( 'General', 'council-debt-counters' ); ?></button></li>
+                        <?php
+                        foreach ( $enabled as $tab_key ) :
+                                if ( empty( $groups[ $tab_key ] ) ) {
+                                                                continue;}
+                                ?>
+                                                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-<?php echo esc_attr( $tab_key ); ?>" type="button" role="tab"><?php echo esc_html( ucfirst( $tab_key ) ); ?></button></li>
+                                                <?php endforeach; ?>
 <?php if ( $docs_field ) : ?>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></button></li>
 <?php endif; ?>
 <?php if ( $council_id ) : ?>
-				<!-- Whistleblower reports moved to dedicated admin page -->
-		</ul>
-		<div class="tab-content pt-3">
-			<div class="tab-pane fade show active" id="tab-general" role="tabpanel">
-				<table class="form-table" role="presentation">
-				<?php
-				$council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
+                                <!-- Whistleblower reports moved to dedicated admin page -->
+                </ul>
+                <div class="tab-content pt-3">
+                        <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
+                                <table class="form-table" role="presentation">
+                                <?php
+                                $council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
 $council_locations = array( 'England', 'Wales', 'Scotland', 'Northern Ireland' );
 $no_accounts       = $council_id ? get_post_meta( $council_id, 'cdc_no_accounts', true ) : '';
 foreach ( $groups['general'] as $field ) :
@@ -105,29 +105,29 @@ if ( 'status_message_type' === $field->name && $no_accounts ) {
 $val      = 'danger';
 $readonly = true;
 }
-					?>
-					<tr>
-						<th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?>
-					<?php
+                                        ?>
+                                        <tr>
+                                                <th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?>
+                                        <?php
                                                                        if ( $is_required ) {
                                                                                echo ' <span class="text-danger cdc-required-indicator">*</span>';}
-					?>
-						</label></th>
-						<td>
-										<?php if ( 'council_type' === $field->name ) : ?>
+                                        ?>
+                                                </label></th>
+                                                <td>
+                                                                                <?php if ( 'council_type' === $field->name ) : ?>
                                                                        <select id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" class="form-select" <?php echo $is_required ? 'required' : ''; ?> <?php echo $readonly ? 'disabled' : ''; ?>>
-											<?php foreach ( $council_types as $t ) : ?>
-										<option value="<?php echo esc_attr( $t ); ?>" <?php selected( $val, $t ); ?>><?php echo esc_html( $t ); ?></option>
-									<?php endforeach; ?>
+                                                                                        <?php foreach ( $council_types as $t ) : ?>
+                                                                                <option value="<?php echo esc_attr( $t ); ?>" <?php selected( $val, $t ); ?>><?php echo esc_html( $t ); ?></option>
+                                                                        <?php endforeach; ?>
                                                                 </select>
                                                                 <?php if ( $is_required ) : ?>
                                                                         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
                                                                 <?php endif; ?>
 <?php elseif ( 'council_location' === $field->name ) : ?>
                                                                        <select id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" class="form-select" <?php echo $is_required ? 'required' : ''; ?> <?php echo $readonly ? 'disabled' : ''; ?>>
-															<?php foreach ( $council_locations as $t ) : ?>
-										<option value="<?php echo esc_attr( $t ); ?>" <?php selected( $val, $t ); ?>><?php echo esc_html( $t ); ?></option>
-									<?php endforeach; ?>
+                                                                                                                        <?php foreach ( $council_locations as $t ) : ?>
+                                                                                <option value="<?php echo esc_attr( $t ); ?>" <?php selected( $val, $t ); ?>><?php echo esc_html( $t ); ?></option>
+                                                                        <?php endforeach; ?>
                                                                 </select>
                                                                 <?php if ( $is_required ) : ?>
                                                                         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
@@ -155,14 +155,9 @@ $readonly = true;
 <div class="input-group">
     <span class="input-group-text">&pound;</span>
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" data-initial-required="<?php echo $is_required ? '1' : '0'; ?>" type="number" step="0.01" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
-    <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
-	<div class="input-group-text">
-		<div class="form-check">
-			<input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
-			<label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
-		</div>
-	</div>
-    <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
+    <?php if ( ! $readonly && $field->name !== 'total_debt' ) : ?>
+        <!-- Ask AI and N/A controls excluded for total_debt -->
+    <?php endif; ?>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
     <?php endif; ?>
@@ -171,14 +166,16 @@ $readonly = true;
 <?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
 <div class="input-group">
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" data-initial-required="<?php echo $is_required ? '1' : '0'; ?>" type="<?php echo esc_attr( $input_type ); ?>" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
-    <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
-	<div class="input-group-text">
-		<div class="form-check">
-			<input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
-			<label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
-		</div>
-	</div>
-    <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
+    <?php if ( ! $readonly && $field->name !== 'total_debt' ) : ?>
+        <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
+        <div class="input-group-text">
+                <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
+                        <label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
+                </div>
+        </div>
+        <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
+    <?php endif; ?>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
     <?php endif; ?>
@@ -256,15 +253,15 @@ $readonly = true;
 </div>
 <?php endif; ?>
 <?php
-			foreach ( $enabled as $tab_key ) :
-				$tab = $tab_key; // using tab key directly, no get_tab_by_key method exists
-				if ( empty( $groups[ $tab_key ] ) ) {
-					continue;
-				}
-				$tab_fields = $groups[ $tab_key ] ?? array();
-				$na_tab_val = $council_id ? get_post_meta( $council_id, 'cdc_na_tab_' . $tab_key, true ) : '';
-				?>
-				<div class="tab-pane" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
+                        foreach ( $enabled as $tab_key ) :
+                                $tab = $tab_key; // using tab key directly, no get_tab_by_key method exists
+                                if ( empty( $groups[ $tab_key ] ) ) {
+                                        continue;
+                                }
+                                $tab_fields = $groups[ $tab_key ] ?? array();
+                                $na_tab_val = $council_id ? get_post_meta( $council_id, 'cdc_na_tab_' . $tab_key, true ) : '';
+                                ?>
+                                <div class="tab-pane" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <div>
                                                         <label for="cdc-year-<?php echo esc_attr( $tab_key ); ?>" class="form-label me-2"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
@@ -273,6 +270,7 @@ $readonly = true;
                                                                         <option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\CDC_Utils::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
                                                                 <?php endforeach; ?>
                                                         </select>
+                                                        <input type="hidden" name="cdc_tab_year[<?php echo esc_attr( $tab_key ); ?>]" value="<?php echo esc_attr( \CouncilDebtCounters\CDC_Utils::current_financial_year() ); ?>" class="cdc-selected-year">
                                                 </div>
                                                 <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" id="cdc-na-tab-<?php echo esc_attr( $tab_key ); ?>" name="cdc_na_tab[<?php echo esc_attr( $tab_key ); ?>]" value="1" <?php checked( $na_tab_val, '1' ); ?>>
@@ -280,73 +278,75 @@ $readonly = true;
                                                 </div>
                                         </div>
                                         <table class="form-table">
-						<tbody>
-							<?php
-							foreach ( $tab_fields as $field ) :
+                                                <tbody>
+                                                        <?php
+                                                        foreach ( $tab_fields as $field ) :
                                                                 $val         = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, $field->name, \CouncilDebtCounters\CDC_Utils::current_financial_year() ) : '';
-								$input_type  = 'text' === $field->type ? 'text' : 'number';
-								$is_required = (bool) $field->required;
-								$readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
-								?>
-								<tr>
-									<th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?>
-										<?php if ( $is_required ) : ?>
-											<span class="cdc-required-indicator text-danger">*</span>
-										<?php endif; ?>
-									</label></th>
-									<td>
-										<?php if ( 'money' === $field->type ) : ?>
-											<?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
+                                                                $input_type  = 'text' === $field->type ? 'text' : 'number';
+                                                                $is_required = (bool) $field->required;
+                                                                $readonly    = in_array( $field->name, \CouncilDebtCounters\Custom_Fields::READONLY_FIELDS, true );
+                                                                ?>
+                                                                <tr>
+                                                                        <th scope="row"><label for="cdc-field-<?php echo esc_attr( $field->id ); ?>"><?php echo esc_html( $field->label ); ?>
+                                                                                <?php if ( $is_required ) : ?>
+                                                                                        <span class="cdc-required-indicator text-danger">*</span>
+                                                                                <?php endif; ?>
+                                                                        </label></th>
+                                                                        <td>
+                                                                                <?php if ( 'money' === $field->type ) : ?>
+                                                                                        <?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
 <div class="input-group">
     <span class="input-group-text">&pound;</span>
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="number" step="0.01" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
+    <?php if ( ! $readonly && $field->name !== 'total_debt' ) : ?>
     <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
-	<div class="input-group-text">
-		<div class="form-check">
-			<input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
-			<label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
-		</div>
-	</div>
+        <div class="input-group-text">
+                <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
+                        <label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
+                </div>
+        </div>
     <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
+    <?php endif; ?>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
     <?php endif; ?>
 </div>
-										<?php else : ?>
-											<?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
+                                                                                <?php else : ?>
+                                                                                        <?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
 <div class="input-group">
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" type="<?php echo esc_attr( $input_type ); ?>" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
     <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
-	<div class="input-group-text">
-		<div class="form-check">
-			<input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
-			<label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
-		</div>
-	</div>
+        <div class="input-group-text">
+                <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
+                        <label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
+                </div>
+        </div>
     <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
     <?php endif; ?>
 </div>
-										<?php endif; ?>
-										<?php if ( 'council_name' !== $field->name ) : ?>
-											<div class="cdc-ai-source mt-1"></div>
-										<?php endif; ?>
-									</td>
-								</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-				</div>
-				<?php
-			endforeach;
-			?>
-			<?php if ( $docs_field ) : ?>
-			<div class="tab-pane fade" id="tab-docs" role="tabpanel">
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><label for="cdc-soa"><?php echo esc_html( $docs_field->label ); ?></label></th>
-						<td>
+                                                                                <?php endif; ?>
+                                                                                <?php if ( 'council_name' !== $field->name ) : ?>
+                                                                                        <div class="cdc-ai-source mt-1"></div>
+                                                                                <?php endif; ?>
+                                                                        </td>
+                                                                </tr>
+                                                        <?php endforeach; ?>
+                                                </tbody>
+                                        </table>
+                                </div>
+                                <?php
+                        endforeach;
+                        ?>
+                        <?php if ( $docs_field ) : ?>
+                        <div class="tab-pane fade" id="tab-docs" role="tabpanel">
+                                <table class="form-table" role="presentation">
+                                        <tr>
+                                                <th scope="row"><label for="cdc-soa"><?php echo esc_html( $docs_field->label ); ?></label></th>
+                                                <td>
                                                <?php $val = $council_id ? \CouncilDebtCounters\Custom_Fields::get_value( $council_id, 'statement_of_accounts', \CouncilDebtCounters\CDC_Utils::current_financial_year() ) : ''; ?>
 <?php if ( $val ) : ?>
         <p><a href="<?php echo esc_url( plugins_url( 'docs/' . $val, dirname( __DIR__, 2 ) . '/council-debt-counters.php' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View selected statement', 'council-debt-counters' ); ?></a></p>
@@ -371,7 +371,7 @@ $readonly = true;
         </p>
                                                         <?php $orphans = \CouncilDebtCounters\Docs_Manager::list_orphan_documents(); ?>
                                                         <?php if ( ! empty( $orphans ) ) : ?>
-								<p class="description mt-2"><?php esc_html_e( 'Or attach an existing document', 'council-debt-counters' ); ?></p>
+                                                                <p class="description mt-2"><?php esc_html_e( 'Or attach an existing document', 'council-debt-counters' ); ?></p>
                                                                 <select name="statement_of_accounts_existing">
                                                                         <option value=""><?php esc_html_e( 'Select document', 'council-debt-counters' ); ?></option>
                                                                         <?php foreach ( $orphans as $doc ) : ?>
@@ -387,43 +387,43 @@ $readonly = true;
                                                 </td>
                                         </tr>
                                 </table>
-				<?php if ( ! empty( $docs ) ) : ?>
+                                <?php if ( ! empty( $docs ) ) : ?>
                                 <h2><?php esc_html_e( 'Uploaded Statements', 'council-debt-counters' ); ?></h2>
                                 <table id="cdc-docs-table" class="widefat">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'File', 'council-debt-counters' ); ?></th>
-							<th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th>
-							<th><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></th>
-							<th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-					<?php foreach ( $docs as $d ) : ?>
-						<tr>
-							<td><?php echo esc_html( $d->filename ); ?></td>
-							<td>
-								<select name="docs[<?php echo esc_attr( $d->id ); ?>][financial_year]">
+                                        <thead>
+                                                <tr>
+                                                        <th><?php esc_html_e( 'File', 'council-debt-counters' ); ?></th>
+                                                        <th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th>
+                                                        <th><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></th>
+                                                        <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
+                                                </tr>
+                                        </thead>
+                                        <tbody>
+                                        <?php foreach ( $docs as $d ) : ?>
+                                                <tr>
+                                                        <td><?php echo esc_html( $d->filename ); ?></td>
+                                                        <td>
+                                                                <select name="docs[<?php echo esc_attr( $d->id ); ?>][financial_year]">
                                                                     <?php foreach ( \CouncilDebtCounters\CDC_Utils::council_years( $council_id ) as $y ) : ?>
                                                                         <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $d->financial_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
                                                                     <?php endforeach; ?>
-								</select>
-							</td>
-							<td>
+                                                                </select>
+                                                        </td>
+                                                        <td>
                                                                 <select name="docs[<?php echo esc_attr( $d->id ); ?>][doc_type]">
                                                                         <option value="draft_statement_of_accounts" <?php selected( $d->doc_type, 'draft_statement_of_accounts' ); ?>><?php esc_html_e( 'Draft', 'council-debt-counters' ); ?></option>
                                                                         <option value="audited_statement_of_accounts" <?php selected( $d->doc_type, 'audited_statement_of_accounts' ); ?>><?php esc_html_e( 'Audited', 'council-debt-counters' ); ?></option>
                                                                 </select>
-							</td>
-							<td>
-								<button type="button" value="<?php echo esc_attr( $d->id ); ?>" class="button cdc-extract-ai"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Extract Figures', 'council-debt-counters' ); ?></button>
+                                                        </td>
+                                                        <td>
+                                                                <button type="button" value="<?php echo esc_attr( $d->id ); ?>" class="button cdc-extract-ai"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Extract Figures', 'council-debt-counters' ); ?></button>
 
-								<button type="submit" name="update_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-secondary"><?php esc_html_e( 'Update', 'council-debt-counters' ); ?></button>
-								<button type="submit" name="delete_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-					</tbody>
+                                                                <button type="submit" name="update_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-secondary"><?php esc_html_e( 'Update', 'council-debt-counters' ); ?></button>
+                                                                <button type="submit" name="delete_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
+                                                        </td>
+                                                </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
                                 </table>
                         </div>
                         <?php endif; ?>
@@ -432,11 +432,11 @@ $readonly = true;
                 </div>
                 <?php endif; ?>
                 <?php submit_button( __( 'Save Council', 'council-debt-counters' ) ); ?>
-	</form>
+        </form>
 </div>
 <?php endif; ?>
 <?php
-	return;
+        return;
 }
 
 $status_param   = isset( $_GET['status'] ) ? sanitize_key( $_GET['status'] ) : 'publish';
@@ -451,30 +451,30 @@ $table->prepare_items();
 $counts = wp_count_posts( 'council' );
 ?>
 <div class="wrap">
-	<h1><?php esc_html_e( 'Councils', 'council-debt-counters' ); ?></h1>
-	<a href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-manage-councils&action=edit' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Add New', 'council-debt-counters' ); ?></a>
-	<ul class="subsubsub">
-		<?php
-		$statuses = [
-			'publish'      => __( 'Active', 'council-debt-counters' ),
-			'draft'        => __( 'Draft', 'council-debt-counters' ),
-			'under_review' => __( 'Under Review', 'council-debt-counters' ),
-		];
-		$links = [];
-		foreach ( $statuses as $status => $label ) {
-			$url   = admin_url( 'admin.php?page=cdc-manage-councils&status=' . $status );
-			$count = $counts->$status ?? 0;
-			$class = ( $status_param === $status ) ? 'current' : '';
-			$links[] = sprintf( '<li><a href="%s" class="%s">%s <span class="count">(%d)</span></a></li>', esc_url( $url ), esc_attr( $class ), esc_html( $label ), intval( $count ) );
-		}
-		echo implode( ' | ', $links );
-		?>
-	</ul>
-	<form method="post">
-		<?php
-		$table->search_box( __( 'Search Councils', 'council-debt-counters' ), 'council-search' );
-		$table->display();
-		?>
-	</form>
+        <h1><?php esc_html_e( 'Councils', 'council-debt-counters' ); ?></h1>
+        <a href="<?php echo esc_url( admin_url( 'admin.php?page=cdc-manage-councils&action=edit' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Add New', 'council-debt-counters' ); ?></a>
+        <ul class="subsubsub">
+                <?php
+                $statuses = [
+                        'publish'      => __( 'Active', 'council-debt-counters' ),
+                        'draft'        => __( 'Draft', 'council-debt-counters' ),
+                        'under_review' => __( 'Under Review', 'council-debt-counters' ),
+                ];
+                $links = [];
+                foreach ( $statuses as $status => $label ) {
+                        $url   = admin_url( 'admin.php?page=cdc-manage-councils&status=' . $status );
+                        $count = $counts->$status ?? 0;
+                        $class = ( $status_param === $status ) ? 'current' : '';
+                        $links[] = sprintf( '<li><a href="%s" class="%s">%s <span class="count">(%d)</span></a></li>', esc_url( $url ), esc_attr( $class ), esc_html( $label ), intval( $count ) );
+                }
+                echo implode( ' | ', $links );
+                ?>
+        </ul>
+        <form method="post">
+                <?php
+                $table->search_box( __( 'Search Councils', 'council-debt-counters' ), 'council-search' );
+                $table->display();
+                ?>
+        </form>
 </div>
 ?>

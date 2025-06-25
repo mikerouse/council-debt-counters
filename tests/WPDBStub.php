@@ -8,8 +8,14 @@ class WPDBStub {
 
     public function prepare($query, ...$args) {
         foreach ($args as $arg) {
-            $query = preg_replace('/%d/', (int)$arg, $query, 1);
-            $query = preg_replace('/%s/', "'" . $arg . "'", $query, 1);
+            if (strpos($query, '%d') !== false) {
+                $query = preg_replace('/%d/', (int)$arg, $query, 1);
+                continue;
+            }
+            if (strpos($query, '%s') !== false) {
+                $safe = str_replace("'", "''", $arg);
+                $query = preg_replace('/%s/', "'" . $safe . "'", $query, 1);
+            }
         }
         return $query;
     }

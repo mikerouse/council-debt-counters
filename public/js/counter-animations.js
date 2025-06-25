@@ -99,6 +99,25 @@
             debugLog('Counter animation complete', {target}, 'verbose');
         });
 
+        if (window.cdcCounters && el.dataset.cid && el.dataset.field && el.dataset.year){
+            const data = new FormData();
+            data.append('action','cdc_get_counter_value');
+            data.append('id', el.dataset.cid);
+            data.append('field', el.dataset.field);
+            data.append('year', el.dataset.year);
+            fetch(window.cdcCounters.ajaxUrl,{method:'POST',credentials:'same-origin',body:data})
+                .then(r=>r.json())
+                .then(res=>{
+                    if(res.success && res.data){
+                        const val = parseFloat(res.data.value);
+                        if(!isNaN(val) && Math.abs(val - target) > 0.01){
+                            counter.update(val);
+                        }
+                    }
+                })
+                .catch(()=>{});
+        }
+
         if (growth !== 0) {
             setInterval(() => {
                 start += growth;

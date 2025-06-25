@@ -70,24 +70,45 @@ class Council_Post_Type {
     }
 
 
-    public static function calculate_total_debt( $post_id ) {
+    public static function calculate_total_debt( $post_id, string $year = '' ) {
         if ( get_post_type( $post_id ) !== 'council' ) {
             return;
         }
-        // Get all relevant fields
-        $year = CDC_Utils::current_financial_year();
-        $current_liabilities = (float) Custom_Fields::get_value( $post_id, 'current_liabilities', $year );
-        $long_term  = (float) Custom_Fields::get_value( $post_id, 'long_term_liabilities', $year );
-        $lease_pfi  = (float) Custom_Fields::get_value( $post_id, 'finance_lease_pfi_liabilities', $year );
-        $manual     = (float) Custom_Fields::get_value( $post_id, 'manual_debt_entry', $year );
-        $adjust   = 0;
-        $entries  = get_post_meta( $post_id, 'cdc_debt_adjustments', true );
+
+        if ( empty( $year ) ) {
+            $year = CDC_Utils::current_financial_year();
+        }
+
+        $current_liabilities = Custom_Fields::get_value( $post_id, 'current_liabilities', $year );
+        $long_term           = Custom_Fields::get_value( $post_id, 'long_term_liabilities', $year );
+        $lease_pfi           = Custom_Fields::get_value( $post_id, 'finance_lease_pfi_liabilities', $year );
+        $manual              = Custom_Fields::get_value( $post_id, 'manual_debt_entry', $year );
+        $entries             = get_post_meta( $post_id, 'cdc_debt_adjustments', true );
+
+        // If we have no data for this year, don't overwrite any existing total with zero.
+        $has_data = false;
+        foreach ( array( $current_liabilities, $long_term, $lease_pfi, $manual ) as $val ) {
+            if ( '' !== $val && null !== $val ) {
+                $has_data = true;
+                break;
+            }
+        }
+        if ( ! $has_data && empty( $entries ) ) {
+            return;
+        }
+
+        $current_liabilities = (float) $current_liabilities;
+        $long_term           = (float) $long_term;
+        $lease_pfi           = (float) $lease_pfi;
+        $manual              = (float) $manual;
+
+        $adjust = 0;
         if ( is_array( $entries ) ) {
             foreach ( $entries as $e ) {
                 $adjust += (float) $e['amount'];
             }
         }
-        // Total debt is current liabilities + long term liabilities + lease/PFI + manual + adjustments
+
         $total = $current_liabilities + $long_term + $lease_pfi + $manual + $adjust;
         Custom_Fields::update_value( $post_id, 'total_debt', $total, $year );
     }

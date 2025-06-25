@@ -134,6 +134,8 @@
         document.querySelectorAll('.cdc-year-select').forEach(function(sel){
             sel.addEventListener('change', function(){
                 var tab = sel.getAttribute('data-tab');
+                var hidden = document.querySelector('input[name="cdc_tab_year['+tab+']"]');
+                if(hidden){ hidden.value = sel.value; }
                 var overlay = document.createElement('div');
                 overlay.id = 'cdc-year-overlay';
                 overlay.innerHTML = '<span class="spinner is-active"></span>';
