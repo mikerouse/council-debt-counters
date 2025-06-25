@@ -157,6 +157,14 @@ class Figure_Submission_Form {
                 }
                 update_post_meta( $post_id, 'ip_address', $ip );
                 update_post_meta( $post_id, 'financial_year', $fig_year );
+                $auto = ! empty( $_POST['cdc_auto_approve'] );
+                if ( $auto && $cid ) {
+                        foreach ( $clean as $key => $val ) {
+                                Custom_Fields::update_value( $cid, $key, $val, $fig_year );
+                        }
+                        wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
+                        update_post_meta( $post_id, 'auto_approved', '1' );
+                }
                 if ( $has_file && $cid ) {
                         Error_Logger::log_debug( 'SoA uploaded via correction form from ' . $ip );
                         $year = sanitize_text_field( wp_unslash( $_POST['cdc_soa_year'] ?? \CouncilDebtCounters\Docs_Manager::current_financial_year() ) );
@@ -208,8 +216,10 @@ class Figure_Submission_Form {
                 wp_send_json_success( __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ) );
         }
 
-        public static function render_form( $atts = array() ) {
-                $council_id = self::get_council_id_from_atts( $atts );
+       public static function render_form( $atts = array() ) {
+               $council_id   = self::get_council_id_from_atts( $atts );
+               $no_sources   = ! empty( $atts['no_sources'] );
+               $auto_approve = ! empty( $atts['auto_approve'] );
                 if ( isset( $_GET['submitted'] ) ) {
                         return '<div class="alert alert-success">' . esc_html__( 'Thank you for your submission.', 'council-debt-counters' ) . '</div>';
                 }
@@ -262,6 +272,9 @@ class Figure_Submission_Form {
                                <form method="post" class="cdc-fig-form">
                                                <?php wp_nonce_field( 'cdc_fig', 'cdc_fig_nonce' ); ?>
                                                <input type="hidden" name="cdc_council_id" value="<?php echo esc_attr( $council_id ); ?>" />
+                                               <?php if ( $auto_approve ) : ?>
+                                                       <input type="hidden" name="cdc_auto_approve" value="1" />
+                                               <?php endif; ?>
                                                <div class="mb-3">
                                                        <label for="cdc_fig_year" class="form-label"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
                                                        <select name="cdc_fig_year" id="cdc_fig_year" class="form-select">
@@ -277,10 +290,12 @@ class Figure_Submission_Form {
 												<span class="input-group-text">&pound;</span>
 												<input type="text" inputmode="decimal" class="form-control" id="fig-<?php echo esc_attr( $field->name ); ?>" name="cdc_figures[<?php echo esc_attr( $field->name ); ?>]" />
 										</div>
-										<input type="text" class="form-control mt-1" id="src-<?php echo esc_attr( $field->name ); ?>" name="cdc_sources[<?php echo esc_attr( $field->name ); ?>]" placeholder="<?php esc_attr_e( 'Source for this figure', 'council-debt-counters' ); ?>" />
-										<div class="form-text">
-												<?php esc_html_e( 'Please enter whole numbers (e.g. 123,456,789.00) without the pound sign.', 'council-debt-counters' ); ?>
-										</div>
+                                       <?php if ( ! $no_sources ) : ?>
+                                       <input type="text" class="form-control mt-1" id="src-<?php echo esc_attr( $field->name ); ?>" name="cdc_sources[<?php echo esc_attr( $field->name ); ?>]" placeholder="<?php esc_attr_e( 'Source for this figure', 'council-debt-counters' ); ?>" />
+                                       <?php endif; ?>
+                                       <div class="form-text">
+                                       <?php esc_html_e( 'Please enter the full figure (e.g. 283000000, not 283,000).', 'council-debt-counters' ); ?>
+                                       </div>
 								</div>
 						<?php endforeach; ?>
 						<div class="mb-3">
