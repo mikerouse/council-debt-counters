@@ -112,6 +112,7 @@ class Custom_Fields {
             field_id mediumint(9) NOT NULL,
             financial_year varchar(9) NOT NULL,
             value longtext NULL,
+            financial_year varchar(9) NOT NULL DEFAULT '" . CDC_Utils::current_financial_year() . "',
             PRIMARY KEY  (id),
             KEY council_id (council_id),
             KEY field_id (field_id),
