@@ -161,7 +161,16 @@ class Figure_Submission_Form {
                 if ( $auto && $cid ) {
                         foreach ( $clean as $key => $val ) {
                                 Custom_Fields::update_value( $cid, $key, $val, $fig_year );
+                                delete_post_meta( $cid, 'cdc_na_' . $key );
+                                $tab = Custom_Fields::get_field_tab( $key );
+                                delete_post_meta( $cid, 'cdc_na_tab_' . $tab );
                         }
+                        foreach ( (array) get_option( 'cdc_enabled_counters', array() ) as $tab_key ) {
+                                delete_post_meta( $cid, 'cdc_na_tab_' . $tab_key );
+                        }
+                        wp_update_post( [ 'ID' => $cid, 'post_status' => 'publish' ] );
+                        delete_post_meta( $cid, 'cdc_under_review' );
+
                         wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
                         update_post_meta( $post_id, 'auto_approved', '1' );
                 }
@@ -213,7 +222,11 @@ class Figure_Submission_Form {
                 }
 
                 Error_Logger::log_info( 'Figure submission submitted via AJAX with ID ' . $result );
-                wp_send_json_success( __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ) );
+                $msg = __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' );
+                if ( ! empty( $_POST['cdc_auto_approve'] ) ) {
+                        $msg = __( 'Thank you for submitting these figures. Please allow a few minutes for them to be published', 'council-debt-counters' );
+                }
+                wp_send_json_success( $msg );
         }
 
        public static function render_form( $atts = array() ) {
@@ -230,17 +243,21 @@ class Figure_Submission_Form {
 				wp_enqueue_style( 'bootstrap-5' );
 				wp_enqueue_script( 'bootstrap-5' );
 				wp_enqueue_script( 'cdc-figure-form', plugins_url( 'public/js/figure-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ), array(), '0.1.0', true );
-				wp_localize_script(
-					'cdc-figure-form',
-					'cdcFig',
-					array(
-						'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-						'siteKey'    => $site_key,
-						'success'    => __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' ),
-						'failure'    => __( 'Submission failed. Please try again.', 'council-debt-counters' ),
-						'submitting' => __( 'Submitting', 'council-debt-counters' ),
-					)
-				);
+                                $success_msg = __( 'Thank you for your submission. Your figures will be reviewed by a moderator before going live.', 'council-debt-counters' );
+                                if ( $auto_approve ) {
+                                        $success_msg = __( 'Thank you for submitting these figures. Please allow a few minutes for them to be published', 'council-debt-counters' );
+                                }
+                                wp_localize_script(
+                                        'cdc-figure-form',
+                                        'cdcFig',
+                                        array(
+                                                'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+                                                'siteKey'    => $site_key,
+                                                'success'    => $success_msg,
+                                                'failure'    => __( 'Submission failed. Please try again.', 'council-debt-counters' ),
+                                                'submitting' => __( 'Submitting', 'council-debt-counters' ),
+                                        )
+                                );
                                 ob_start();
                                 $fields = Custom_Fields::get_fields();
                 $show_upload = false;
@@ -259,15 +276,26 @@ class Figure_Submission_Form {
                                 }
                         }
                 }
-                                $inputs = array();
-		foreach ( $fields as $f ) {
-			if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
-						$tab = Custom_Fields::get_field_tab( $f->name );
-				if ( in_array( $tab, array( 'debt', 'spending', 'income', 'deficit', 'interest', 'reserves', 'consultancy' ), true ) ) {
-					$inputs[] = $f;
-				}
-			}
-		}
+                $inputs  = array();
+                $exclude = array(
+                        // These fields are calculated internally or currently hidden from user submissions.
+                        'total_debt',
+                        'annual_deficit',
+                        'minimum_revenue_provision',
+                        'manual_debt_entry',
+                        'consultancy_spend',
+                );
+                foreach ( $fields as $f ) {
+                        if ( in_array( $f->name, $exclude, true ) ) {
+                                continue;
+                        }
+                        if ( in_array( $f->type, array( 'number', 'money' ), true ) ) {
+                                $tab = Custom_Fields::get_field_tab( $f->name );
+                                if ( in_array( $tab, array( 'debt', 'spending', 'income', 'deficit', 'interest', 'reserves', 'consultancy' ), true ) ) {
+                                        $inputs[] = $f;
+                                }
+                        }
+                }
 		?>
                                <form method="post" class="cdc-fig-form">
                                                <?php wp_nonce_field( 'cdc_fig', 'cdc_fig_nonce' ); ?>
@@ -284,20 +312,31 @@ class Figure_Submission_Form {
                                                        </select>
                                                </div>
                                                <?php foreach ( $inputs as $field ) : ?>
-								<div class="mb-3">
-										<label for="fig-<?php echo esc_attr( $field->name ); ?>" class="form-label"><?php echo esc_html( $field->label ); ?></label>
-										<div class="input-group">
-												<span class="input-group-text">&pound;</span>
-												<input type="text" inputmode="decimal" class="form-control" id="fig-<?php echo esc_attr( $field->name ); ?>" name="cdc_figures[<?php echo esc_attr( $field->name ); ?>]" />
-										</div>
+                                                               <div class="mb-3">
+                                                                              <?php
+                                                                              $label = $field->label;
+                                                                              if ( 'annual_spending' === $field->name ) {
+                                                                                      $label = __( 'Total Annual Expenditure', 'council-debt-counters' );
+                                                                              }
+                                                                              ?>
+                                                                              <label for="fig-<?php echo esc_attr( $field->name ); ?>" class="form-label"><?php echo esc_html( $label ); ?></label>
+                                                                              <div class="input-group">
+                                                                                      <span class="input-group-text">&pound;</span>
+                                                                                      <input type="text" inputmode="decimal" class="form-control" id="fig-<?php echo esc_attr( $field->name ); ?>" name="cdc_figures[<?php echo esc_attr( $field->name ); ?>]" />
+                                                                              </div>
                                        <?php if ( ! $no_sources ) : ?>
                                        <input type="text" class="form-control mt-1" id="src-<?php echo esc_attr( $field->name ); ?>" name="cdc_sources[<?php echo esc_attr( $field->name ); ?>]" placeholder="<?php esc_attr_e( 'Source for this figure', 'council-debt-counters' ); ?>" />
                                        <?php endif; ?>
                                        <div class="form-text">
                                        <?php esc_html_e( 'Please enter the full figure (e.g. 283000000, not 283,000).', 'council-debt-counters' ); ?>
                                        </div>
-								</div>
-						<?php endforeach; ?>
+                                       <?php if ( 'annual_spending' === $field->name ) : ?>
+                                       <div class="form-text">
+                                       <?php esc_html_e( 'This is the gross expenditure figure taken from the comprehensive income and expenditure statement.', 'council-debt-counters' ); ?>
+                                       </div>
+                                       <?php endif; ?>
+                                                               </div>
+                                               <?php endforeach; ?>
 						<div class="mb-3">
 								<label for="cdc_note" class="form-label"><?php esc_html_e( 'Note (optional)', 'council-debt-counters' ); ?></label>
 								<textarea class="form-control" id="cdc_note" name="cdc_note"></textarea>

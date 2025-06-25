@@ -26,9 +26,8 @@ if ( 'edit' === $req_action ) {
                 $current_status = $council_id ? get_post_status( $council_id ) : 'draft';
                 $users          = get_users( [ 'fields' => [ 'ID', 'display_name' ] ] );
                 $reports        = $council_id ? count( get_posts( [ 'post_type' => \CouncilDebtCounters\Whistleblower_Form::CPT, 'numberposts' => -1, 'post_status' => 'private', 'meta_key' => 'council_id', 'meta_value' => $council_id ] ) ) : 0;
-                echo '<div id="cdc-toolbar" class="mb-3 d-flex justify-content-between align-items-center">';
                 $msg = isset( $_GET['updated'] ) ? '<div class="alert alert-success mb-0">' . esc_html__( 'Update successful.', 'council-debt-counters' ) . '</div>' : '';
-                echo '<div id="cdc-status-msg">' . $msg . '</div>';
+                echo '<div id="cdc-toolbar" class="mb-2 d-flex justify-content-between align-items-center">';
                 echo '<div class="d-flex align-items-center flex-nowrap">';
                 echo '<select id="cdc-post-status" class="form-select me-2"><option value="publish"' . selected( $current_status, 'publish', false ) . '>' . esc_html__( 'Active', 'council-debt-counters' ) . '</option><option value="draft"' . selected( $current_status, 'draft', false ) . '>' . esc_html__( 'Draft', 'council-debt-counters' ) . '</option><option value="under_review"' . selected( $current_status, 'under_review', false ) . '>' . esc_html__( 'Under Review', 'council-debt-counters' ) . '</option></select>';
                 echo '<select name="assigned_user" class="form-select me-2"><option value="0">' . esc_html__( 'Unassigned', 'council-debt-counters' ) . '</option>';
@@ -41,15 +40,11 @@ if ( 'edit' === $req_action ) {
                         echo '<span class="badge bg-info me-2">' . esc_html__( 'Reports:', 'council-debt-counters' ) . ' ' . intval( $reports ) . '</span>';
                         $view_link = get_permalink( $council_id );
                         echo '<a href="' . esc_url( $view_link ) . '" class="btn btn-sm btn-primary me-2" target="_blank" rel="noopener noreferrer">' . esc_html__( 'View Live Page', 'council-debt-counters' ) . '</a>';
-                        if ( defined( 'ELEMENTOR_VERSION' ) ) {
-                                $edit_link = admin_url( 'post.php?post=' . $council_id . '&action=elementor' );
-                                echo '<a href="' . esc_url( $edit_link ) . '" class="btn btn-sm btn-secondary me-2">' . esc_html__( 'Edit with Elementor', 'council-debt-counters' ) . '</a>';
-                        }
                         $del = wp_nonce_url( admin_url( 'admin.php?page=cdc-manage-councils&action=delete&post=' . $council_id ), 'cdc_delete_council_' . $council_id );
                         echo '<a href="' . esc_url( $del ) . '" class="btn btn-sm btn-danger me-2" onclick="return confirm(\'' . esc_js( __( 'Delete this council?', 'council-debt-counters' ) ) . '\');">' . esc_html__( 'Trash Council', 'council-debt-counters' ) . '</a>';
-                        echo '<button type="button" class="btn btn-sm btn-info me-2" id="cdc-ask-ai-all"><span class="dashicons dashicons-lightbulb"></span> ' . esc_html__( 'Ask AI for All', 'council-debt-counters' ) . '</button>';
                 }
                 echo '</div></div>';
+                echo '<div id="cdc-status-msg" class="mb-3">' . $msg . '</div>';
         $fields  = \CouncilDebtCounters\Custom_Fields::get_fields();
         $enabled = (array) get_option( 'cdc_enabled_counters', array() );
         $groups  = array( 'general' => array() );

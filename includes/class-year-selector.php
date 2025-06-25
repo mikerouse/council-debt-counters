@@ -42,6 +42,9 @@ class Year_Selector {
         if ( ! is_singular( 'council' ) ) {
             return $content;
         }
+        if ( \CouncilDebtCounters\CDC_Utils::is_under_review( get_the_ID() ) ) {
+            return $content;
+        }
         wp_enqueue_style( 'bootstrap-5' );
         wp_enqueue_style( 'cdc-year-overlay' );
         wp_enqueue_script( 'bootstrap-5' );

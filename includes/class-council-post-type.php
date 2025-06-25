@@ -40,7 +40,9 @@ class Council_Post_Type {
 
         register_post_status( 'under_review', [
             'label'                     => _x( 'Under Review', 'post', 'council-debt-counters' ),
-            'public'                    => false,
+            'public'                    => true,
+            'publicly_queryable'        => true,
+            'exclude_from_search'       => false,
             'internal'                  => false,
             'show_in_admin_all_list'    => true,
             'show_in_admin_status_list' => true,
