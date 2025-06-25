@@ -24,7 +24,7 @@ class Year_Maintenance {
         $posts = get_posts([
             'post_type'   => 'council',
             'numberposts' => -1,
-            'post_status' => [ 'publish', 'draft', 'under_review' ],
+            'post_status' => [ 'publish', 'draft' ],
             'fields'      => 'ids',
         ]);
         foreach ( $posts as $id ) {
