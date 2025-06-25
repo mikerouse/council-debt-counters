@@ -24,7 +24,7 @@ class Year_Maintenance {
         $posts = get_posts([
             'post_type'   => 'council',
             'numberposts' => -1,
-            'post_status' => [ 'publish', 'draft', 'under_review' ],
+            'post_status' => [ 'publish', 'draft' ],
             'fields'      => 'ids',
         ]);
         foreach ( $posts as $id ) {
@@ -32,10 +32,9 @@ class Year_Maintenance {
             update_post_meta( $id, 'cdc_enabled_years', [ $year ] );
             $val = Custom_Fields::get_value( $id, 'current_liabilities', $year );
             if ( '' === $val || null === $val ) {
-                wp_update_post([
-                    'ID'          => $id,
-                    'post_status' => 'under_review',
-                ]);
+                update_post_meta( $id, 'cdc_under_review', '1' );
+            } else {
+                delete_post_meta( $id, 'cdc_under_review' );
             }
         }
         update_option( self::OPTION, '1' );

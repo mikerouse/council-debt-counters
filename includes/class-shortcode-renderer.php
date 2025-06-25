@@ -520,7 +520,8 @@ class Shortcode_Renderer {
                        return '';
                }
 
-               if ( 'under_review' !== get_post_status( $id ) ) {
+               $flag = get_post_meta( $id, 'cdc_under_review', true );
+               if ( '1' !== $flag ) {
                        return '';
                }
 
@@ -534,8 +535,8 @@ class Shortcode_Renderer {
                ob_start();
                ?>
                <div class="alert alert-info">
-                       <?php esc_html_e( "Help us build the UK's only public database of key financial figures for local government.", 'council-debt-counters' ); ?>
-                       <a href="#" class="cdc-open-fig-modal ms-1"><?php esc_html_e( 'Tap here to submit the figures for this council', 'council-debt-counters' ); ?></a>
+                       <?php esc_html_e( 'This council is awaiting review. Help us build the UK\'s only public database of key financial figures for local government.', 'council-debt-counters' ); ?>
+                       <a href="#" class="cdc-open-fig-modal ms-1"><?php esc_html_e( 'Click or tap here to submit the figures for this council', 'council-debt-counters' ); ?></a>
                </div>
                <div class="modal fade" id="cdc-fig-modal" tabindex="-1" aria-hidden="true">
                        <div class="modal-dialog modal-dialog-centered">
