@@ -17,6 +17,7 @@ class Council_Admin_Page {
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
         add_action( 'admin_post_cdc_save_council', [ __CLASS__, 'handle_save' ] );
         add_action( 'wp_ajax_cdc_update_toolbar', [ __CLASS__, 'ajax_update_toolbar' ] );
+        add_action( 'wp_ajax_cdc_get_year_values', [ __CLASS__, 'ajax_get_year_values' ] );
     }
 
     public static function add_page() {
@@ -76,6 +77,7 @@ class Council_Admin_Page {
             true
         );
         wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
+        wp_enqueue_style( 'cdc-year-progress', plugins_url( 'admin/css/year-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
         wp_enqueue_style( 'cdc-upload-progress', plugins_url( 'admin/css/upload-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.1' );
         wp_enqueue_style( 'cdc-toolbar', plugins_url( 'admin/css/toolbar.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
         wp_localize_script( 'cdc-council-form', 'cdcAiMessages', [
@@ -275,6 +277,33 @@ class Council_Admin_Page {
         Error_Logger::log_info( 'Toolbar updated for council ' . $post_id );
 
         wp_send_json_success( [ 'message' => implode( ' ', $message_parts ) ] );
+    }
+
+    public static function ajax_get_year_values() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+        }
+        check_ajax_referer( 'cdc_save_council', 'nonce' );
+
+        $post_id = intval( $_POST['post_id'] ?? 0 );
+        $tab     = sanitize_key( $_POST['tab'] ?? '' );
+        $year    = sanitize_text_field( $_POST['year'] ?? CDC_Utils::current_financial_year() );
+        if ( ! $post_id || ! $tab ) {
+            wp_send_json_error( __( 'Invalid request.', 'council-debt-counters' ) );
+        }
+
+        $fields  = Custom_Fields::get_fields();
+        $values  = [];
+        $na_vals = [];
+        foreach ( $fields as $field ) {
+            if ( Custom_Fields::get_field_tab( $field->name ) !== $tab ) {
+                continue;
+            }
+            $values[ $field->name ] = Custom_Fields::get_value( $post_id, $field->name, $year );
+            $na_vals[ $field->name ] = get_post_meta( $post_id, 'cdc_na_' . $field->name, true );
+        }
+
+        wp_send_json_success( [ 'values' => $values, 'na' => $na_vals ] );
     }
 
     public static function render_page() {
