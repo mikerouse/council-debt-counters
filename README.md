@@ -89,6 +89,10 @@ This plugin is tightly integrated into our site’s theme and admin UI. It is **
 
 Bootstrap can be loaded from a CDN via **Debt Counters → Settings → Load assets from CDN**. Font Awesome icons are always served via our kit.
 
+### Front‑end Financial Year Selector
+
+When viewing a single council page, a drop‑down will appear above the content allowing visitors to choose which financial year to display. Selecting a year fetches the updated HTML via AJAX and re-renders all counters. Ensure your theme outputs `the_content()` so the selector can be injected automatically.
+
 ---
 
 *If you’re part of our content team and have questions about any feature, please reach out to the development team or review the Troubleshooting logs

@@ -129,7 +129,8 @@
         }
         updateTabState();
 
-        // Handle financial year selector for each tab
+        // When a year is picked, pull the values for that year and
+        // update all fields on the selected tab.
         document.querySelectorAll('.cdc-year-select').forEach(function(sel){
             sel.addEventListener('change', function(){
                 var tab = sel.getAttribute('data-tab');

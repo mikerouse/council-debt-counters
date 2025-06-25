@@ -279,6 +279,10 @@ class Council_Admin_Page {
         wp_send_json_success( [ 'message' => implode( ' ', $message_parts ) ] );
     }
 
+    /**
+     * Fetch values for a specific financial year when the editor switches the
+     * dropdown on a tab.
+     */
     public static function ajax_get_year_values() {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );

@@ -1,4 +1,5 @@
 #cdc-year-overlay {
+    /* Full screen overlay used while content updates */
     position: fixed;
     top: 0;
     left: 0;

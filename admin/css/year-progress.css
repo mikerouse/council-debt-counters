@@ -1,4 +1,5 @@
 #cdc-year-overlay {
+    /* Overlay used when switching years */
     position: fixed;
     top: 0;
     left: 0;
