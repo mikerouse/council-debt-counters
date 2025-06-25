@@ -131,8 +131,8 @@ class Shortcode_Renderer {
                         );
                 }
 
-               // If the raw value is £0.00, attempt deeper inspection to locate the figure
-               if ( '0.00' === $raw_value || '0' === $raw_value ) {
+               // If the raw value resolves to zero, attempt deeper inspection to locate the figure
+               if ( 0.0 === (float) $raw_value ) {
                        $year                 = CDC_Utils::current_financial_year();
                        list( $replacement, $details ) = self::gather_zero_value_debug_info( $id, $field, $year );
                        Error_Logger::log_debug( $details );
