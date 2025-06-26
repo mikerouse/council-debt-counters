@@ -225,9 +225,20 @@ class Custom_Fields {
                 'type'           => in_array( $field['type'], [ 'number', 'money' ], true ) ? 'number' : 'string',
                 'single'         => true,
                 'show_in_rest'   => true,
-                'sanitize_callback' => in_array( $field['type'], [ 'number', 'money' ], true ) ? 'floatval' : 'sanitize_text_field',
+                'sanitize_callback' => in_array( $field['type'], [ 'number', 'money' ], true ) ? [ __CLASS__, 'sanitize_number_meta' ] : 'sanitize_text_field',
             ] );
         }
+    }
+
+    /**
+     * Sanitize numeric meta values for register_meta callbacks.
+     * WordPress passes four arguments, but we only care about the value.
+     *
+     * @param mixed  $value  Raw meta value.
+     * @return float         Sanitised number.
+     */
+    public static function sanitize_number_meta( $value ) {
+        return floatval( $value );
     }
 
     public static function admin_menu() {

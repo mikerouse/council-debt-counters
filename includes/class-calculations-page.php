@@ -13,6 +13,8 @@ class Calculations_Page {
 
     public static function init() {
         add_action( 'admin_menu', [ __CLASS__, 'add_menu' ] );
+        add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
+        add_action( 'wp_ajax_cdc_calc_table', [ __CLASS__, 'ajax_table' ] );
     }
 
     public static function add_menu() {
@@ -54,6 +56,52 @@ class Calculations_Page {
             }
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Zero values logged.', 'council-debt-counters' ) . '</p></div>';
         }
+    }
+
+    /**
+     * Output the table of values for a council.
+     */
+    public static function render_table( int $cid ) {
+        $cid = absint( $cid );
+        include plugin_dir_path( __DIR__ ) . 'admin/views/calculations-table.php';
+    }
+
+    /**
+     * AJAX handler for loading the council data table.
+     */
+    public static function ajax_table() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error();
+        }
+        check_ajax_referer( 'cdc_calc_table', 'nonce' );
+        $cid = isset( $_POST['cid'] ) ? absint( $_POST['cid'] ) : 0;
+        if ( ! $cid ) {
+            wp_send_json_error();
+        }
+        ob_start();
+        self::render_table( $cid );
+        $html = ob_get_clean();
+        wp_send_json_success( [ 'html' => $html ] );
+    }
+
+    /**
+     * Enqueue assets for the calculations page.
+     */
+    public static function enqueue_assets( $hook ) {
+        if ( 'debt-counters_page_' . self::SLUG !== $hook ) {
+            return;
+        }
+        wp_enqueue_script(
+            'cdc-calculations',
+            plugins_url( 'admin/js/calculations.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
+            [],
+            '0.1.0',
+            true
+        );
+        wp_localize_script( 'cdc-calculations', 'cdcCalc', [
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            'nonce'   => wp_create_nonce( 'cdc_calc_table' ),
+        ] );
     }
 
     public static function render() {
