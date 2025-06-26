@@ -30,10 +30,26 @@
         var assignee = document.querySelector('select[name="assigned_user"]');
         var uploadBtn = document.getElementById('cdc-upload-doc');
         var msgArea = document.getElementById('cdc-status-msg');
+        var activeInput = document.getElementById('cdc-active-tab');
+        if(activeInput){
+            var current = document.querySelector('.tab-pane.show.active');
+            if(current){ activeInput.value = current.id.replace('tab-',''); }
+        }
+        if(msgArea){
+            var alertEl = msgArea.querySelector('.alert');
+            if(alertEl){
+                setTimeout(function(){
+                    var a = bootstrap.Alert.getOrCreateInstance(alertEl); a.close();
+                },6000);
+            }
+        }
         function flash(msg){
             if(!msgArea) return;
-            msgArea.innerHTML = '<div class="alert alert-success mb-0">'+msg+'</div>';
-            setTimeout(function(){ msgArea.innerHTML = ''; },3000);
+            msgArea.innerHTML = '<div class="alert alert-success alert-dismissible fade show mb-0" role="alert">'+msg+'<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+            var el = msgArea.querySelector('.alert');
+            if(el){
+                setTimeout(function(){ var a=bootstrap.Alert.getOrCreateInstance(el); a.close(); },6000);
+            }
         }
         function sendToolbar(data){
             data.append('action','cdc_update_toolbar');
@@ -181,6 +197,7 @@
         document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(btn){
             btn.addEventListener('shown.bs.tab', function(){
                 var tab = btn.getAttribute('data-bs-target').replace('#tab-','');
+                if(activeInput){ activeInput.value = tab; }
                 if(globalYear){
                     fetchYearValues(tab, globalYear.value);
                 }
@@ -484,7 +501,8 @@
             askAll.addEventListener('click',async function(ev){
                 ev.preventDefault();
                 var buttons=document.querySelectorAll('.cdc-ask-ai');
-                for(var i=0;i<buttons.length;i++){
+                var total=buttons.length;
+                for(var i=0;i<total;i++){
                     await askField(buttons[i].dataset.field);
                 }
             });
