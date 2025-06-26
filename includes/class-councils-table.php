@@ -27,7 +27,9 @@ class Councils_Table extends \WP_List_Table {
         return [
             'cb'           => '<input type="checkbox" />',
             'name'         => __( 'Name', 'council-debt-counters' ),
+            'id'           => __( 'ID', 'council-debt-counters' ),
             'population'   => __( 'Population', 'council-debt-counters' ),
+            'visits'       => __( 'Visits Last Hour', 'council-debt-counters' ),
             'last_updated' => __( 'Last Updated', 'council-debt-counters' ),
             'status'       => __( 'Status', 'council-debt-counters' ),
         ];
@@ -55,6 +57,15 @@ class Councils_Table extends \WP_List_Table {
         $actions['delete'] = sprintf( '<a href="%s" onclick="return confirm(\'%s\');">%s</a>', esc_url( $del ), esc_js( __( 'Delete this council?', 'council-debt-counters' ) ), __( 'Delete', 'council-debt-counters' ) );
 
         return sprintf( '<strong><a class="row-title" href="%s">%s</a></strong>%s', esc_url( $edit ), esc_html( get_the_title( $item ) ), $this->row_actions( $actions ) );
+    }
+
+    protected function column_id( $item ) {
+        return intval( $item->ID );
+    }
+
+    protected function column_visits( $item ) {
+        $counts = Stats_Page::get_visit_counts( $item->ID );
+        return sprintf( '%d human / %d AI', $counts['human'], $counts['ai'] );
     }
 
     protected function column_shortcode( $item ) {
