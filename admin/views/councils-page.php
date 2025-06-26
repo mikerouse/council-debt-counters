@@ -98,6 +98,7 @@ if ( 'edit' === $req_action ) {
                 </ul>
                 <div class="tab-content pt-3">
                         <div class="tab-pane fade<?php echo ( 'general' === $active_tab ) ? ' show active' : ''; ?>" id="tab-general" role="tabpanel">
+                                <input type="hidden" name="cdc_tab_year[general]" value="<?php echo esc_attr( \CouncilDebtCounters\CDC_Utils::current_financial_year() ); ?>" class="cdc-selected-year">
                                 <table class="form-table" role="presentation">
                                 <?php
                                 $council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
