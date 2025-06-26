@@ -464,6 +464,27 @@ class Custom_Fields {
     }
 
     /**
+     * Move all custom field values from one year to another for a council.
+     * Used by the Calculations admin page to fix misplaced data.
+     *
+     * @param int    $council_id Council post ID.
+     * @param string $from       Source financial year.
+     * @param string $to         Destination financial year.
+     */
+    public static function move_year_data( int $council_id, string $from, string $to ) {
+        $fields = self::get_fields();
+        foreach ( $fields as $field ) {
+            $val = self::get_value( $council_id, $field->name, $from );
+            if ( '' === $val || null === $val ) {
+                continue;
+            }
+            self::update_value( $council_id, $field->name, $val, $to );
+            update_post_meta( $council_id, $field->name . '_' . $to, $val );
+            update_post_meta( $council_id, $field->name, $val );
+        }
+    }
+
+    /**
      * Merge any legacy `interest_paid_on_debt` values into the current
      * `interest_paid` field. This runs during installation and on every
      * initialisation so older data is always moved to the new tab.
