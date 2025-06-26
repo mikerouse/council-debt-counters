@@ -7,6 +7,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 $req_action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : '';
 $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
 
+// Preserve the selected financial year when returning to this page.
+$selected_year = isset( $_GET['year'] ) ? sanitize_text_field( $_GET['year'] ) : '';
+if ( $selected_year ) {
+        $GLOBALS['cdc_selected_year'] = $selected_year;
+}
+
 if ( 'delete' === $req_action && $council_id ) {
                 check_admin_referer( 'cdc_delete_council_' . $council_id );
                 wp_delete_post( $council_id, true );
