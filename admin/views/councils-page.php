@@ -12,11 +12,12 @@ $selected_year = isset( $_GET['year'] ) ? sanitize_text_field( $_GET['year'] ) :
 if ( $selected_year ) {
         $GLOBALS['cdc_selected_year'] = $selected_year;
 }
+$active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 
 if ( 'delete' === $req_action && $council_id ) {
                 check_admin_referer( 'cdc_delete_council_' . $council_id );
                 wp_delete_post( $council_id, true );
-                echo '<div class="alert alert-success"><p>' . esc_html__( 'Council deleted.', 'council-debt-counters' ) . '</p></div>';
+                echo '<div class="alert alert-success alert-dismissible fade show" role="alert"><p>' . esc_html__( 'Council deleted.', 'council-debt-counters' ) . '</p><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="' . esc_attr__( 'Close', 'council-debt-counters' ) . '"></button></div>';
                 $req_action = '';
 }
 
@@ -32,7 +33,7 @@ if ( 'edit' === $req_action ) {
                 $current_status = $council_id ? get_post_status( $council_id ) : 'draft';
                 $users          = get_users( [ 'fields' => [ 'ID', 'display_name' ] ] );
                 $reports        = $council_id ? count( get_posts( [ 'post_type' => \CouncilDebtCounters\Whistleblower_Form::CPT, 'numberposts' => -1, 'post_status' => 'private', 'meta_key' => 'council_id', 'meta_value' => $council_id ] ) ) : 0;
-                $msg = isset( $_GET['updated'] ) ? '<div class="alert alert-success mb-0">' . esc_html__( 'Update successful.', 'council-debt-counters' ) . '</div>' : '';
+                $msg = isset( $_GET['updated'] ) ? '<div class="alert alert-success alert-dismissible fade show mb-0" role="alert">' . esc_html__( 'Update successful.', 'council-debt-counters' ) . '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="' . esc_attr__( 'Close', 'council-debt-counters' ) . '"></button></div>' : '';
                 echo '<div id="cdc-toolbar" class="mb-2 d-flex justify-content-between align-items-center">';
                 echo '<div class="d-flex align-items-center flex-nowrap">';
                 echo '<select id="cdc-post-status" class="form-select me-2"><option value="publish"' . selected( $current_status, 'publish', false ) . '>' . esc_html__( 'Active', 'council-debt-counters' ) . '</option><option value="draft"' . selected( $current_status, 'draft', false ) . '>' . esc_html__( 'Draft', 'council-debt-counters' ) . '</option><option value="under_review"' . selected( $current_status, 'under_review', false ) . '>' . esc_html__( 'Under Review', 'council-debt-counters' ) . '</option></select>';
@@ -78,24 +79,25 @@ if ( 'edit' === $req_action ) {
         <form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <input type="hidden" name="action" value="cdc_save_council">
                 <?php wp_nonce_field( 'cdc_save_council' ); ?>
-                                <input type="hidden" name="post_id" value="<?php echo esc_attr( $council_id ); ?>">
+                <input type="hidden" name="post_id" value="<?php echo esc_attr( $council_id ); ?>">
+                <input type="hidden" name="active_tab" id="cdc-active-tab" value="<?php echo esc_attr( $active_tab ); ?>">
                 <ul class="nav nav-tabs" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button" role="tab"><?php esc_html_e( 'General', 'council-debt-counters' ); ?></button></li>
+                        <li class="nav-item"><button class="nav-link<?php echo ( 'general' === $active_tab ) ? ' active' : ''; ?>" data-bs-toggle="tab" data-bs-target="#tab-general" type="button" role="tab"><?php esc_html_e( 'General', 'council-debt-counters' ); ?></button></li>
                         <?php
                         foreach ( $enabled as $tab_key ) :
                                 if ( empty( $groups[ $tab_key ] ) ) {
                                                                 continue;}
                                 ?>
-                                                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-<?php echo esc_attr( $tab_key ); ?>" type="button" role="tab"><?php echo esc_html( ucfirst( $tab_key ) ); ?></button></li>
+                                <li class="nav-item"><button class="nav-link<?php echo ( $tab_key === $active_tab ) ? ' active' : ''; ?>" data-bs-toggle="tab" data-bs-target="#tab-<?php echo esc_attr( $tab_key ); ?>" type="button" role="tab"><?php echo esc_html( ucfirst( $tab_key ) ); ?></button></li>
                                                 <?php endforeach; ?>
 <?php if ( $docs_field ) : ?>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></button></li>
+<li class="nav-item"><button class="nav-link<?php echo ( 'docs' === $active_tab ) ? ' active' : ''; ?>" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab"><?php esc_html_e( 'Statement of Accounts', 'council-debt-counters' ); ?></button></li>
 <?php endif; ?>
 <?php if ( $council_id ) : ?>
                                 <!-- Whistleblower reports moved to dedicated admin page -->
                 </ul>
                 <div class="tab-content pt-3">
-                        <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
+                        <div class="tab-pane fade<?php echo ( 'general' === $active_tab ) ? ' show active' : ''; ?>" id="tab-general" role="tabpanel">
                                 <table class="form-table" role="presentation">
                                 <?php
                                 $council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
@@ -272,7 +274,7 @@ $readonly = true;
                                 $tab_fields = $groups[ $tab_key ] ?? array();
                                 $na_tab_val = $council_id ? get_post_meta( $council_id, 'cdc_na_tab_' . $tab_key, true ) : '';
                                 ?>
-                                <div class="tab-pane" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
+                                <div class="tab-pane fade<?php echo ( $tab_key === $active_tab ) ? ' show active' : ''; ?>" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <div>
                                                         <input type="hidden" name="cdc_tab_year[<?php echo esc_attr( $tab_key ); ?>]" value="<?php echo esc_attr( \CouncilDebtCounters\CDC_Utils::current_financial_year() ); ?>" class="cdc-selected-year">
@@ -347,7 +349,7 @@ $readonly = true;
                         endforeach;
                         ?>
                         <?php if ( $docs_field ) : ?>
-                        <div class="tab-pane fade" id="tab-docs" role="tabpanel">
+                        <div class="tab-pane fade<?php echo ( 'docs' === $active_tab ) ? ' show active' : ''; ?>" id="tab-docs" role="tabpanel">
                                 <table class="form-table" role="presentation">
                                         <tr>
                                                 <th scope="row"><label for="cdc-soa"><?php echo esc_html( $docs_field->label ); ?></label></th>

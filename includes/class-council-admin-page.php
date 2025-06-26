@@ -273,7 +273,8 @@ class Council_Admin_Page {
 
         Error_Logger::log_info( 'Council saved: ' . $post_id );
         $redirect_year = rawurlencode( $debt_year );
-        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&action=edit&post=' . $post_id . '&updated=1&year=' . $redirect_year ) );
+        $redirect_tab  = isset( $_POST['active_tab'] ) ? sanitize_key( $_POST['active_tab'] ) : 'general';
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&action=edit&post=' . $post_id . '&updated=1&year=' . $redirect_year . '&tab=' . rawurlencode( $redirect_tab ) ) );
         exit;
     }
 
