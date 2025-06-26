@@ -25,6 +25,7 @@ $wpdb = new WPDBStub();
 require_once __DIR__ . '/../includes/class-counter-manager.php';
 require_once __DIR__ . '/../includes/class-cdc-utils.php';
 require_once __DIR__ . '/../includes/class-custom-fields.php';
+require_once __DIR__ . '/../includes/class-docs-manager.php';
 
 function is_serialized($data, $strict = true) {
     if (!is_string($data)) return false;

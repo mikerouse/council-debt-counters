@@ -53,6 +53,26 @@
         }
     }
 
+    function initInfoElement(el){
+        el.dataset.cdcInfoInitialised = '1';
+        let items = [];
+        try { items = JSON.parse(el.dataset.items || '[]'); } catch(e){}
+        if(!items.length) return;
+        let idx = 0;
+        el.textContent = items[0];
+        el.style.opacity = '1';
+        if(items.length > 1){
+            setInterval(()=>{
+                idx = (idx + 1) % items.length;
+                el.style.opacity = '0';
+                setTimeout(()=>{
+                    el.textContent = items[idx];
+                    el.style.opacity = '1';
+                },400);
+            },3500);
+        }
+    }
+
     function init(el){
         if (el.dataset.cdcCountupInitialised) {
             debugLog('Skipping already-initialised counter', {id: el.id}, 'verbose');
@@ -133,6 +153,11 @@
                 intersection.observe(el);
             }
         });
+        context.querySelectorAll('.cdc-counter-info').forEach(el => {
+            if(!el.dataset.cdcInfoInitialised){
+                initInfoElement(el);
+            }
+        });
     }
 
     const intersection = new IntersectionObserver(entries => {
@@ -152,8 +177,13 @@
                     if (node.classList && node.classList.contains('cdc-counter')){
                         observeCounters(node.parentNode || document);
                     }
-                    const nested = node.querySelectorAll ? node.querySelectorAll('.cdc-counter') : [];
-                    nested.forEach(el => observeCounters(el.parentNode || document));
+                    if (node.classList && node.classList.contains('cdc-counter-info')){
+                        initInfoElement(node);
+                    }
+                    const nestedCounters = node.querySelectorAll ? node.querySelectorAll('.cdc-counter') : [];
+                    nestedCounters.forEach(el => observeCounters(el.parentNode || document));
+                    const nestedInfo = node.querySelectorAll ? node.querySelectorAll('.cdc-counter-info') : [];
+                    nestedInfo.forEach(el => initInfoElement(el));
                 }
             });
         });

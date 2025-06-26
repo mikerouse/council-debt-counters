@@ -54,7 +54,8 @@ class Year_Selector {
             'nonce'   => wp_create_nonce( self::NONCE ),
             'postId'  => get_the_ID(),
             'years'   => CDC_Utils::council_years( get_the_ID() ),
-            'current' => CDC_Utils::current_financial_year(),
+            // Default to the most recent enabled year for this council.
+            'current' => CDC_Utils::latest_enabled_year( get_the_ID() ),
         ] );
         $selector  = '<div class="cdc-year-selector mb-3"><label for="cdc-year-select" class="me-2">' . esc_html__( 'Financial Year', 'council-debt-counters' ) . '</label>';
         $selector .= '<select id="cdc-year-select" class="form-select d-inline w-auto"></select></div>';

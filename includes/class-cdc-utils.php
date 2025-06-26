@@ -45,9 +45,10 @@ class CDC_Utils {
             return $GLOBALS['cdc_selected_year'];
         }
         if ( function_exists( '\is_singular' ) && \is_singular( 'council' ) ) {
-            $year = get_post_meta( get_the_ID(), 'cdc_default_financial_year', true );
-            if ( $year ) {
-                return $year;
+            // Use the most recent enabled year when viewing a council page.
+            $latest = self::latest_enabled_year( get_the_ID() );
+            if ( $latest ) {
+                return $latest;
             }
         }
         if ( class_exists( '\\CouncilDebtCounters\\Docs_Manager' ) && method_exists( '\\CouncilDebtCounters\\Docs_Manager', 'current_financial_year' ) ) {
@@ -85,6 +86,20 @@ class CDC_Utils {
         }
 
         return array_values( array_intersect( $years, $enabled ) );
+    }
+
+    /**
+     * Get the most recent enabled financial year for a council.
+     * Falls back to the plugin's current year if none are enabled.
+     */
+    public static function latest_enabled_year( int $council_id = 0 ) : string {
+        $years = self::council_years( $council_id );
+        if ( ! empty( $years ) ) {
+            // The years array is ordered from newest to oldest.
+            return $years[0];
+        }
+        // Default to plugin's global current year if no enabled years found.
+        return Docs_Manager::current_financial_year();
     }
 
     /**

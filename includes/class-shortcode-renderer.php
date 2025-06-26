@@ -79,8 +79,9 @@ class Shortcode_Renderer {
                 if ( CDC_Utils::is_under_review( $id ) ) {
                         return '';
                 }
-                // Get the raw value for the field
-                $raw_value = Custom_Fields::get_value( $id, $field, CDC_Utils::current_financial_year() );
+                // Work with the most recent enabled year for this council.
+                $year      = CDC_Utils::latest_enabled_year( $id );
+                $raw_value = Custom_Fields::get_value( $id, $field, $year );
                 // Get a parent council ID if this is a child council (if the council is a child it means the council has been taken over and no longer exists)
                 $parent    = intval( get_post_meta( $id, 'cdc_parent_council', true ) );
                 // If the tab is set to 'Do not show this counter' we don't need to show this counter
@@ -133,7 +134,6 @@ class Shortcode_Renderer {
 
                // If the raw value resolves to zero, attempt deeper inspection to locate the figure
                if ( 0.0 === (float) $raw_value ) {
-                       $year                 = CDC_Utils::current_financial_year();
                        list( $replacement, $details ) = self::gather_zero_value_debug_info( $id, $field, $year );
                        Error_Logger::log_debug( $details );
                        wp_mail( get_option( 'admin_email' ), __( 'CDC zero value troubleshooting', 'council-debt-counters' ), $details );
@@ -182,6 +182,7 @@ class Shortcode_Renderer {
                 $label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
                 $title         = self::counter_title( $type ?: $field );
                 $collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
+                $info_line     = self::counter_info( $id, $type ?: $field, $year );
                 // Prepare the HTML output for the counter
                 ob_start();
                 ?>
@@ -194,9 +195,12 @@ class Shortcode_Renderer {
                         <?php endif; ?>
                 </div>
                 <div class="cdc-counter-wrapper text-center mb-3">
-                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£" data-cid="<?php echo esc_attr( $id ); ?>" data-field="<?php echo esc_attr( $field ); ?>" data-year="<?php echo esc_attr( CDC_Utils::current_financial_year() ); ?>">
+                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£" data-cid="<?php echo esc_attr( $id ); ?>" data-field="<?php echo esc_attr( $field ); ?>" data-year="<?php echo esc_attr( $year ); ?>">
                                 &hellip;
                         </div>
+                        <?php if ( $info_line ) : ?>
+                                <div class="cdc-counter-info small text-muted" data-items="<?php echo esc_attr( wp_json_encode( [ $info_line ] ) ); ?>"></div>
+                        <?php endif; ?>
                 </div>
                 <?php if ( $with_details ) : ?>
                         <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
@@ -361,7 +365,7 @@ class Shortcode_Renderer {
                 }
 
                 $name     = get_the_title( $id );
-                $year      = CDC_Utils::current_financial_year();
+                $year      = CDC_Utils::latest_enabled_year( $id );
                 $interest  = (float) Custom_Fields::get_value( $id, 'interest_paid', $year );
                 $debt      = (float) Custom_Fields::get_value( $id, 'total_debt', $year );
                 $permalink = get_permalink( $id );
@@ -409,7 +413,7 @@ class Shortcode_Renderer {
                         return '';
                 }
 
-                $year    = CDC_Utils::current_financial_year();
+                $year    = CDC_Utils::latest_enabled_year( $id );
                 $message = Custom_Fields::get_value( $id, 'status_message', $year );
                 $type    = Custom_Fields::get_value( $id, 'status_message_type', $year );
 
@@ -556,8 +560,8 @@ class Shortcode_Renderer {
         * @param string $value Replacement value.
         * @param array  $lines Log lines for debugging.
         */
-       private static function reconcile_zero_value( int $id, string $field, string $year, string $value, array &$lines ) : void {
-               $current = Custom_Fields::get_value( $id, $field, $year );
+    private static function reconcile_zero_value( int $id, string $field, string $year, string $value, array &$lines ) : void {
+        $current = Custom_Fields::get_value( $id, $field, $year );
                if ( (string) $current !== (string) $value ) {
                        $lines[] = 'Reconciled stored value from ' . var_export( $current, true ) . ' to ' . $value . '.';
                        Custom_Fields::update_value( $id, $field, $value, $year );
@@ -565,8 +569,62 @@ class Shortcode_Renderer {
                        update_post_meta( $id, $field, $value );
                } else {
                        $lines[] = 'Stored value already matches replacement.';
-               }
-       }
+        }
+    }
+
+    /**
+     * Generate a short informative line for each counter.
+     */
+    private static function counter_info( int $id, string $type, string $year ) : string {
+        $population = (float) Custom_Fields::get_value( $id, 'population', $year );
+        $households = (float) Custom_Fields::get_value( $id, 'households', $year );
+
+        switch ( $type ) {
+            case 'debt':
+                $debt     = (float) Custom_Fields::get_value( $id, 'total_debt', $year );
+                $reserves = (float) Custom_Fields::get_value( $id, 'usable_reserves', $year );
+                if ( $debt > 0 && $reserves > 0 ) {
+                    $ratio = ( $reserves / $debt ) * 100;
+                    return sprintf( __( 'Reserves to debt ratio: %s%%', 'council-debt-counters' ), number_format_i18n( $ratio, 1 ) );
+                }
+                break;
+            case 'spending':
+                $spend = (float) Custom_Fields::get_value( $id, 'annual_spending', $year );
+                if ( $population > 0 && $spend > 0 ) {
+                    $per = $spend / $population;
+                    return sprintf( __( 'Spending per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                }
+                break;
+            case 'deficit':
+                $deficit = (float) Custom_Fields::get_value( $id, 'annual_deficit', $year );
+                if ( $population > 0 && $deficit != 0 ) {
+                    $per = $deficit / $population;
+                    return sprintf( __( 'Deficit per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                }
+                break;
+            case 'interest':
+                $interest = (float) Custom_Fields::get_value( $id, 'interest_paid', $year );
+                if ( $population > 0 && $interest > 0 ) {
+                    $per = $interest / $population;
+                    return sprintf( __( 'Interest per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                }
+                break;
+            case 'income':
+                $income = (float) Custom_Fields::get_value( $id, 'total_income', $year );
+                if ( $households > 0 && $income > 0 ) {
+                    $per = $income / $households;
+                    return sprintf( __( 'Income per household: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                }
+                break;
+            default:
+                $value = (float) Custom_Fields::get_value( $id, $type, $year );
+                if ( $population > 0 && $value > 0 ) {
+                    $per = $value / $population;
+                    return sprintf( __( 'Per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                }
+        }
+        return '';
+    }
 
         /**
          * Renders a total annual counter for a specific field.
@@ -915,10 +973,8 @@ class Shortcode_Renderer {
                        return self::render_missing_prompt( [ 'id' => $id ] );
                }
 
-                $year   = get_post_meta( $id, 'cdc_default_financial_year', true );
-                if ( ! $year ) {
-                        $year = CDC_Utils::current_financial_year();
-                }
+                // Default to the most recent enabled year for this council.
+                $year = CDC_Utils::latest_enabled_year( $id );
 
                 wp_enqueue_style( 'bootstrap-5' );
                 wp_enqueue_style( 'cdc-counter' );
