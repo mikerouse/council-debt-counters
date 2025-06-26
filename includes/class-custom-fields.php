@@ -134,18 +134,13 @@ class Custom_Fields {
      * Copy existing values from 2025/26 into the 2023/24 year if needed.
      */
     private static function backfill_2023_financial_year() {
-        if ( '1' === get_option( 'cdc_backfill_2023', '0' ) ) {
-            return;
-        }
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE_VALUES;
         $from  = '2025/26';
         $to    = '2023/24';
-        // Only insert rows that don't already exist for 2023/24.
-        $wpdb->query( $wpdb->prepare(
-            "INSERT INTO $table (council_id, field_id, financial_year, value)
-             SELECT v.council_id, v.field_id, %s, v.value
-             FROM $table v
+
+        $pending = (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(*) FROM $table v
              WHERE v.financial_year = %s
              AND NOT EXISTS (
                  SELECT 1 FROM $table t
@@ -153,10 +148,34 @@ class Custom_Fields {
                    AND t.field_id = v.field_id
                    AND t.financial_year = %s
              )",
-            $to,
             $from,
             $to
         ) );
+
+        if ( 0 === $pending && '1' === get_option( 'cdc_backfill_2023', '0' ) ) {
+            return;
+        }
+
+        if ( $pending > 0 ) {
+            Error_Logger::log_info( "Migrating {$pending} field values from $from to $to" );
+            $wpdb->query( $wpdb->prepare(
+                "INSERT INTO $table (council_id, field_id, financial_year, value)
+                 SELECT v.council_id, v.field_id, %s, v.value
+                 FROM $table v
+                 WHERE v.financial_year = %s
+                 AND NOT EXISTS (
+                     SELECT 1 FROM $table t
+                     WHERE t.council_id = v.council_id
+                       AND t.field_id = v.field_id
+                       AND t.financial_year = %s
+                 )",
+                $to,
+                $from,
+                $to
+            ) );
+            Error_Logger::log_info( 'Backfill operation completed' );
+        }
+
         update_option( 'cdc_backfill_2023', '1' );
     }
 
@@ -206,9 +225,20 @@ class Custom_Fields {
                 'type'           => in_array( $field['type'], [ 'number', 'money' ], true ) ? 'number' : 'string',
                 'single'         => true,
                 'show_in_rest'   => true,
-                'sanitize_callback' => in_array( $field['type'], [ 'number', 'money' ], true ) ? 'floatval' : 'sanitize_text_field',
+                'sanitize_callback' => in_array( $field['type'], [ 'number', 'money' ], true ) ? [ __CLASS__, 'sanitize_number_meta' ] : 'sanitize_text_field',
             ] );
         }
+    }
+
+    /**
+     * Sanitize numeric meta values for register_meta callbacks.
+     * WordPress passes four arguments, but we only care about the value.
+     *
+     * @param mixed  $value  Raw meta value.
+     * @return float         Sanitised number.
+     */
+    public static function sanitize_number_meta( $value ) {
+        return floatval( $value );
     }
 
     public static function admin_menu() {
@@ -441,6 +471,27 @@ class Custom_Fields {
 
                 self::update_value( $post->ID, $key, $value, CDC_Utils::current_financial_year() );
             }
+        }
+    }
+
+    /**
+     * Move all custom field values from one year to another for a council.
+     * Used by the Calculations admin page to fix misplaced data.
+     *
+     * @param int    $council_id Council post ID.
+     * @param string $from       Source financial year.
+     * @param string $to         Destination financial year.
+     */
+    public static function move_year_data( int $council_id, string $from, string $to ) {
+        $fields = self::get_fields();
+        foreach ( $fields as $field ) {
+            $val = self::get_value( $council_id, $field->name, $from );
+            if ( '' === $val || null === $val ) {
+                continue;
+            }
+            self::update_value( $council_id, $field->name, $val, $to );
+            update_post_meta( $council_id, $field->name . '_' . $to, $val );
+            update_post_meta( $council_id, $field->name, $val );
         }
     }
 

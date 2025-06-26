@@ -129,43 +129,61 @@
         }
         updateTabState();
 
-        // When a year is picked, pull the values for that year and
-        // update all fields on the selected tab.
-        document.querySelectorAll('.cdc-year-select').forEach(function(sel){
-            sel.addEventListener('change', function(){
-                var tab = sel.getAttribute('data-tab');
-                var hidden = document.querySelector('input[name="cdc_tab_year['+tab+']"]');
-                if(hidden){ hidden.value = sel.value; }
-                var overlay = document.createElement('div');
-                overlay.id = 'cdc-year-overlay';
-                overlay.innerHTML = '<span class="spinner is-active"></span>';
-                document.body.appendChild(overlay);
-                var data = new FormData();
-                data.append('action','cdc_get_year_values');
-                data.append('post_id', cdcToolbarData.id);
-                data.append('tab', tab);
-                data.append('year', sel.value);
-                data.append('nonce', cdcToolbarData.nonce);
-                fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
-                    .then(function(r){return r.json();})
-                    .then(function(res){
-                        if(res.success && res.data){
-                            Object.keys(res.data.values).forEach(function(name){
-                                var input=document.querySelector('#tab-'+tab+' [data-cdc-field="'+name+'"]');
-                                if(input){
-                                    input.value=res.data.values[name];
-                                    input.dispatchEvent(new Event('input'));
-                                }
-                                var cb=document.getElementById('cdc-na-'+name);
-                                if(cb){
-                                    cb.checked=res.data.na[name]=='1';
-                                    cb.dispatchEvent(new Event('change'));
-                                }
-                            });
-                        }
-                        overlay.remove();
-                    })
-                    .catch(function(){ overlay.remove(); });
+        function fetchYearValues(tab, year){
+            var hidden = document.querySelector('input[name="cdc_tab_year['+tab+']"]');
+            if(hidden){ hidden.value = year; }
+            var overlay = document.createElement('div');
+            overlay.id = 'cdc-year-overlay';
+            overlay.innerHTML = '<span class="spinner is-active"></span>';
+            document.body.appendChild(overlay);
+            var data = new FormData();
+            data.append('action','cdc_get_year_values');
+            data.append('post_id', cdcToolbarData.id);
+            data.append('tab', tab);
+            data.append('year', year);
+            data.append('nonce', cdcToolbarData.nonce);
+            fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                .then(function(r){return r.json();})
+                .then(function(res){
+                    if(res.success && res.data){
+                        Object.keys(res.data.values).forEach(function(name){
+                            var input=document.querySelector('#tab-'+tab+' [data-cdc-field="'+name+'"]');
+                            if(input){
+                                input.value=res.data.values[name];
+                                input.dispatchEvent(new Event('input'));
+                            }
+                            var cb=document.getElementById('cdc-na-'+name);
+                            if(cb){
+                                cb.checked=res.data.na[name]=='1';
+                                cb.dispatchEvent(new Event('change'));
+                            }
+                        });
+                    }
+                    overlay.remove();
+                })
+                .catch(function(){ overlay.remove(); });
+        }
+
+        var globalYear = document.getElementById('cdc-global-year');
+        if(globalYear){
+            globalYear.addEventListener('change', function(){
+                document.querySelectorAll('.cdc-selected-year').forEach(function(inp){ inp.value = globalYear.value; });
+                var active = document.querySelector('.tab-pane.active');
+                if(active){
+                    var tab = active.id.replace('tab-','');
+                    fetchYearValues(tab, globalYear.value);
+                }
+                var soa = document.getElementById('cdc-soa-year');
+                if(soa){ soa.value = globalYear.value; }
+            });
+        }
+
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(btn){
+            btn.addEventListener('shown.bs.tab', function(){
+                var tab = btn.getAttribute('data-bs-target').replace('#tab-','');
+                if(globalYear){
+                    fetchYearValues(tab, globalYear.value);
+                }
             });
         });
 

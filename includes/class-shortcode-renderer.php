@@ -131,36 +131,29 @@ class Shortcode_Renderer {
                         );
                 }
 
-                // If the raw value is £0.00, we should double check with the backend to ensure we have the correct value
-                if ( '0.00' === $raw_value || '0' === $raw_value ) {
-                        global $wpdb;
-                        $meta_key = $wpdb->esc_like( $field ) . '_';
-                        $year = CDC_Utils::current_financial_year();
-                        // Try to get the meta value for the current year, fallback to meta without year if not found
-                        $backend_value = $wpdb->get_var( $wpdb->prepare(
-                                        "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND (meta_key = %s OR meta_key = %s) ORDER BY meta_key = %s DESC LIMIT 1",
-                                        $id,
-                                        $field . '_' . $year,
-                                        $field,
-                                        $field . '_' . $year
-                        ) );
-                        if ( '' === $backend_value || null === $backend_value ) {
-                                // If the backend value is also empty, we show a warning message
-                                $label = $field;
-                                return sprintf(
-                                '<div class="alert alert-danger">%s</div>',
-                                esc_html(
-                                        sprintf(
-                                        /* translators: %s: Field label */
-                                                __( 'No %s figure found', 'council-debt-counters' ),
-                                                $label
-                                        )
-                                )
-                                );
-                        };
-                        // If the backend value is not empty, we use that as the raw value
-                        $raw_value = $backend_value;
-                }
+               // If the raw value resolves to zero, attempt deeper inspection to locate the figure
+               if ( 0.0 === (float) $raw_value ) {
+                       $year                 = CDC_Utils::current_financial_year();
+                       list( $replacement, $details ) = self::gather_zero_value_debug_info( $id, $field, $year );
+                       Error_Logger::log_debug( $details );
+                       wp_mail( get_option( 'admin_email' ), __( 'CDC zero value troubleshooting', 'council-debt-counters' ), $details );
+
+                       if ( '' !== $replacement ) {
+                               $raw_value = $replacement;
+                       } else {
+                               $label = $field;
+                               return sprintf(
+                                       '<div class="alert alert-danger">%s</div>',
+                                       esc_html(
+                                               sprintf(
+                                               /* translators: %s: Field label */
+                                                       __( 'No %s figure found', 'council-debt-counters' ),
+                                                       $label
+                                               )
+                                       )
+                               );
+                       }
+               }
 
                 // If we do have a figure, but the council has been taken over, we show the last figure as a static value (such as the outgoing council's debt)
                 if ( $parent ) {
@@ -467,6 +460,112 @@ class Shortcode_Renderer {
                </div>
                <?php
                return ob_get_clean();
+       }
+
+       /**
+        * Gather troubleshooting information when a zero value is detected.
+        * Returns a replacement value if one can be derived along with log info.
+        *
+        * @param int    $id    Council post ID.
+        * @param string $field Field name.
+        * @param string $year  Financial year.
+        * @return array{string,string} [replacement value, log details]
+        */
+       private static function gather_zero_value_debug_info( int $id, string $field, string $year ) : array {
+               global $wpdb;
+               $lines          = [];
+               $lines[]        = "Zero value detected for field {$field} on council ID {$id} for {$year}.";
+               $fields_table   = $wpdb->prefix . Custom_Fields::TABLE_FIELDS;
+               $values_table   = $wpdb->prefix . Custom_Fields::TABLE_VALUES;
+               $field_id       = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $fields_table WHERE name = %s", $field ) );
+               $db_value       = '';
+               $backend_value  = null;
+               $replacement    = '';
+
+               if ( $field_id ) {
+                       $sql = $wpdb->prepare( "SELECT value FROM $values_table WHERE council_id = %d AND field_id = %d AND financial_year = %s", $id, $field_id, $year );
+                       $lines[] = 'Custom field SQL: ' . $sql;
+                       $db_value = $wpdb->get_var( $sql );
+                       $lines[] = 'Result: ' . var_export( $db_value, true );
+
+                       $hist_sql = $wpdb->prepare( "SELECT financial_year, value FROM $values_table WHERE council_id = %d AND field_id = %d ORDER BY financial_year DESC", $id, $field_id );
+                       $lines[] = 'Custom field history SQL: ' . $hist_sql;
+                       foreach ( $wpdb->get_results( $hist_sql ) as $row ) {
+                               $lines[] = '- ' . $row->financial_year . ': ' . var_export( $row->value, true );
+                       }
+               }
+
+               $meta_sql = $wpdb->prepare( "SELECT meta_key, meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key LIKE %s", $id, $wpdb->esc_like( $field ) . '%' );
+               $lines[]  = 'Postmeta SQL: ' . $meta_sql;
+               foreach ( $wpdb->get_results( $meta_sql ) as $row ) {
+                       $lines[] = '- ' . $row->meta_key . ': ' . var_export( $row->meta_value, true );
+                       if ( $row->meta_key === $field . '_' . $year || $row->meta_key === $field ) {
+                               $backend_value = $row->meta_value;
+                       }
+               }
+
+               $calc_total = null;
+               if ( 'total_debt' === $field ) {
+                       $components = [
+                               'current_liabilities',
+                               'long_term_liabilities',
+                               'finance_lease_pfi_liabilities',
+                               'manual_debt_entry',
+                       ];
+                       $component_sum = 0.0;
+                       $lines[] = 'Debt components:';
+                       foreach ( $components as $comp ) {
+                               $val      = Custom_Fields::get_value( $id, $comp, $year );
+                               $lines[]  = '- ' . $comp . ': ' . var_export( $val, true );
+                               $component_sum += (float) $val;
+                       }
+
+                       $entries       = get_post_meta( $id, 'cdc_debt_adjustments', true );
+                       $adjust_total  = 0.0;
+                       if ( is_array( $entries ) ) {
+                               foreach ( $entries as $e ) {
+                                       $adjust_total += (float) $e['amount'];
+                               }
+                       }
+                       $lines[] = '- adjustments: ' . $adjust_total;
+                       $calc_total = $component_sum + $adjust_total;
+                       $lines[] = 'Calculated total debt: ' . $calc_total;
+               }
+
+               if ( '' !== $db_value && null !== $db_value ) {
+                       $replacement = $db_value;
+               } elseif ( '' !== $backend_value && null !== $backend_value ) {
+                       $replacement = $backend_value;
+               } elseif ( null !== $calc_total ) {
+                       $replacement = (string) $calc_total;
+               }
+
+               if ( '' !== $replacement && is_numeric( $replacement ) ) {
+                       self::reconcile_zero_value( $id, $field, $year, $replacement, $lines );
+               }
+
+               return [ $replacement, implode( "\n", $lines ) ];
+       }
+
+       /**
+        * Update stored values when a valid replacement is found to maintain a single source of truth.
+        *
+        * @param int    $id    Council post ID.
+        * @param string $field Field name.
+        * @param string $year  Financial year.
+        * @param string $value Replacement value.
+        * @param array  $lines Log lines for debugging.
+        */
+       private static function reconcile_zero_value( int $id, string $field, string $year, string $value, array &$lines ) : void {
+               $current = Custom_Fields::get_value( $id, $field, $year );
+               if ( (string) $current !== (string) $value ) {
+                       $lines[] = 'Reconciled stored value from ' . var_export( $current, true ) . ' to ' . $value . '.';
+                       Custom_Fields::update_value( $id, $field, $value, $year );
+                       update_post_meta( $id, $field . '_' . $year, $value );
+                       update_post_meta( $id, $field, $value );
+               } else {
+                       $lines[] = 'Stored value already matches replacement.';
+               }
        }
 
         /**

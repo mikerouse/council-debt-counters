@@ -35,6 +35,11 @@ if ( 'edit' === $req_action ) {
                         printf( '<option value="%d"%s>%s</option>', $u->ID, selected( $assigned, $u->ID, false ), esc_html( $u->display_name ) );
                 }
                 echo '</select>';
+                echo '<select id="cdc-global-year" class="form-select me-2">';
+                foreach ( \CouncilDebtCounters\CDC_Utils::council_years( $council_id ) as $y ) {
+                        printf( '<option value="%s"%s>%s</option>', esc_attr( $y ), selected( \CouncilDebtCounters\CDC_Utils::current_financial_year(), $y, false ), esc_html( $y ) );
+                }
+                echo '</select>';
                 if ( $council_id ) {
                         echo '<span class="badge bg-secondary me-2">ID: ' . intval( $council_id ) . '</span>';
                         echo '<span class="badge bg-info me-2">' . esc_html__( 'Reports:', 'council-debt-counters' ) . ' ' . intval( $reports ) . '</span>';
@@ -264,12 +269,6 @@ $readonly = true;
                                 <div class="tab-pane" id="tab-<?php echo esc_attr( $tab_key ); ?>" role="tabpanel">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <div>
-                                                        <label for="cdc-year-<?php echo esc_attr( $tab_key ); ?>" class="form-label me-2"><?php esc_html_e( 'Financial Year', 'council-debt-counters' ); ?></label>
-                                                        <select class="form-select cdc-year-select d-inline w-auto" id="cdc-year-<?php echo esc_attr( $tab_key ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>">
-                                                                <?php foreach ( \CouncilDebtCounters\CDC_Utils::council_years( $council_id ) as $y ) : ?>
-                                                                        <option value="<?php echo esc_attr( $y ); ?>" <?php selected( \CouncilDebtCounters\CDC_Utils::current_financial_year(), $y ); ?>><?php echo esc_html( $y ); ?></option>
-                                                                <?php endforeach; ?>
-                                                        </select>
                                                         <input type="hidden" name="cdc_tab_year[<?php echo esc_attr( $tab_key ); ?>]" value="<?php echo esc_attr( \CouncilDebtCounters\CDC_Utils::current_financial_year() ); ?>" class="cdc-selected-year">
                                                 </div>
                                                 <div class="form-check">
