@@ -935,10 +935,10 @@ class Shortcode_Renderer {
                                                 $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) );
                                                 $prefix   = in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ? '' : '£';
                                                 $label    = '<span class="cdc-counter" data-target="' . esc_attr( $row['value'] ) . '" data-growth="0" data-start="0" data-duration="' . esc_attr( $duration ) . '" data-prefix="' . esc_attr( $prefix ) . '" data-cid="' . esc_attr( $row['id'] ) . '" data-lb-type="' . esc_attr( $type ) . '" data-year="' . esc_attr( $year ) . '" data-nonce="' . esc_attr( $nonce ) . '"></span>' . ( 'reserves_to_debt_ratio' === $type ? '%' : '' );
-                                                echo '<tr><td><i class="fa-regular fa-star me-2 cdc-fav-toggle" data-id="' . esc_attr( $row['id'] ) . '" role="button"></i>' . esc_html( $row['name'] ) . '</td>';
-                                                echo '<td>' . $label . '</td>';
+                                                echo '<tr class="align-middle"><td class="align-middle"><i class="fa-regular fa-star me-2 cdc-fav-toggle" data-id="' . esc_attr( $row['id'] ) . '" role="button"></i>' . esc_html( $row['name'] ) . '</td>';
+                                                echo '<td class="align-middle">' . $label . '</td>';
                                 if ( $with_link ) {
-                                        echo '<td><a href="#" class="cdc-compare-link" data-id="' . esc_attr( $row['id'] ) . '">+ ' . esc_html__( 'Add to Compare', 'council-debt-counters' ) . '</a></td>'; // TODO: implement comparison feature
+                                        echo '<td class="align-middle"><a href="#" class="cdc-compare-link" data-id="' . esc_attr( $row['id'] ) . '">+ ' . esc_html__( 'Add to Compare', 'council-debt-counters' ) . '</a></td>'; // TODO: implement comparison feature
                                 }
                                                 echo '</tr>';
                         }

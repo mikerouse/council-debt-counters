@@ -58,6 +58,20 @@
         }
     }
 
+    function formatLeaderboardValue(val){
+        const abs = Math.abs(val);
+        if(abs >= 1e9){
+            return { value: val / 1e9, decimals: 3, suffix: 'bn' };
+        }
+        if(abs >= 1e6){
+            return { value: val / 1e6, decimals: 3, suffix: 'm' };
+        }
+        if(abs >= 1e3){
+            return { value: val / 1e3, decimals: 0, suffix: 'k' };
+        }
+        return { value: val, decimals: 0, suffix: '' };
+    }
+
     function initInfoElement(el){
         el.dataset.cdcInfoInitialised = '1';
         let items = [];
@@ -100,14 +114,24 @@
         const prefix  = el.dataset.prefix || '';
         // Allow each counter to control how long the initial animation lasts.
         const duration = parseFloat(el.dataset.duration) || 15;
-        const decimals = 2;
+        let decimals = 2;
+        let suffix = '';
+        let displayTarget = target;
+        if(el.dataset.lbType){
+            const fmt = formatLeaderboardValue(target);
+            displayTarget = fmt.value;
+            decimals = fmt.decimals;
+            suffix = fmt.suffix;
+            start = formatLeaderboardValue(start).value;
+        }
 
-        debugLog('Initialising counter', {target, start, growth, prefix});
+        debugLog('Initialising counter', {target, start, growth, prefix, displayTarget, decimals, suffix});
 
-        const counter = new CountUpClass(el, target, {
+        const counter = new CountUpClass(el, displayTarget, {
             startVal: start,
             decimalPlaces: decimals,
             prefix: prefix,
+            suffix: suffix,
             duration: duration,
             easingFn: easeOutCubic
         });
@@ -157,7 +181,8 @@
                     if(res.success && res.data){
                         const val = parseFloat(res.data.value);
                         if(!isNaN(val) && Math.abs(val - target) > 0.01){
-                            counter.update(val);
+                            const fmt = formatLeaderboardValue(val);
+                            counter.update(fmt.value);
                         }
                     }
                 })
