@@ -662,9 +662,9 @@ class Shortcode_Renderer {
 		}
 
 		$year    = self::total_counter_year( $type ?: $field );
-		$annual  = Custom_Fields::get_total_value( $field, $year );
-		$rate    = Counter_Manager::per_second_rate( $annual );
-		$current = $rate * Counter_Manager::seconds_since_fy_start( $year );
+                $annual  = Custom_Fields::get_total_value( $field, $year );
+                $rate    = Counter_Manager::per_second_rate( $annual );
+
 
 			wp_enqueue_style( 'bootstrap-5' );
 			wp_enqueue_style( 'cdc-counter' );
@@ -688,8 +688,9 @@ class Shortcode_Renderer {
 								<i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
 						</button>
 				</div>
-								<div class="cdc-counter-wrapper text-center mb-3">
-												<div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+                                <div class="cdc-counter-wrapper text-center mb-3">
+                                        <?php // Animate from zero to the annual total over five seconds. ?>
+                                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $annual ); ?>" data-growth="0" data-start="0" data-duration="5" data-prefix="£">
 																&hellip;
 												</div>
 												<noscript>
@@ -784,13 +785,7 @@ class Shortcode_Renderer {
 				)
 			);
 
-		$growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
-
-		$now             = time();
-		$start_year      = (int) substr( $year, 0, 4 );
-		$fy_start        = strtotime( $start_year . '-04-01' );
-		$elapsed_seconds = max( 0, $now - $fy_start );
-		$start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
+                $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
 			wp_enqueue_style( 'bootstrap-5' );
 			wp_enqueue_style( 'cdc-counter' );
@@ -810,8 +805,9 @@ class Shortcode_Renderer {
 								<i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
 						</button>
 				</div>
-								<div class="cdc-counter-wrapper text-center mb-3">
-												<div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
+                                <div class="cdc-counter-wrapper text-center mb-3">
+                                        <?php // Count up from zero to the site-wide total debt in five seconds. ?>
+                                        <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total ); ?>" data-growth="0" data-start="0" data-duration="5" data-prefix="£">
 																&hellip;
 												</div>
 												<noscript>

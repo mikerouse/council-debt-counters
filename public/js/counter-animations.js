@@ -93,6 +93,8 @@
         let start     = parseFloat(el.dataset.start)  || 0;
         const growth  = parseFloat(el.dataset.growth) || 0;
         const prefix  = el.dataset.prefix || '';
+        // Allow each counter to control how long the initial animation lasts.
+        const duration = parseFloat(el.dataset.duration) || 2;
         const decimals = 2;
 
         debugLog('Initialising counter', {target, start, growth, prefix});
@@ -101,7 +103,7 @@
             startVal: start,
             decimalPlaces: decimals,
             prefix: prefix,
-            duration: 2
+            duration: duration
         });
 
         if (counter.error) {
