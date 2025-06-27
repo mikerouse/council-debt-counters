@@ -1,6 +1,19 @@
 (function(){
   function ready(fn){ if(document.readyState!=='loading'){fn();} else {document.addEventListener('DOMContentLoaded',fn);} }
 
+  var pending=0;
+  var spinner;
+
+  function showSpinner(){
+    pending++;
+    if(spinner) spinner.classList.remove('d-none');
+  }
+
+  function hideSpinner(){
+    pending=Math.max(0,pending-1);
+    if(pending===0 && spinner){ spinner.classList.add('d-none'); }
+  }
+
   function save(input){
     var row = input.closest('tr');
     var cid = row.getAttribute('data-cid');
@@ -13,6 +26,7 @@
     d.append('value', input.value);
     d.append('year', year);
     d.append('nonce', cdcPower.nonce);
+    showSpinner();
     fetch(cdcPower.ajaxUrl,{method:'POST',credentials:'same-origin',body:d})
       .then(function(r){return r.json();})
       .then(function(res){
@@ -22,7 +36,8 @@
         }else{
           input.classList.add('bg-danger','text-white');
         }
-      });
+      })
+      .finally(hideSpinner);
   }
 
   function filter(){
@@ -34,6 +49,7 @@
   }
 
   ready(function(){
+    spinner=document.getElementById('cdc-pe-spinner');
     document.querySelectorAll('.cdc-pe-input').forEach(function(el){
       el.addEventListener('change', function(){ save(el); });
       el.addEventListener('keydown', function(e){

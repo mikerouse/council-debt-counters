@@ -38,6 +38,7 @@ $fields = [
             <?php endforeach; ?>
         </select>
         <input id="cdc-pe-search" type="search" class="form-control" placeholder="<?php esc_attr_e( 'Search councils…', 'council-debt-counters' ); ?>" style="max-width:200px;" />
+        <span id="cdc-pe-spinner" class="spinner-border spinner-border-sm align-self-center ms-2 d-none" role="status" aria-hidden="true"></span>
     </div>
     <table class="table table-striped table-hover" id="cdc-power-table">
         <thead>

@@ -81,6 +81,20 @@ class Power_Editor_Page {
             update_post_meta( $cid, 'cdc_enabled_years', $years );
         }
 
+        // If at least one tab has figures, mark the council as Active.
+        $enabled_tabs = (array) get_option( 'cdc_enabled_counters', array() );
+        $active       = false;
+        foreach ( $enabled_tabs as $tab_key ) {
+            if ( '1' !== get_post_meta( $cid, 'cdc_na_tab_' . $tab_key, true ) ) {
+                $active = true;
+                break;
+            }
+        }
+        if ( $active ) {
+            wp_update_post( [ 'ID' => $cid, 'post_status' => 'publish' ] );
+            delete_post_meta( $cid, 'cdc_under_review' );
+        }
+
         wp_send_json_success();
     }
 
