@@ -58,7 +58,19 @@
         }
     }
 
-    function formatLeaderboardValue(val){
+    /**
+     * Format leaderboard values using shortened units when appropriate.
+     *
+     * @param {number} val  The numeric value to format.
+     * @param {string} type The leaderboard type (used to skip ratios).
+     * @return {{value:number, decimals:number, suffix:string}}
+     */
+    function formatLeaderboardValue(val, type){
+        // Ratios and percentages should not be shortened and retain 2 decimals.
+        if(type === 'reserves_to_debt_ratio'){
+            return { value: val, decimals: 2, suffix: '' };
+        }
+
         const abs = Math.abs(val);
         if(abs >= 1e9){
             return { value: val / 1e9, decimals: 3, suffix: 'bn' };
@@ -66,7 +78,7 @@
         if(abs >= 1e6){
             return { value: val / 1e6, decimals: 3, suffix: 'm' };
         }
-        if(abs >= 1e3){
+        if(abs >= 1e5){
             return { value: val / 1e3, decimals: 0, suffix: 'k' };
         }
         return { value: val, decimals: 0, suffix: '' };
@@ -118,11 +130,11 @@
         let suffix = '';
         let displayTarget = target;
         if(el.dataset.lbType){
-            const fmt = formatLeaderboardValue(target);
+            const fmt = formatLeaderboardValue(target, el.dataset.lbType);
             displayTarget = fmt.value;
             decimals = fmt.decimals;
             suffix = fmt.suffix;
-            start = formatLeaderboardValue(start).value;
+            start = formatLeaderboardValue(start, el.dataset.lbType).value;
         }
 
         debugLog('Initialising counter', {target, start, growth, prefix, displayTarget, decimals, suffix});
@@ -181,7 +193,7 @@
                     if(res.success && res.data){
                         const val = parseFloat(res.data.value);
                         if(!isNaN(val) && Math.abs(val - target) > 0.01){
-                            const fmt = formatLeaderboardValue(val);
+                            const fmt = formatLeaderboardValue(val, el.dataset.lbType);
                             counter.update(fmt.value);
                         }
                     }

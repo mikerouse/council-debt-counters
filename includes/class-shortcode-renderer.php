@@ -862,7 +862,7 @@ class Shortcode_Renderer {
                 }
         }
 
-        private static function leaderboard_html( string $type, int $limit, string $format, bool $with_link, string $year, string $nonce ) {
+        private static function leaderboard_html( string $type, int $limit, string $format, string $year, string $nonce ) {
                 $posts = get_posts(
                                 array(
                                         'post_type'   => 'council',
@@ -909,7 +909,7 @@ class Shortcode_Renderer {
 
 			ob_start();
                 if ( 'list' === $format ) {
-                                echo '<ul class="list-group">';
+                echo '<ul class="list-group">';
                         foreach ( $rows as $row ) {
                                         $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) );
                                         $prefix   = in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ? '' : '£';
@@ -918,28 +918,20 @@ class Shortcode_Renderer {
                                         echo '<i class="fa-regular fa-star me-2 cdc-fav-toggle" data-id="' . esc_attr( $row['id'] ) . '" role="button"></i>'; // TODO: toggle favourite councils
                                         echo esc_html( $row['name'] );
                                         echo '<span class="badge bg-secondary">' . $label . '</span>';
-                                if ( $with_link ) {
-                                                echo ' <a class="ms-2" href="#" class="cdc-compare-link" data-id="' . esc_attr( $row['id'] ) . '">+ ' . esc_html__( 'Add to Compare', 'council-debt-counters' ) . '</a>'; // TODO: implement compare feature
-                                }
+                                // Comparison feature removed for now.
                                         echo '</li>';
                         }
                                 echo '</ul>';
                 } else {
-                                echo '<table class="table table-striped">';
-                                echo '<thead><tr><th>' . esc_html__( 'Council', 'council-debt-counters' ) . '</th><th>' . esc_html__( 'Value', 'council-debt-counters' ) . '</th>';
-                        if ( $with_link ) {
-                                        echo '<th></th>';
-                        }
-                                echo '</tr></thead><tbody>';
+                        echo '<table class="table table-striped">';
+                        echo '<thead><tr><th>' . esc_html__( 'Council', 'council-debt-counters' ) . '</th><th>' . esc_html__( 'Value', 'council-debt-counters' ) . '</th></tr></thead><tbody>';
                         foreach ( $rows as $row ) {
                                                 $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) );
                                                 $prefix   = in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ? '' : '£';
                                                 $label    = '<span class="cdc-counter" data-target="' . esc_attr( $row['value'] ) . '" data-growth="0" data-start="0" data-duration="' . esc_attr( $duration ) . '" data-prefix="' . esc_attr( $prefix ) . '" data-cid="' . esc_attr( $row['id'] ) . '" data-lb-type="' . esc_attr( $type ) . '" data-year="' . esc_attr( $year ) . '" data-nonce="' . esc_attr( $nonce ) . '"></span>' . ( 'reserves_to_debt_ratio' === $type ? '%' : '' );
                                                 echo '<tr class="align-middle"><td class="align-middle"><i class="fa-regular fa-star me-2 cdc-fav-toggle" data-id="' . esc_attr( $row['id'] ) . '" role="button"></i>' . esc_html( $row['name'] ) . '</td>';
                                                 echo '<td class="align-middle">' . $label . '</td>';
-                                if ( $with_link ) {
-                                        echo '<td class="align-middle"><a href="#" class="cdc-compare-link" data-id="' . esc_attr( $row['id'] ) . '">+ ' . esc_html__( 'Add to Compare', 'council-debt-counters' ) . '</a></td>'; // TODO: implement comparison feature
-                                }
+                                // Placeholder for future compare link column.
                                                 echo '</tr>';
                         }
                                 echo '</tbody></table>';
@@ -952,17 +944,15 @@ class Shortcode_Renderer {
 				array(
 					'type'   => 'highest_debt',
 					'limit'  => 10,
-					'format' => 'table',
-					'link'   => '0',
-					'year'   => '',
+                                        'format' => 'table',
+                                        'year'   => '',
 				),
 				$atts
 			);
 
 			$type      = sanitize_key( $atts['type'] );
 			$limit     = max( 1, intval( $atts['limit'] ) );
-			$format    = in_array( $atts['format'], array( 'table', 'list' ), true ) ? $atts['format'] : 'table';
-			$with_link = (bool) intval( $atts['link'] );
+                        $format    = in_array( $atts['format'], array( 'table', 'list' ), true ) ? $atts['format'] : 'table';
 			$year      = sanitize_text_field( $atts['year'] );
 		if ( '' === $year || ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
 				$year = CDC_Utils::current_financial_year();
@@ -992,7 +982,7 @@ class Shortcode_Renderer {
 								</select>
 						</div>
                                                 <div class="cdc-leaderboard-container cdc-show">
-                                                        <?php echo self::leaderboard_html( $type, $limit, $format, $with_link, $year, $nonce ); ?>
+                                                        <?php echo self::leaderboard_html( $type, $limit, $format, $year, $nonce ); ?>
 						</div>
 				</div>
 				<?php
@@ -1155,7 +1145,7 @@ class Shortcode_Renderer {
 				wp_send_json_error( array( 'message' => __( 'Invalid year.', 'council-debt-counters' ) ), 400 );
 		}
                         $nonce = sanitize_text_field( wp_unslash( $_POST['nonce'] ?? '' ) );
-                        $html  = self::leaderboard_html( $type, $limit, $format, true, $year, $nonce );
+                        $html  = self::leaderboard_html( $type, $limit, $format, $year, $nonce );
 			wp_send_json_success( array( 'html' => $html ) );
 	}
 
