@@ -119,6 +119,23 @@ class Settings_Page {
                 );
                 register_setting(
                         'cdc_settings',
+                        'cdc_total_counter_years',
+                        array(
+                                'type'              => 'array',
+                                'default'           => array(
+                                        'debt'        => '2023/24',
+                                        'spending'    => '2023/24',
+                                        'income'      => '2023/24',
+                                        'deficit'     => '2023/24',
+                                        'interest'    => '2023/24',
+                                        'reserves'    => '2023/24',
+                                        'consultancy' => '2023/24',
+                                ),
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_years' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
                         'cdc_log_level',
                         array(
                                 'type'              => 'string',
@@ -249,6 +266,21 @@ class Settings_Page {
                 $clean = array();
                 foreach ( $value as $k => $v ) {
                         $clean[ sanitize_key( $k ) ] = sanitize_text_field( $v );
+                }
+                return $clean;
+        }
+
+        public static function sanitize_years( $value ) {
+                if ( ! is_array( $value ) ) {
+                        return array();
+                }
+                $clean = array();
+                foreach ( $value as $k => $v ) {
+                        $year = sanitize_text_field( $v );
+                        if ( ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
+                                $year = '2023/24';
+                        }
+                        $clean[ sanitize_key( $k ) ] = $year;
                 }
                 return $clean;
         }

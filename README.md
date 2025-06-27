@@ -63,7 +63,7 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - Compare existing vs submitted values, choose per field, then **Save**.  
    - All actions are logged to `moderation.log` for audit.
 
-4. **Publishing Shortcodes**  
+4. **Publishing Shortcodes**
    Embed counters anywhere on the live site using: ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
    See the “Shortcodes” section below for full usage.
 
@@ -77,9 +77,9 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
 ## Available Shortcodes
 
 - `[council_counter id="…"]` – Animated per-council figures.  
-- `[total_debt_counter]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals.  
-- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.  
-- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables.  
+- `[total_debt_counter year="YYYY/YY"]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals. Defaults use the year set in **Debt Counters → Settings**.
+- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.
+- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables with a year selector.
 
 ---
 

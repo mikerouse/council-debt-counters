@@ -248,6 +248,7 @@ class Data_Loader {
                         'cdc_enabled_counters'        => get_option( 'cdc_enabled_counters', array() ),
                        'cdc_counter_titles'          => get_option( 'cdc_counter_titles', array() ),
                        'cdc_total_counter_titles'    => get_option( 'cdc_total_counter_titles', array() ),
+                       'cdc_total_counter_years'     => get_option( 'cdc_total_counter_years', array() ),
                        'cdc_log_level'               => get_option( 'cdc_log_level', 'standard' ),
                );
 		return wp_json_encode( $options );

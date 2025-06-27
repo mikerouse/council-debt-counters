@@ -59,6 +59,7 @@ $types = [
                             <tr>
                                 <th><?php esc_html_e( 'Shortcode', 'council-debt-counters' ); ?></th>
                                 <th><?php esc_html_e( 'Counter Title', 'council-debt-counters' ); ?></th>
+                                <th><?php esc_html_e( 'Default Year', 'council-debt-counters' ); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -66,6 +67,16 @@ $types = [
                                 <tr>
                                     <td><code><?php echo esc_html( $info['shortcode'] ); ?></code></td>
                                     <td><input type="text" name="cdc_total_counter_titles[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( $total_titles[ $key ] ?? $info['label'] ); ?>" class="regular-text" /></td>
+                                    <td>
+                                        <select name="cdc_total_counter_years[<?php echo esc_attr( $key ); ?>]" class="form-select">
+                                            <?php
+                                            $selected_year = $total_years[ $key ] ?? get_option( 'cdc_default_financial_year', '2023/24' );
+                                            foreach ( \CouncilDebtCounters\Docs_Manager::financial_years() as $y ) :
+                                            ?>
+                                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $selected_year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
