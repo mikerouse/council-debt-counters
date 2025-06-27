@@ -57,19 +57,24 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - Use **Ask AI** for individual fields or **Ask AI for All**.  
    - Save your changes; optionally submit for moderation review.
 
-3. **Moderation Review**  
+3. **Power Editor**
+   - Go to **Debt Counters → Power Editor**.
+   - Quickly edit figures for councils marked “Under Review.”
+   - Select a year once to apply it to all edits.
+
+4. **Moderation Review**
    - Go to **Debt Counters → Submissions**.  
    - Click **Review** on a pending submission.  
    - Compare existing vs submitted values, choose per field, then **Save**.  
    - All actions are logged to `moderation.log` for audit.
 
-4. **Publishing Shortcodes**
+5. **Publishing Shortcodes**
 
    Embed counters anywhere on the live site using: ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
 
    See the “Shortcodes” section below for full usage.
 
-5. **Troubleshooting & Logs**  
+6. **Troubleshooting & Logs**
 - **Debt Counters → Troubleshooting** to view AI and error logs.  
 - Adjust JavaScript debug levels (Verbose, Standard, Quiet).  
 - Inspect token-usage and progress overlays when AI runs.
