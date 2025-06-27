@@ -169,12 +169,8 @@ class Shortcode_Renderer {
 				return '<div class="cdc-counter-static fw-bold">£' . esc_html( number_format_i18n( (float) $raw_value, 2 ) ) . '</div>';
 		}
 
-				// The annual figure is assumed to be spread evenly over the financial year, which starts on 1 April.
-				$annual = (float) $raw_value;
-				// The rate of increase per second is calculated from the annual figure spread over the seconds in the financial year.
-				$rate = Counter_Manager::per_second_rate( $annual );
-				// The current value is the rate of growth multiplied by the number of seconds since the start of the financial year.
-				$current = $rate * Counter_Manager::seconds_since_fy_start();
+                // The annual figure represents the total for the selected financial year.
+                $annual = (float) $raw_value;
 
 				// Enqueue the necessary styles and scripts
 				wp_enqueue_style( 'bootstrap-5' );
@@ -204,7 +200,7 @@ class Shortcode_Renderer {
 						<?php endif; ?>
 				</div>
 				<div class="cdc-counter-wrapper text-center mb-3">
-						<div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£" data-cid="<?php echo esc_attr( $id ); ?>" data-field="<?php echo esc_attr( $field ); ?>" data-year="<?php echo esc_attr( $year ); ?>">
+                                <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $annual ); ?>" data-growth="0" data-start="0" data-duration="5" data-prefix="£" data-cid="<?php echo esc_attr( $id ); ?>" data-field="<?php echo esc_attr( $field ); ?>" data-year="<?php echo esc_attr( $year ); ?>">
 								&hellip;
 						</div>
 					<?php if ( $info_line ) : ?>
@@ -217,11 +213,10 @@ class Shortcode_Renderer {
 								<ul class="mt-2 list-unstyled">
 										<?php // translators: %s: Field label ?>
 										<li><?php echo esc_html( sprintf( __( 'Annual %s:', 'council-debt-counters' ), $label ) ); ?> £<?php echo esc_html( number_format_i18n( $annual, 2 ) ); ?></li>
-										<li><?php esc_html_e( 'Increase per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $rate, 6 ) ); ?></li>
-								</ul>
-								<div class="alert alert-warning mt-2">
-										<?php esc_html_e( 'This counter assumes the annual figure is spread evenly from 1 April.', 'council-debt-counters' ); ?>
-								</div>
+                                                        </ul>
+                                                        <p class="mt-2 text-muted">
+                                                                <?php echo esc_html( self::counter_description_text( $type ?: $field ) ); ?>
+                                                        </p>
 							</div>
 						</div>
 				<?php endif; ?>
@@ -598,7 +593,7 @@ class Shortcode_Renderer {
 	/**
 	 * Generate a short informative line for each counter.
 	 */
-	private static function counter_info( int $id, string $type, string $year ): string {
+private static function counter_info( int $id, string $type, string $year ): string {
 		$population = (float) Custom_Fields::get_value( $id, 'population', $year );
 		$households = (float) Custom_Fields::get_value( $id, 'households', $year );
 
@@ -1135,4 +1130,19 @@ class Shortcode_Renderer {
 			$html = self::leaderboard_html( $type, $limit, $format, true, $year );
 			wp_send_json_success( array( 'html' => $html ) );
 	}
+       /**
+        * Provide an explanatory line for each counter type.
+        */
+       private static function counter_description_text( string $type ): string {
+               switch ( $type ) {
+                       case 'debt':
+                               return __( 'Shows the council\'s total outstanding borrowings for the selected year.', 'council-debt-counters' );
+                       case 'spending':
+                               return __( 'Total gross expenditure from the comprehensive income and expenditure statement for day-to-day services across all directorates.', 'council-debt-counters' );
+                       case 'deficit':
+                               return __( 'The deficit reported after grants, asset revaluation and pension adjustments.', 'council-debt-counters' );
+                       default:
+                               return __( 'Annual total for the selected financial year.', 'council-debt-counters' );
+               }
+       }
 }
