@@ -299,53 +299,96 @@
             if(!target) return;
             e.preventDefault();
             var docId = target.value;
-                var overlay = document.createElement("div");
-                overlay.id = "cdc-ai-overlay";
-                overlay.innerHTML = "<span class=\"spinner is-active\"></span><div class=\"progress w-75 mt-2\" style=\"height:8px\"><div class=\"progress-bar\" style=\"width:0%\"></div></div><p></p>";
-                var p = overlay.querySelector("p");
-                var bar = overlay.querySelector('.progress-bar');
-                var maxTime = cdcAiMessages.timeout || 60;
-                var elapsed = 0;
-                var barTimer = setInterval(function(){
-                    elapsed++;
-                    var pct = Math.min(100, (elapsed / maxTime) * 100);
-                    bar.style.width = pct + '%';
-                    if (elapsed >= maxTime) clearInterval(barTimer);
-                },1000);
-                document.body.appendChild(overlay);
-
-                var steps = cdcAiMessages.steps || [];
-                var i = 0;
-                p.textContent = steps[i] || '';
-                var interval = setInterval(function(){
-                    i++;
-                    if (i < steps.length) {
-                        p.textContent = steps[i];
+            var data = new FormData();
+            data.append('action','cdc_extract_info');
+            data.append('doc_id', docId);
+            fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                .then(function(r){return r.json();})
+                .then(function(res){
+                    if(!res.success){
+                        alert(res.data && res.data.message ? res.data.message : cdcAiMessages.error);
+                        return;
                     }
-                }, 1500);
+                    var modal = ensureExtractModal();
+                    var info = modal.querySelector('#cdc-extract-info');
+                    if(info){
+                        info.textContent = cdcAiMessages.yearLabel + ' ' + res.data.year + ' \u2013 ' + cdcAiMessages.tokenLabel + ' ' + res.data.tokens;
+                    }
+                    var confirmBtn = modal.querySelector('#cdc-extract-confirm');
+                    var m = bootstrap.Modal.getOrCreateInstance(modal);
+                    function onConfirm(){
+                        confirmBtn.removeEventListener('click', onConfirm);
+                        m.hide();
+                        runExtraction(docId);
+                    }
+                    confirmBtn.addEventListener('click', onConfirm, {once:true});
+                    m.show();
+                });
+        });
 
-                var data = new FormData();
-                data.append("action","cdc_extract_figures");
-                data.append("doc_id", docId);
-                fetch(ajaxurl,{method:"POST",credentials:"same-origin",body:data})
-                    .then(function(r){return r.json();})
-                    .then(function(res){
-                        clearInterval(interval);
-                        clearInterval(barTimer);
-                        var msg = (res.data && res.data.message) || res.message;
-                        var tokens = res.data && res.data.tokens ? res.data.tokens : 0;
-                        if (tokens) {
-                            msg += ' (' + tokens + ' tokens)';
-                        }
-                        p.textContent = msg || cdcAiMessages.error;
-                        setTimeout(function(){location.reload();},1200);
-                    })
-                    .catch(function(){
-                        clearInterval(interval);
-                        clearInterval(barTimer);
-                        p.textContent = cdcAiMessages.error;
-                    });
-            });
+        function runExtraction(docId){
+            var overlay = document.createElement("div");
+            overlay.id = "cdc-ai-overlay";
+            overlay.innerHTML = "<span class=\"spinner is-active\"></span><div class=\"progress w-75 mt-2\" style=\"height:8px\"><div class=\"progress-bar\" style=\"width:0%\"></div></div><p></p>";
+            var p = overlay.querySelector("p");
+            var bar = overlay.querySelector('.progress-bar');
+            var maxTime = cdcAiMessages.timeout || 60;
+            var elapsed = 0;
+            var barTimer = setInterval(function(){
+                elapsed++;
+                var pct = Math.min(100, (elapsed / maxTime) * 100);
+                bar.style.width = pct + '%';
+                if (elapsed >= maxTime) clearInterval(barTimer);
+            },1000);
+            document.body.appendChild(overlay);
+
+            var steps = cdcAiMessages.steps || [];
+            var i = 0;
+            p.textContent = steps[i] || '';
+            var interval = setInterval(function(){
+                i++;
+                if (i < steps.length) {
+                    p.textContent = steps[i];
+                }
+            }, 1500);
+
+            var data = new FormData();
+            data.append('action','cdc_extract_figures');
+            data.append('doc_id', docId);
+            fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:data})
+                .then(function(r){return r.json();})
+                .then(function(res){
+                    clearInterval(interval);
+                    clearInterval(barTimer);
+                    var msg = (res.data && res.data.message) || res.message;
+                    var tokens = res.data && res.data.tokens ? res.data.tokens : 0;
+                    if (tokens) {
+                        msg += ' (' + tokens + ' tokens)';
+                    }
+                    p.textContent = msg || cdcAiMessages.error;
+                    setTimeout(function(){location.reload();},1200);
+                })
+                .catch(function(){
+                    clearInterval(interval);
+                    clearInterval(barTimer);
+                    p.textContent = cdcAiMessages.error;
+                });
+        }
+
+        function ensureExtractModal(){
+            var m=document.getElementById('cdc-extract-modal');
+            if(m) return m;
+            var html='<div class="modal fade" id="cdc-extract-modal" tabindex="-1" aria-hidden="true">'+
+                '<div class="modal-dialog"><div class="modal-content">'+
+                '<div class="modal-header"><h5 class="modal-title">'+cdcAiMessages.confirmTitle+'</h5>'+
+                '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'+
+                '<div class="modal-body"><p id="cdc-extract-info"></p></div>'+
+                '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">'+cdcAiMessages.cancel+'</button>'+
+                '<button type="button" class="btn btn-primary" id="cdc-extract-confirm">'+cdcAiMessages.confirm+'</button></div>'+
+                '</div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+            return document.getElementById('cdc-extract-modal');
+        }
 
         function aiOverlay(msg){
             var ov=document.createElement('div');

@@ -73,7 +73,7 @@ class Council_Admin_Page {
             'cdc-council-form',
             plugins_url( 'admin/js/council-form.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
             [],
-            '0.1.4',
+            '0.1.5',
             true
         );
         wp_enqueue_style( 'cdc-ai-progress', plugins_url( 'admin/css/ai-progress.css', dirname( __DIR__ ) . '/council-debt-counters.php' ), [], '0.1.0' );
@@ -100,6 +100,10 @@ class Council_Admin_Page {
             'typeSentence' => __( 'Short sentence', 'council-debt-counters' ),
             'responseLabel' => __( 'AI response', 'council-debt-counters' ),
             'accept' => __( 'Accept and Insert', 'council-debt-counters' ),
+            'confirmTitle' => __( 'Confirm Extraction', 'council-debt-counters' ),
+            'confirm' => __( 'Extract Now', 'council-debt-counters' ),
+            'yearLabel' => __( 'Year:', 'council-debt-counters' ),
+            'tokenLabel' => __( 'Estimated tokens:', 'council-debt-counters' ),
         ] );
         $council_id = isset( $_GET['post'] ) ? intval( $_GET['post'] ) : 0;
         wp_localize_script( 'cdc-council-form', 'cdcToolbarData', [
