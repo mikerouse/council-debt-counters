@@ -144,6 +144,24 @@
                     }
                 })
                 .catch(()=>{});
+        } else if(window.cdcLeaderboard && el.dataset.lbType && el.dataset.cid && el.dataset.year && el.dataset.nonce){
+            const data = new FormData();
+            data.append('action','cdc_get_leaderboard_value');
+            data.append('nonce', el.dataset.nonce);
+            data.append('id', el.dataset.cid);
+            data.append('lb_type', el.dataset.lbType);
+            data.append('year', el.dataset.year);
+            fetch(window.cdcLeaderboard.ajaxUrl,{method:'POST',credentials:'same-origin',body:data})
+                .then(r=>r.json())
+                .then(res=>{
+                    if(res.success && res.data){
+                        const val = parseFloat(res.data.value);
+                        if(!isNaN(val) && Math.abs(val - target) > 0.01){
+                            counter.update(val);
+                        }
+                    }
+                })
+                .catch(()=>{});
         }
 
         if (growth !== 0) {
