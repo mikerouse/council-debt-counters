@@ -98,6 +98,7 @@ if ( 'edit' === $req_action ) {
                 </ul>
                 <div class="tab-content pt-3">
                         <div class="tab-pane fade<?php echo ( 'general' === $active_tab ) ? ' show active' : ''; ?>" id="tab-general" role="tabpanel">
+                                <input type="hidden" name="cdc_tab_year[general]" value="<?php echo esc_attr( \CouncilDebtCounters\CDC_Utils::current_financial_year() ); ?>" class="cdc-selected-year">
                                 <table class="form-table" role="presentation">
                                 <?php
                                 $council_types     = array( 'Unitary', 'County', 'District', 'Metropolitan Borough', 'London Borough', 'Parish', 'Town', 'Combined Authority' );
@@ -180,14 +181,9 @@ $readonly = true;
 <div class="input-group">
     <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" data-initial-required="<?php echo $is_required ? '1' : '0'; ?>" type="<?php echo esc_attr( $input_type ); ?>" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?>>
     <?php if ( ! $readonly && $field->name !== 'total_debt' ) : ?>
-        <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
-        <div class="input-group-text">
-                <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="cdc-na-<?php echo esc_attr( $field->name ); ?>" name="cdc_na[<?php echo esc_attr( $field->name ); ?>]" value="1" <?php checked( $na_val, '1' ); ?>>
-                        <label class="form-check-label" for="cdc-na-<?php echo esc_attr( $field->name ); ?>"></label>
-                </div>
-        </div>
-        <span class="input-group-text"><?php esc_html_e( 'N/A', 'council-debt-counters' ); ?></span>
+        <?php if ( 'council_name' !== $field->name ) : ?>
+            <button type="button" class="btn btn-outline-secondary cdc-ask-ai" data-field="<?php echo esc_attr( $field->name ); ?>"><span class="dashicons dashicons-lightbulb me-1"></span><?php esc_html_e( 'Ask AI', 'council-debt-counters' ); ?></button>
+        <?php endif; ?>
     <?php endif; ?>
     <?php if ( $is_required ) : ?>
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
@@ -203,17 +199,19 @@ $readonly = true;
                                 <tr>
                                         <th scope="row"><?php esc_html_e( 'Sharing Image', 'council-debt-counters' ); ?></th>
                                         <td>
-                                                <?php $share = $council_id ? absint( get_post_meta( $council_id, 'cdc_sharing_image', true ) ) : 0; ?>
+                                                <?php
+                                                $share          = $council_id ? absint( get_post_meta( $council_id, 'cdc_sharing_image', true ) ) : 0;
+                                                $default_image  = 'https://mikerouse.co.uk/wp-content/uploads/2025/06/djb1whucfby.jpg';
+                                                $share_url      = $share ? wp_get_attachment_url( $share ) : $default_image;
+                                                ?>
                                                 <div id="cdc-sharing-image-preview">
-                                                        <?php if ( $share ) : ?>
-                                                                <?php echo wp_get_attachment_image( $share, array( 150, 150 ) ); ?>
-                                                        <?php endif; ?>
+                                                        <img src="<?php echo esc_url( $share_url ); ?>" alt="" style="max-width:150px;height:auto;" />
                                                 </div>
-                                                <input type="hidden" id="cdc-sharing-image" name="cdc_sharing_image" value="<?php echo esc_attr( $share ); ?>" data-url="<?php echo esc_url( $share ? wp_get_attachment_url( $share ) : '' ); ?>" />
+                                                <input type="hidden" id="cdc-sharing-image" name="cdc_sharing_image" value="<?php echo esc_attr( $share ); ?>" data-url="<?php echo esc_url( $share_url ); ?>" />
                                                 <button type="button" class="button" id="cdc-sharing-image-button"><?php esc_html_e( 'Select Image', 'council-debt-counters' ); ?></button>
-<button type="button" class="button" id="cdc-sharing-image-remove" <?php if ( ! $share ) echo 'style="display:none"'; ?>><?php esc_html_e( 'Remove', 'council-debt-counters' ); ?></button>
-</td>
-</tr>
+                                                <button type="button" class="button" id="cdc-sharing-image-remove" <?php if ( ! $share ) echo 'style="display:none"'; ?>><?php esc_html_e( 'Remove', 'council-debt-counters' ); ?></button>
+                                        </td>
+                                </tr>
 <tr>
 <th scope="row"><?php esc_html_e( 'Taken over by', 'council-debt-counters' ); ?></th>
 <td>

@@ -10,6 +10,11 @@ class Custom_Fields {
     const TABLE_VALUES = 'cdc_field_values';
     const PAGE_SLUG = 'cdc-custom-fields';
 
+    /**
+     * Placeholder year used for fields that are not tied to a financial year.
+     */
+    const GENERAL_YEAR = 'general';
+
     const TAB_OPTIONS = [
         'general',
         'debt',
@@ -386,8 +391,30 @@ class Custom_Fields {
         if ( ! $field ) {
             return '';
         }
+        $tab = self::get_field_tab( $name );
+        if ( 'general' === $tab ) {
+            $financial_year = self::GENERAL_YEAR;
+        }
         global $wpdb;
-        $raw = $wpdb->get_var( $wpdb->prepare( 'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d AND financial_year = %s', $council_id, $field->id, $financial_year ) );
+        $raw = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d AND financial_year = %s',
+                $council_id,
+                $field->id,
+                $financial_year
+            )
+        );
+
+        if ( null === $raw ) {
+            $raw = $wpdb->get_var(
+                $wpdb->prepare(
+                    'SELECT value FROM ' . $wpdb->prefix . self::TABLE_VALUES . ' WHERE council_id = %d AND field_id = %d ORDER BY financial_year DESC LIMIT 1',
+                    $council_id,
+                    $field->id
+                )
+            );
+        }
+
         return maybe_unserialize( $raw );
     }
 
@@ -398,6 +425,10 @@ class Custom_Fields {
         $field = self::get_field_by_name( $name );
         if ( ! $field ) {
             return false;
+        }
+        $tab = self::get_field_tab( $name );
+        if ( 'general' === $tab ) {
+            $financial_year = self::GENERAL_YEAR;
         }
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE_VALUES;

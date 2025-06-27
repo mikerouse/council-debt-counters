@@ -739,7 +739,7 @@ class Shortcode_Renderer {
 		$atts        = shortcode_atts( array( 'year' => '' ), $atts );
 		$year_param  = sanitize_text_field( $atts['year'] );
 		$year        = ( '' !== $year_param && preg_match( '/^\d{4}\/\d{2}$/', $year_param ) ) ? $year_param : self::total_counter_year( 'debt' );
-			$enabled = (array) get_option( 'cdc_enabled_counters', array() );
+		$enabled = (array) get_option( 'cdc_enabled_counters', array() );
 		if ( ! in_array( 'debt', $enabled, true ) ) {
 				return '';
 		}
@@ -1126,6 +1126,7 @@ class Shortcode_Renderer {
 			$html = self::leaderboard_html( $type, $limit, $format, true, $year );
 			wp_send_json_success( array( 'html' => $html ) );
 	}
+
 		/**
 		* Provide an explanatory line for each counter type.
 		*/
