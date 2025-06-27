@@ -64,7 +64,9 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - All actions are logged to `moderation.log` for audit.
 
 4. **Publishing Shortcodes**
-   Embed counters anywhere on the live site using: ` [council_counter id="123"] [total_debt_counter year="2024/25"] [cdc_leaderboard type="debt_per_resident" limit="5"] `
+
+   Embed counters anywhere on the live site using: ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
+
    See the “Shortcodes” section below for full usage.
 
 5. **Troubleshooting & Logs**  
@@ -76,10 +78,10 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
 
 ## Available Shortcodes
 
-- `[council_counter id="…"]` – Animated per-council figures.  
-- `[total_debt_counter year="YYYY/YY"]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals. The optional `year` overrides the default.
-- `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.
-- `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables with a year selector.
+  - `[council_counter id="…"]` – Animated per-council figures that count from zero to the annual total over fifteen seconds.
+  - `[total_debt_counter year="YYYY/YY"]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals. Defaults use the year set in **Debt Counters → Settings**. These counters count up from zero to the total figure over fifteen seconds.
+  - `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.
+  - `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables with a year selector.
 
 ---
 

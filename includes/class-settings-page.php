@@ -119,6 +119,23 @@ class Settings_Page {
                 );
                 register_setting(
                         'cdc_settings',
+                        'cdc_total_counter_years',
+                        array(
+                                'type'              => 'array',
+                                'default'           => array(
+                                        'debt'        => '2023/24',
+                                        'spending'    => '2023/24',
+                                        'income'      => '2023/24',
+                                        'deficit'     => '2023/24',
+                                        'interest'    => '2023/24',
+                                        'reserves'    => '2023/24',
+                                        'consultancy' => '2023/24',
+                                ),
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_years' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
                         'cdc_log_level',
                         array(
                                 'type'              => 'string',
@@ -142,6 +159,15 @@ class Settings_Page {
                                 'type'              => 'string',
                                 'default'           => '600',
                                 'sanitize_callback' => array( __CLASS__, 'sanitize_weight' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
+                        'cdc_counter_duration',
+                        array(
+                                'type'              => 'integer',
+                                'default'           => 15,
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_duration' ),
                         )
                 );
                 register_setting(
@@ -242,6 +268,14 @@ class Settings_Page {
                 return $value;
         }
 
+        public static function sanitize_duration( $value ) {
+                $value = (int) $value;
+                if ( $value < 1 ) {
+                        return 15;
+                }
+                return $value;
+        }
+
         public static function sanitize_titles( $value ) {
                 if ( ! is_array( $value ) ) {
                         return array();
@@ -249,6 +283,21 @@ class Settings_Page {
                 $clean = array();
                 foreach ( $value as $k => $v ) {
                         $clean[ sanitize_key( $k ) ] = sanitize_text_field( $v );
+                }
+                return $clean;
+        }
+
+        public static function sanitize_years( $value ) {
+                if ( ! is_array( $value ) ) {
+                        return array();
+                }
+                $clean = array();
+                foreach ( $value as $k => $v ) {
+                        $year = sanitize_text_field( $v );
+                        if ( ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
+                                $year = '2023/24';
+                        }
+                        $clean[ sanitize_key( $k ) ] = $year;
                 }
                 return $clean;
         }

@@ -2,6 +2,11 @@
     'use strict';
 
     const LOG_LEVELS = { quiet: 0, standard: 1, verbose: 2 };
+    const easeOutCubic = (t, b, c, d) => {
+        t /= d;
+        t--;
+        return c * (t * t * t + 1) + b;
+    };
 
     debugLog('counter-animations script loaded', null, 'verbose');
 
@@ -93,6 +98,8 @@
         let start     = parseFloat(el.dataset.start)  || 0;
         const growth  = parseFloat(el.dataset.growth) || 0;
         const prefix  = el.dataset.prefix || '';
+        // Allow each counter to control how long the initial animation lasts.
+        const duration = parseFloat(el.dataset.duration) || 15;
         const decimals = 2;
 
         debugLog('Initialising counter', {target, start, growth, prefix});
@@ -101,7 +108,8 @@
             startVal: start,
             decimalPlaces: decimals,
             prefix: prefix,
-            duration: 2
+            duration: duration,
+            easingFn: easeOutCubic
         });
 
         if (counter.error) {
