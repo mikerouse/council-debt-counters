@@ -209,15 +209,11 @@ class Shortcode_Renderer {
 				</div>
 				<?php if ( $with_details ) : ?>
 						<div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
-							<div class="text-center cdc-counter-details">
-								<ul class="mt-2 list-unstyled">
-										<?php // translators: %s: Field label ?>
-										<li><?php echo esc_html( sprintf( __( 'Annual %s:', 'council-debt-counters' ), $label ) ); ?> £<?php echo esc_html( number_format_i18n( $annual, 2 ) ); ?></li>
-                                                        </ul>
-                                                        <p class="mt-2 text-muted">
-                                                                <?php echo esc_html( self::counter_description_text( $type ?: $field ) ); ?>
-                                                        </p>
-							</div>
+<div class="text-center cdc-counter-details">
+<p class="mt-2 text-muted">
+<?php echo esc_html( self::counter_description_text( $type ?: $field ) ); ?>
+</p>
+</div>
 						</div>
 				<?php endif; ?>
 				<?php
@@ -1139,10 +1135,12 @@ private static function counter_info( int $id, string $type, string $year ): str
                                return __( 'Shows the council\'s total outstanding borrowings for the selected year.', 'council-debt-counters' );
                        case 'spending':
                                return __( 'Total gross expenditure from the comprehensive income and expenditure statement for day-to-day services across all directorates.', 'council-debt-counters' );
-                       case 'deficit':
-                               return __( 'The deficit reported after grants, asset revaluation and pension adjustments.', 'council-debt-counters' );
-                       default:
-                               return __( 'Annual total for the selected financial year.', 'council-debt-counters' );
+case 'deficit':
+return __( 'The deficit reported after grants, asset revaluation and pension adjustments.', 'council-debt-counters' );
+case 'income':
+return __( 'The income figure is the gross income declared on the comprehensive income and expenditure statement from directorate services. It excludes council tax.', 'council-debt-counters' );
+default:
+return __( 'Annual total for the selected financial year.', 'council-debt-counters' );
                }
        }
 }
