@@ -51,12 +51,28 @@
   ready(function(){
     spinner=document.getElementById('cdc-pe-spinner');
     document.querySelectorAll('.cdc-pe-input').forEach(function(el){
-      el.addEventListener('change', function(){ save(el); });
+      el.addEventListener('change', function(){
+        save(el);
+      });
       el.addEventListener('keydown', function(e){
-        if(e.key==='Enter'){ e.preventDefault(); save(el); var next=el.closest('td').nextElementSibling; if(next){ next=next.querySelector('.cdc-pe-input'); } if(!next){ var nr=el.closest('tr').nextElementSibling; if(nr) next=nr.querySelector('.cdc-pe-input'); }
-        if(next){ next.focus(); }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          save(el);
+          var next = el.closest('td').nextElementSibling;
+          if (next) {
+            next = next.querySelector('.cdc-pe-input');
+          }
+          if (! next) {
+            var nr = el.closest('tr').nextElementSibling;
+            if (nr) {
+              next = nr.querySelector('.cdc-pe-input');
+            }
+          }
+          if (next) {
+            next.focus();
+          }
         }
-      );
+      });
     });
     var search=document.getElementById('cdc-pe-search');
     if(search){ search.addEventListener('input', filter); }

@@ -63,6 +63,8 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - Inline-edit population, liabilities (including PFI/leases), spending,
      deficit, income and interest in a spreadsheet-like table.
    - Select a year once to apply it to all edits.
+   - A spinner in the top-right shows when your changes are saving.
+   - The header and column headings stay visible as you scroll.
 
 4. **Moderation Review**
    - Go to **Debt Counters → Submissions**.  

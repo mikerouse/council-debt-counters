@@ -31,14 +31,14 @@ $fields = [
 ?>
 <div class="wrap">
     <h1><?php esc_html_e( 'Power Editor', 'council-debt-counters' ); ?></h1>
-    <div class="d-flex mb-3">
+    <div id="cdc-pe-header" class="d-flex align-items-center mb-3">
         <select id="cdc-pe-year" class="form-select me-2" style="width:auto;">
             <?php foreach ( $years as $y ) : ?>
                 <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $year, $y ); ?>><?php echo esc_html( $y ); ?></option>
             <?php endforeach; ?>
         </select>
         <input id="cdc-pe-search" type="search" class="form-control" placeholder="<?php esc_attr_e( 'Search councils…', 'council-debt-counters' ); ?>" style="max-width:200px;" />
-        <span id="cdc-pe-spinner" class="spinner-border spinner-border-sm align-self-center ms-2 d-none" role="status" aria-hidden="true"></span>
+        <span id="cdc-pe-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
     </div>
     <table class="table table-striped table-hover" id="cdc-power-table">
         <thead>

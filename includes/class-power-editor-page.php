@@ -42,11 +42,18 @@ class Power_Editor_Page {
         wp_enqueue_style( 'bootstrap-5', $bootstrap_css, [], '5.3.1' );
         wp_enqueue_script( 'bootstrap-5', $bootstrap_js, [], '5.3.1', true );
 
+        wp_enqueue_style(
+            'cdc-power-editor',
+            plugins_url( 'admin/css/power-editor.css', dirname( __DIR__ ) . '/council-debt-counters.php' ),
+            [],
+            '0.1.0'
+        );
+
         wp_enqueue_script(
             'cdc-power-editor',
             plugins_url( 'admin/js/power-editor.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
             [],
-            '0.1.0',
+            '0.1.1',
             true
         );
         wp_localize_script( 'cdc-power-editor', 'cdcPower', [
