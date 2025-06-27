@@ -387,19 +387,20 @@ $readonly = true;
                                                                         <option value="draft_statement_of_accounts"><?php esc_html_e( 'Draft', 'council-debt-counters' ); ?></option>
                                                                         <option value="audited_statement_of_accounts"><?php esc_html_e( 'Audited', 'council-debt-counters' ); ?></option>
                                                                 </select>
-                                                                <button type="button" id="cdc-upload-doc" class="button button-secondary mt-2"><?php esc_html_e( 'Add Document', 'council-debt-counters' ); ?></button>
                                                         <?php endif; ?>
+                                                        <button type="button" id="cdc-upload-doc" class="btn btn-primary mt-2"><?php esc_html_e( 'Upload Document', 'council-debt-counters' ); ?></button>
                                                 </td>
                                         </tr>
                                 </table>
                                 <?php if ( ! empty( $docs ) ) : ?>
                                 <h2><?php esc_html_e( 'Uploaded Statements', 'council-debt-counters' ); ?></h2>
-                                <table id="cdc-docs-table" class="widefat">
+                                <table id="cdc-docs-table" class="table table-striped">
                                         <thead>
                                                 <tr>
                                                         <th><?php esc_html_e( 'File', 'council-debt-counters' ); ?></th>
                                                         <th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th>
                                                         <th><?php esc_html_e( 'Type', 'council-debt-counters' ); ?></th>
+                                                        <th><?php esc_html_e( 'Size (MB)', 'council-debt-counters' ); ?></th>
                                                         <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
                                                 </tr>
                                         </thead>
@@ -421,10 +422,20 @@ $readonly = true;
                                                                 </select>
                                                         </td>
                                                         <td>
-                                                                <button type="button" value="<?php echo esc_attr( $d->id ); ?>" class="button cdc-extract-ai"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Extract Figures', 'council-debt-counters' ); ?></button>
+                                                                <?php
+                                                                $size = '';
+                                                                $p    = \CouncilDebtCounters\Docs_Manager::get_docs_path() . $d->filename;
+                                                                if ( file_exists( $p ) ) {
+                                                                        $size = number_format( filesize( $p ) / 1048576, 2 );
+                                                                }
+                                                                echo esc_html( $size );
+                                                                ?>
+                                                        </td>
+                                                        <td>
+                                                                <button type="button" value="<?php echo esc_attr( $d->id ); ?>" class="btn btn-outline-primary cdc-extract-ai"><span class="dashicons dashicons-lightbulb"></span> <?php esc_html_e( 'Extract Figures', 'council-debt-counters' ); ?></button>
 
-                                                                <button type="submit" name="update_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-secondary"><?php esc_html_e( 'Update', 'council-debt-counters' ); ?></button>
-                                                                <button type="submit" name="delete_doc" value="<?php echo esc_attr( $d->id ); ?>" class="button button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
+                                                                <button type="submit" name="update_doc" value="<?php echo esc_attr( $d->id ); ?>" class="btn btn-secondary ms-1"><?php esc_html_e( 'Update', 'council-debt-counters' ); ?></button>
+                                                                <button type="submit" name="delete_doc" value="<?php echo esc_attr( $d->id ); ?>" class="btn btn-danger ms-1" onclick="return confirm('<?php esc_attr_e( 'Delete this document?', 'council-debt-counters' ); ?>');"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button>
                                                         </td>
                                                 </tr>
                                         <?php endforeach; ?>
