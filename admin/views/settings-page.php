@@ -84,6 +84,24 @@ $types = [
                 </td>
             </tr>
             <tr>
+                <th scope="row"><label for="cdc_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <input name="cdc_openai_api_key" type="text" id="cdc_openai_api_key" value="<?php echo esc_attr( get_option( 'cdc_openai_api_key', '' ) ); ?>" class="regular-text" />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="cdc_recaptcha_site_key"><?php esc_html_e( 'reCAPTCHA Site Key', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <input name="cdc_recaptcha_site_key" type="text" id="cdc_recaptcha_site_key" value="<?php echo esc_attr( get_option( 'cdc_recaptcha_site_key', '' ) ); ?>" class="regular-text" />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="cdc_recaptcha_secret_key"><?php esc_html_e( 'reCAPTCHA Secret Key', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <input name="cdc_recaptcha_secret_key" type="text" id="cdc_recaptcha_secret_key" value="<?php echo esc_attr( get_option( 'cdc_recaptcha_secret_key', '' ) ); ?>" class="regular-text" />
+                </td>
+            </tr>
+            <tr>
                 <th scope="row"><label for="cdc_openai_model"><?php esc_html_e( 'OpenAI Model', 'council-debt-counters' ); ?></label></th>
                 <td>
                     <?php $model = get_option( 'cdc_openai_model', 'gpt-3.5-turbo' ); ?>
@@ -94,7 +112,7 @@ $types = [
                         <option value="o4-mini" <?php selected( $model, 'o4-mini' ); ?>>o4-mini</option>
                         <option value="gpt-4o" <?php selected( $model, 'gpt-4o' ); ?>>gpt-4o</option>
                     </select>
-                    <p class="description"><?php esc_html_e( 'Requires an OpenAI API key on the Licences & Addons page.', 'council-debt-counters' ); ?></p>
+                    <p class="description"><?php esc_html_e( 'Requires an OpenAI API key.', 'council-debt-counters' ); ?></p>
                 </td>
             </tr>
             <tr>

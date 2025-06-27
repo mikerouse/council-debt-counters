@@ -8,7 +8,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Docs_Manager {
     const DOCS_DIR = 'docs';
     const ALLOWED_EXTENSIONS = ['csv', 'pdf', 'xlsx'];
-    const FREE_LIMIT = 10;
 
     const TABLE = 'cdc_documents';
     const DOC_TYPES = [
@@ -125,9 +124,7 @@ class Docs_Manager {
     }
 
     public static function can_upload() {
-        $is_pro = License_Manager::is_valid();
-        if ( $is_pro ) return true;
-        return count( self::list_documents() ) < self::FREE_LIMIT;
+        return true;
     }
 
     public static function upload_document( $file, string $doc_type = '', int $council_id = 0, string $financial_year = '' ) {
@@ -421,7 +418,6 @@ class Docs_Manager {
             wp_send_json_error( [ 'message' => __( 'Permission denied.', 'council-debt-counters' ) ] );
         }
 
-        // Licence validity is checked when the key is saved in the admin.
 
         if ( ! get_option( 'cdc_openai_api_key' ) ) {
             Error_Logger::log_error( 'AI extraction blocked: API key missing' );
