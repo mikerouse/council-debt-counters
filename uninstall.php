@@ -11,8 +11,6 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 // Options to remove.
 $option_names = array(
-	'cdc_license_key',
-	'cdc_license_valid',
 	'cdc_openai_api_key',
 	'cdc_enabled_counters',
 	'cdc_log_level',

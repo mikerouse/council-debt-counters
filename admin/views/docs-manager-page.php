@@ -1,12 +1,10 @@
 <?php
 use CouncilDebtCounters\Docs_Manager;
-use CouncilDebtCounters\License_Manager;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 $docs = Docs_Manager::list_documents();
 $can_upload = Docs_Manager::can_upload();
-$is_pro = License_Manager::is_valid();
 $upload_error = '';
 
 if ( isset( $_POST['cdc_assign_doc'], $_POST['cdc_doc_name'], $_POST['cdc_council'], $_POST['cdc_doc_type'], $_POST['cdc_assign_nonce'] ) && wp_verify_nonce( $_POST['cdc_assign_nonce'], 'cdc_assign_doc' ) ) {

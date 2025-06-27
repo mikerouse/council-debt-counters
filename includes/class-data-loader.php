@@ -238,12 +238,10 @@ class Data_Loader {
 	 * Export plugin settings and keys as JSON.
 	 */
 	public static function export_settings() {
-		$options = array(
-			License_Manager::OPTION_KEY   => get_option( License_Manager::OPTION_KEY, '' ),
-			License_Manager::OPTION_VALID => get_option( License_Manager::OPTION_VALID, '' ),
-			'cdc_openai_api_key'          => get_option( 'cdc_openai_api_key', '' ),
-			'cdc_recaptcha_site_key'      => get_option( 'cdc_recaptcha_site_key', '' ),
-			'cdc_recaptcha_secret_key'    => get_option( 'cdc_recaptcha_secret_key', '' ),
+                $options = array(
+                        'cdc_openai_api_key'          => get_option( 'cdc_openai_api_key', '' ),
+                        'cdc_recaptcha_site_key'      => get_option( 'cdc_recaptcha_site_key', '' ),
+                        'cdc_recaptcha_secret_key'    => get_option( 'cdc_recaptcha_secret_key', '' ),
 			'cdc_openai_model'            => get_option( 'cdc_openai_model', 'gpt-3.5-turbo' ),
                         'cdc_enabled_counters'        => get_option( 'cdc_enabled_counters', array() ),
                        'cdc_counter_titles'          => get_option( 'cdc_counter_titles', array() ),

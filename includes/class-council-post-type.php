@@ -13,7 +13,6 @@ class Council_Post_Type {
      */
     public static function init() {
         add_action( 'init', [ __CLASS__, 'register' ] );
-        add_action( 'load-post-new.php', [ __CLASS__, 'enforce_limit' ] );
         add_action( 'save_post_council', [ __CLASS__, 'calculate_total_debt' ], 20, 1 );
     }
 
@@ -58,16 +57,6 @@ class Council_Post_Type {
         return (int) $count->publish + (int) $count->draft + (int) $count->pending;
     }
 
-    /**
-     * Prevent creation of more councils when limit reached.
-     */
-    public static function enforce_limit() {
-        $screen = get_current_screen();
-        if ( $screen && 'council' === $screen->post_type && ! License_Manager::is_valid() && self::count_councils() >= 2 ) {
-            wp_safe_redirect( admin_url( 'edit.php?post_type=council&cdc_limit=1' ) );
-            exit;
-        }
-    }
 
 
     public static function calculate_total_debt( $post_id, string $year = '' ) {

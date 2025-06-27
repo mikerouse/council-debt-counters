@@ -28,14 +28,6 @@ class Settings_Page {
 			'dashicons-chart-line'
 		);
 
-		add_submenu_page(
-			'council-debt-counters',
-			__( 'Licence Keys and Addons', 'council-debt-counters' ),
-			__( 'Licence Keys and Addons', 'council-debt-counters' ),
-			'manage_options',
-			'cdc-license-keys',
-			array( __CLASS__, 'render_license_page' )
-		);
 
 		add_submenu_page(
 			'council-debt-counters',
@@ -75,14 +67,10 @@ class Settings_Page {
 	}
 
 	public static function register_settings() {
-		// Options on the Licence page.
-		register_setting( 'cdc_license', License_Manager::OPTION_KEY );
-		register_setting( 'cdc_license', License_Manager::OPTION_VALID );
-		register_setting( 'cdc_license', 'cdc_openai_api_key' );
-		register_setting( 'cdc_license', 'cdc_recaptcha_site_key' );
-		register_setting( 'cdc_license', 'cdc_recaptcha_secret_key' );
-
-		// Options on the Settings page.
+                // Options on the Settings page.
+                register_setting( 'cdc_settings', 'cdc_openai_api_key' );
+                register_setting( 'cdc_settings', 'cdc_recaptcha_site_key' );
+                register_setting( 'cdc_settings', 'cdc_recaptcha_secret_key' );
 		register_setting(
 			'cdc_settings',
 			'cdc_openai_model',
@@ -318,9 +306,6 @@ class Settings_Page {
 		include plugin_dir_path( __DIR__ ) . 'admin/views/instructions-page.php';
 	}
 
-	public static function render_license_page() {
-		include plugin_dir_path( __DIR__ ) . 'admin/views/license-page.php';
-	}
 
 	public static function render_settings_page() {
 		include plugin_dir_path( __DIR__ ) . 'admin/views/settings-page.php';
