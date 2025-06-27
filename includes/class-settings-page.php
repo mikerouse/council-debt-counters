@@ -163,6 +163,15 @@ class Settings_Page {
                 );
                 register_setting(
                         'cdc_settings',
+                        'cdc_counter_duration',
+                        array(
+                                'type'              => 'integer',
+                                'default'           => 15,
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_duration' ),
+                        )
+                );
+                register_setting(
+                        'cdc_settings',
                         'cdc_default_financial_year',
                         array(
                                 'type'    => 'string',
@@ -255,6 +264,14 @@ class Settings_Page {
                 $value = preg_replace( '/[^0-9]/', '', $value );
                 if ( $value < 100 || $value > 900 ) {
                         return '600';
+                }
+                return $value;
+        }
+
+        public static function sanitize_duration( $value ) {
+                $value = (int) $value;
+                if ( $value < 1 ) {
+                        return 15;
                 }
                 return $value;
         }

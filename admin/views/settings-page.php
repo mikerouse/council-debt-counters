@@ -118,6 +118,13 @@ $types = [
                 </td>
             </tr>
             <tr>
+                <th scope="row"><label for="cdc_counter_duration"><?php esc_html_e( 'Animation Duration (seconds)', 'council-debt-counters' ); ?></label></th>
+                <td>
+                    <?php $duration = get_option( 'cdc_counter_duration', 15 ); ?>
+                    <input type="number" name="cdc_counter_duration" id="cdc_counter_duration" value="<?php echo esc_attr( $duration ); ?>" min="1" step="1" />
+                </td>
+            </tr>
+            <tr>
                 <th scope="row"><label for="cdc_default_financial_year"><?php esc_html_e( 'Default Financial Year', 'council-debt-counters' ); ?></label></th>
                 <td>
                     <?php $def_year = get_option( 'cdc_default_financial_year', '2023/24' ); ?>

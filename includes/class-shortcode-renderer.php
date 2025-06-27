@@ -169,8 +169,8 @@ class Shortcode_Renderer {
 				return '<div class="cdc-counter-static fw-bold">£' . esc_html( number_format_i18n( (float) $raw_value, 2 ) ) . '</div>';
 		}
 
-                // The annual figure represents the total for the selected financial year.
-                $annual = (float) $raw_value;
+				// The annual figure represents the total for the selected financial year.
+				$annual = (float) $raw_value;
 
 				// Enqueue the necessary styles and scripts
 				wp_enqueue_style( 'bootstrap-5' );
@@ -200,7 +200,8 @@ class Shortcode_Renderer {
 						<?php endif; ?>
 				</div>
 				<div class="cdc-counter-wrapper text-center mb-3">
-                                <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $annual ); ?>" data-growth="0" data-start="0" data-duration="5" data-prefix="£" data-cid="<?php echo esc_attr( $id ); ?>" data-field="<?php echo esc_attr( $field ); ?>" data-year="<?php echo esc_attr( $year ); ?>">
+								<?php $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) ); ?>
+								<div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $annual ); ?>" data-growth="0" data-start="0" data-duration="<?php echo esc_attr( $duration ); ?>" data-prefix="£" data-cid="<?php echo esc_attr( $id ); ?>" data-field="<?php echo esc_attr( $field ); ?>" data-year="<?php echo esc_attr( $year ); ?>">
 								&hellip;
 						</div>
 					<?php if ( $info_line ) : ?>
@@ -211,7 +212,7 @@ class Shortcode_Renderer {
 						<div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
 <div class="text-center cdc-counter-details">
 <p class="mt-2 text-muted">
-<?php echo esc_html( self::counter_description_text( $type ?: $field ) ); ?>
+					<?php echo esc_html( self::counter_description_text( $type ?: $field ) ); ?>
 </p>
 </div>
 						</div>
@@ -589,7 +590,7 @@ class Shortcode_Renderer {
 	/**
 	 * Generate a short informative line for each counter.
 	 */
-private static function counter_info( int $id, string $type, string $year ): string {
+	private static function counter_info( int $id, string $type, string $year ): string {
 		$population = (float) Custom_Fields::get_value( $id, 'population', $year );
 		$households = (float) Custom_Fields::get_value( $id, 'households', $year );
 
@@ -652,10 +653,9 @@ private static function counter_info( int $id, string $type, string $year ): str
 			return '';
 		}
 
-		$year    = self::total_counter_year( $type ?: $field );
-                $annual  = Custom_Fields::get_total_value( $field, $year );
-                $rate    = Counter_Manager::per_second_rate( $annual );
-
+		$year           = self::total_counter_year( $type ?: $field );
+				$annual = Custom_Fields::get_total_value( $field, $year );
+				$rate   = Counter_Manager::per_second_rate( $annual );
 
 			wp_enqueue_style( 'bootstrap-5' );
 			wp_enqueue_style( 'cdc-counter' );
@@ -679,9 +679,9 @@ private static function counter_info( int $id, string $type, string $year ): str
 								<i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
 						</button>
 				</div>
-                                <div class="cdc-counter-wrapper text-center mb-3">
-                                        <?php // Animate from zero to the annual total over five seconds. ?>
-                                        <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $annual ); ?>" data-growth="0" data-start="0" data-duration="5" data-prefix="£">
+								<div class="cdc-counter-wrapper text-center mb-3">
+										<?php $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) ); ?>
+										<div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $annual ); ?>" data-growth="0" data-start="0" data-duration="<?php echo esc_attr( $duration ); ?>" data-prefix="£">
 																&hellip;
 												</div>
 												<noscript>
@@ -744,28 +744,28 @@ private static function counter_info( int $id, string $type, string $year ): str
 				return '';
 		}
 
-			$posts    = get_posts(
+			$posts                       = get_posts(
 				array(
 					'post_type'   => 'council',
 					'numberposts' => -1,
 					'fields'      => 'ids',
 				)
 			);
-                        $total             = 0.0;
-                        $interest          = 0.0;
-                        $current_total     = 0.0;
-                        $long_term_total   = 0.0;
-                        $lease_pfi_total   = 0.0;
-                foreach ( $posts as $id ) {
-                        if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
-                                        continue;
-                        }
-                        $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt', $year );
-                        $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid', $year );
-                        $current_total   += (float) Custom_Fields::get_value( (int) $id, 'current_liabilities', $year );
-                        $long_term_total += (float) Custom_Fields::get_value( (int) $id, 'long_term_liabilities', $year );
-                        $lease_pfi_total += (float) Custom_Fields::get_value( (int) $id, 'finance_lease_pfi_liabilities', $year );
-                }
+						$total           = 0.0;
+						$interest        = 0.0;
+						$current_total   = 0.0;
+						$long_term_total = 0.0;
+						$lease_pfi_total = 0.0;
+		foreach ( $posts as $id ) {
+			if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
+								continue;
+			}
+				$total           += (float) Custom_Fields::get_value( (int) $id, 'total_debt', $year );
+				$interest        += (float) Custom_Fields::get_value( (int) $id, 'interest_paid', $year );
+				$current_total   += (float) Custom_Fields::get_value( (int) $id, 'current_liabilities', $year );
+				$long_term_total += (float) Custom_Fields::get_value( (int) $id, 'long_term_liabilities', $year );
+				$lease_pfi_total += (float) Custom_Fields::get_value( (int) $id, 'finance_lease_pfi_liabilities', $year );
+		}
 
 			$count = count(
 				array_filter(
@@ -776,7 +776,7 @@ private static function counter_info( int $id, string $type, string $year ): str
 				)
 			);
 
-                $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
+				$growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
 			wp_enqueue_style( 'bootstrap-5' );
 			wp_enqueue_style( 'cdc-counter' );
@@ -796,9 +796,9 @@ private static function counter_info( int $id, string $type, string $year ): str
 								<i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
 						</button>
 				</div>
-                                <div class="cdc-counter-wrapper text-center mb-3">
-                                        <?php // Count up from zero to the site-wide total debt in five seconds. ?>
-                                        <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total ); ?>" data-growth="0" data-start="0" data-duration="5" data-prefix="£">
+								<div class="cdc-counter-wrapper text-center mb-3">
+										<?php $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) ); ?>
+										<div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total ); ?>" data-growth="0" data-start="0" data-duration="<?php echo esc_attr( $duration ); ?>" data-prefix="£">
 																&hellip;
 												</div>
 												<noscript>
@@ -806,23 +806,23 @@ private static function counter_info( int $id, string $type, string $year ): str
 												</noscript>
 								</div>
 								<p class="text-muted small text-center mb-1"><?php printf( esc_html__( 'As reported in the %s financial year', 'council-debt-counters' ), esc_html( $year ) ); ?></p>
-                                <div class="collapse text-center" id="<?php echo esc_attr( $collapse_id ); ?>">
-                                                <ul class="mt-2 list-unstyled">
-                                                                <li><?php esc_html_e( 'Total Debt:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $total, 2 ) ); ?></li>
-                                                                <li><?php esc_html_e( 'Total Current Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $current_total, 2 ) ); ?></li>
-                                                                <li><?php esc_html_e( 'Total Long Term Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $long_term_total, 2 ) ); ?></li>
-                                                                <li><?php esc_html_e( 'Total PFI/Finance Lease Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $lease_pfi_total, 2 ) ); ?></li>
-                                                                <li><?php esc_html_e( 'Growth rate per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
-                                                </ul>
-                                                <div class="text-muted">
-                                                        <?php
-                                                                printf(
-                                                                        /* translators: %s: number of councils */
-                                                                        esc_html__( 'Based on %s', 'council-debt-counters' ),
-                                                                        esc_html( sprintf( _n( '%d council', '%d councils', $count, 'council-debt-counters' ), $count ) )
-                                                                );
-                                                        ?>
-                                                </div>
+								<div class="collapse text-center" id="<?php echo esc_attr( $collapse_id ); ?>">
+												<ul class="mt-2 list-unstyled">
+																<li><?php esc_html_e( 'Total Debt:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $total, 2 ) ); ?></li>
+																<li><?php esc_html_e( 'Total Current Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $current_total, 2 ) ); ?></li>
+																<li><?php esc_html_e( 'Total Long Term Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $long_term_total, 2 ) ); ?></li>
+																<li><?php esc_html_e( 'Total PFI/Finance Lease Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $lease_pfi_total, 2 ) ); ?></li>
+																<li><?php esc_html_e( 'Growth rate per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
+												</ul>
+												<div class="text-muted">
+														<?php
+																printf(
+																		/* translators: %s: number of councils */
+																	esc_html__( 'Based on %s', 'council-debt-counters' ),
+																	esc_html( sprintf( _n( '%d council', '%d councils', $count, 'council-debt-counters' ), $count ) )
+																);
+														?>
+												</div>
 				</div>
 				<?php
 				return ob_get_clean();
@@ -1126,21 +1126,21 @@ private static function counter_info( int $id, string $type, string $year ): str
 			$html = self::leaderboard_html( $type, $limit, $format, true, $year );
 			wp_send_json_success( array( 'html' => $html ) );
 	}
-       /**
-        * Provide an explanatory line for each counter type.
-        */
-       private static function counter_description_text( string $type ): string {
-               switch ( $type ) {
-                       case 'debt':
-                               return __( 'Shows the council\'s total outstanding borrowings for the selected year.', 'council-debt-counters' );
-                       case 'spending':
-                               return __( 'Total gross expenditure from the comprehensive income and expenditure statement for day-to-day services across all directorates.', 'council-debt-counters' );
-case 'deficit':
-return __( 'The deficit reported after grants, asset revaluation and pension adjustments.', 'council-debt-counters' );
-case 'income':
-return __( 'The income figure is the gross income declared on the comprehensive income and expenditure statement from directorate services. It excludes council tax.', 'council-debt-counters' );
-default:
-return __( 'Annual total for the selected financial year.', 'council-debt-counters' );
-               }
-       }
+		/**
+		* Provide an explanatory line for each counter type.
+		*/
+	private static function counter_description_text( string $type ): string {
+		switch ( $type ) {
+			case 'debt':
+				return __( 'Shows the council\'s total outstanding borrowings for the selected year.', 'council-debt-counters' );
+			case 'spending':
+				return __( 'Total gross expenditure from the comprehensive income and expenditure statement for day-to-day services across all directorates.', 'council-debt-counters' );
+			case 'deficit':
+				return __( 'The deficit reported after grants, asset revaluation and pension adjustments.', 'council-debt-counters' );
+			case 'income':
+				return __( 'The income figure is the gross income declared on the comprehensive income and expenditure statement from directorate services. It excludes council tax.', 'council-debt-counters' );
+			default:
+				return __( 'Annual total for the selected financial year.', 'council-debt-counters' );
+		}
+	}
 }
