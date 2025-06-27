@@ -155,6 +155,10 @@ class Council_Admin_Page {
             $tab   = Custom_Fields::get_field_tab( $field->name );
             $year  = isset( $tab_years[ $tab ] ) ? sanitize_text_field( $tab_years[ $tab ] ) : CDC_Utils::current_financial_year();
             Custom_Fields::update_value( $post_id, $field->name, wp_unslash( $value ), $year );
+            if ( 'council_closed' === $field->name && $value ) {
+                Custom_Fields::update_value( $post_id, 'status_message', __( 'This council no longer exists', 'council-debt-counters' ), CDC_Utils::current_financial_year() );
+                Custom_Fields::update_value( $post_id, 'status_message_type', 'warning', CDC_Utils::current_financial_year() );
+            }
             $meta_key = 'cdc_na_' . $field->name;
             if ( isset( $na_flags[ $field->name ] ) ) {
                 update_post_meta( $post_id, $meta_key, '1' );

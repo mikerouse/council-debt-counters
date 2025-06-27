@@ -27,6 +27,7 @@ $fields = [
 'annual_deficit',
 'total_income',
 'interest_paid',
+'council_closed',
 ];
 ?>
 <div class="wrap">
@@ -53,6 +54,7 @@ $fields = [
                 <th><?php esc_html_e( 'Deficit', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Income', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Interest Paid', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Closed', 'council-debt-counters' ); ?></th>
             </tr>
         </thead>
         <tbody>
@@ -62,7 +64,11 @@ $fields = [
                     <td><?php echo esc_html( get_the_title( $p ) ); ?></td>
                     <?php foreach ( $fields as $f ) : ?>
                         <?php $val = Custom_Fields::get_value( $p->ID, $f, $year ); ?>
-                        <td><input type="text" class="form-control form-control-sm cdc-pe-input" data-field="<?php echo esc_attr( $f ); ?>" value="<?php echo esc_attr( $val ); ?>" /></td>
+                        <?php if ( 'council_closed' === $f ) : ?>
+                            <td class="text-center"><input type="checkbox" class="form-check-input cdc-pe-input" data-field="<?php echo esc_attr( $f ); ?>" <?php checked( $val, '1' ); ?>></td>
+                        <?php else : ?>
+                            <td><input type="text" class="form-control form-control-sm cdc-pe-input" data-field="<?php echo esc_attr( $f ); ?>" value="<?php echo esc_attr( $val ); ?>" /></td>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </tr>
             <?php endforeach; wp_reset_postdata(); ?>

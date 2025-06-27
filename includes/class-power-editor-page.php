@@ -78,6 +78,10 @@ class Power_Editor_Page {
         }
 
         Custom_Fields::update_value( $cid, $field, $value, $year );
+        if ( 'council_closed' === $field && $value ) {
+            Custom_Fields::update_value( $cid, 'status_message', __( 'This council no longer exists', 'council-debt-counters' ), CDC_Utils::current_financial_year() );
+            Custom_Fields::update_value( $cid, 'status_message_type', 'warning', CDC_Utils::current_financial_year() );
+        }
         delete_post_meta( $cid, 'cdc_na_' . $field );
         $tab = Custom_Fields::get_field_tab( $field );
         delete_post_meta( $cid, 'cdc_na_tab_' . $tab );

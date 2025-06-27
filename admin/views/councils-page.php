@@ -149,6 +149,11 @@ $readonly = true;
 <?php elseif ( 'financial_data_source_url' === $field->name ) : ?>
 <input data-cdc-field="<?php echo esc_attr( $field->name ); ?>" data-initial-required="<?php echo $is_required ? '1' : '0'; ?>" type="url" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" value="<?php echo esc_attr( $val ); ?>" class="form-control" <?php echo $readonly ? 'readonly disabled' : 'name="cdc_fields[' . esc_attr( $field->id ) . ']"'; ?> <?php echo $is_required ? 'required' : ''; ?> placeholder="https://example.com/statement.pdf">
 <p class="description mt-1"><?php esc_html_e( 'Link to the published statement this data comes from.', 'council-debt-counters' ); ?></p>
+<?php elseif ( 'council_closed' === $field->name ) : ?>
+<div class="form-check">
+    <input type="checkbox" class="form-check-input" id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" value="1" <?php checked( $val, '1' ); ?> <?php echo $readonly ? 'disabled' : ''; ?> />
+    <label for="cdc-field-<?php echo esc_attr( $field->id ); ?>" class="form-check-label"><?php esc_html_e( 'This council no longer exists', 'council-debt-counters' ); ?></label>
+</div>
 <?php elseif ( 'status_message_type' === $field->name ) : ?>
 <select id="cdc-field-<?php echo esc_attr( $field->id ); ?>" name="cdc_fields[<?php echo esc_attr( $field->id ); ?>]" class="form-select" <?php echo $is_required ? 'required' : ''; ?> <?php echo $readonly ? 'disabled' : ''; ?>>
 <?php foreach ( array( 'info', 'warning', 'danger' ) as $t ) : ?>

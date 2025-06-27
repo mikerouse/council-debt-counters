@@ -61,9 +61,11 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - Go to **Debt Counters → Power Editor**.
    - Quickly edit figures for councils marked “Under Review.”
    - Inline-edit population, liabilities (including PFI/leases), spending,
-     deficit, income and interest in a spreadsheet-like table.
+   deficit, income, interest and whether the council has closed in a
+   spreadsheet-like table.
    - Select a year once to apply it to all edits.
    - A spinner in the top-right shows when your changes are saving.
+   - Ticking **Closed** adds a status message that the council no longer exists.
    - The header and column headings stay visible as you scroll.
 
 4. **Moderation Review**

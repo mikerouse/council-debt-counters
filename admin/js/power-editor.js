@@ -23,7 +23,8 @@
     d.append('action','cdc_power_save');
     d.append('cid', cid);
     d.append('field', field);
-    d.append('value', input.value);
+    var value = input.type === 'checkbox' ? (input.checked ? '1' : '') : input.value;
+    d.append('value', value);
     d.append('year', year);
     d.append('nonce', cdcPower.nonce);
     showSpinner();
@@ -55,7 +56,7 @@
         save(el);
       });
       el.addEventListener('keydown', function(e){
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && el.type !== 'checkbox') {
           e.preventDefault();
           save(el);
           var next = el.closest('td').nextElementSibling;
