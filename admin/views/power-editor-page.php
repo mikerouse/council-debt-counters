@@ -1,7 +1,11 @@
 <?php
+use CouncilDebtCounters\CDC_Utils;
+use CouncilDebtCounters\Custom_Fields;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
 $year  = CDC_Utils::current_financial_year();
 $years = CDC_Utils::council_years();
 $query = new WP_Query([
