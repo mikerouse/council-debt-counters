@@ -57,3 +57,7 @@
 .grecaptcha-badge {
 	visibility: hidden;
 }
+
+#cdc-detail-total-debt {
+	text-align: center;
+}

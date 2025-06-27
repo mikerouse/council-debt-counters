@@ -42,21 +42,21 @@ class Shortcode_Renderer {
 			);
 	}
 
-        private static function total_counter_title( string $type ): string {
-                $defaults = self::total_default_labels();
-                $titles   = (array) get_option( 'cdc_total_counter_titles', array() );
-                $default  = $defaults[ $type ] ?? ucwords( $type );
-                return sanitize_text_field( $titles[ $type ] ?? $default );
-        }
+	private static function total_counter_title( string $type ): string {
+			$defaults = self::total_default_labels();
+			$titles   = (array) get_option( 'cdc_total_counter_titles', array() );
+			$default  = $defaults[ $type ] ?? ucwords( $type );
+			return sanitize_text_field( $titles[ $type ] ?? $default );
+	}
 
-        private static function total_counter_year( string $type ): string {
-                $years = (array) get_option( 'cdc_total_counter_years', array() );
-                $year  = $years[ $type ] ?? get_option( 'cdc_default_financial_year', '2023/24' );
-                if ( ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
-                        $year = '2023/24';
-                }
-                return $year;
-        }
+	private static function total_counter_year( string $type ): string {
+			$years = (array) get_option( 'cdc_total_counter_years', array() );
+			$year  = $years[ $type ] ?? get_option( 'cdc_default_financial_year', '2023/24' );
+		if ( ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
+				$year = '2023/24';
+		}
+			return $year;
+	}
 
 		/**
 		* Get the URL for an icon asset.
@@ -655,16 +655,16 @@ class Shortcode_Renderer {
 		 * @param string $type
 		 * @return bool|string
 		 */
-    private static function render_total_annual_counter( string $field, string $type = '' ) {
-        $enabled = (array) get_option( 'cdc_enabled_counters', array() );
-        if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
-            return '';
-        }
+	private static function render_total_annual_counter( string $field, string $type = '' ) {
+		$enabled = (array) get_option( 'cdc_enabled_counters', array() );
+		if ( '' !== $type && ! in_array( $type, $enabled, true ) ) {
+			return '';
+		}
 
-        $year    = self::total_counter_year( $type ?: $field );
-        $annual  = Custom_Fields::get_total_value( $field, $year );
-        $rate    = Counter_Manager::per_second_rate( $annual );
-        $current = $rate * Counter_Manager::seconds_since_fy_start( $year );
+		$year    = self::total_counter_year( $type ?: $field );
+		$annual  = Custom_Fields::get_total_value( $field, $year );
+		$rate    = Counter_Manager::per_second_rate( $annual );
+		$current = $rate * Counter_Manager::seconds_since_fy_start( $year );
 
 			wp_enqueue_style( 'bootstrap-5' );
 			wp_enqueue_style( 'cdc-counter' );
@@ -688,16 +688,16 @@ class Shortcode_Renderer {
 								<i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
 						</button>
 				</div>
-                                <div class="cdc-counter-wrapper text-center mb-3">
-                                                <div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
-                                                                &hellip;
-                                                </div>
-                                                <noscript>
-                                                                <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
-                                                </noscript>
-                                </div>
-                                <p class="text-muted small text-center mb-1"><?php printf( esc_html__( 'As reported in the %s financial year', 'council-debt-counters' ), esc_html( $year ) ); ?></p>
-                                <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
+								<div class="cdc-counter-wrapper text-center mb-3">
+												<div id="<?php echo esc_attr( $counter_id ); ?>" class="cdc-counter <?php echo esc_attr( $counter_class ); ?> display-6 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $current ); ?>" data-growth="<?php echo esc_attr( $rate ); ?>" data-start="<?php echo esc_attr( $current ); ?>" data-prefix="£">
+																&hellip;
+												</div>
+												<noscript>
+																<p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
+												</noscript>
+								</div>
+								<p class="text-muted small text-center mb-1"><?php printf( esc_html__( 'As reported in the %s financial year', 'council-debt-counters' ), esc_html( $year ) ); ?></p>
+								<div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
 						<ul class="mt-2 list-unstyled">
 							<?php // translators: %s: Field label ?>
 								<li><?php echo esc_html( sprintf( __( 'Annual %s:', 'council-debt-counters' ), $label ) ); ?> £<?php echo esc_html( number_format_i18n( $annual, 2 ) ); ?></li>
@@ -744,10 +744,10 @@ class Shortcode_Renderer {
 	}
 
 	public static function render_total_debt_counter( $atts = array() ) {
-        $atts       = shortcode_atts( array( 'year' => '' ), $atts );
-        $year_param = sanitize_text_field( $atts['year'] );
-        $year       = ( '' !== $year_param && preg_match( '/^\d{4}\/\d{2}$/', $year_param ) ) ? $year_param : self::total_counter_year( 'debt' );
-			$enabled    = (array) get_option( 'cdc_enabled_counters', array() );
+		$atts        = shortcode_atts( array( 'year' => '' ), $atts );
+		$year_param  = sanitize_text_field( $atts['year'] );
+		$year        = ( '' !== $year_param && preg_match( '/^\d{4}\/\d{2}$/', $year_param ) ) ? $year_param : self::total_counter_year( 'debt' );
+			$enabled = (array) get_option( 'cdc_enabled_counters', array() );
 		if ( ! in_array( 'debt', $enabled, true ) ) {
 				return '';
 		}
@@ -759,15 +759,21 @@ class Shortcode_Renderer {
 					'fields'      => 'ids',
 				)
 			);
-			$total    = 0.0;
-			$interest = 0.0;
-		foreach ( $posts as $id ) {
-			if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
-					continue;
-			}
-			$total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt', $year );
-			$interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid', $year );
-		}
+                        $total             = 0.0;
+                        $interest          = 0.0;
+                        $current_total     = 0.0;
+                        $long_term_total   = 0.0;
+                        $lease_pfi_total   = 0.0;
+                foreach ( $posts as $id ) {
+                        if ( get_post_meta( (int) $id, 'cdc_parent_council', true ) ) {
+                                        continue;
+                        }
+                        $total    += (float) Custom_Fields::get_value( (int) $id, 'total_debt', $year );
+                        $interest += (float) Custom_Fields::get_value( (int) $id, 'interest_paid', $year );
+                        $current_total   += (float) Custom_Fields::get_value( (int) $id, 'current_liabilities', $year );
+                        $long_term_total += (float) Custom_Fields::get_value( (int) $id, 'long_term_liabilities', $year );
+                        $lease_pfi_total += (float) Custom_Fields::get_value( (int) $id, 'finance_lease_pfi_liabilities', $year );
+                }
 
 			$count = count(
 				array_filter(
@@ -778,13 +784,13 @@ class Shortcode_Renderer {
 				)
 			);
 
-        $growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
+		$growth_per_second = $interest / ( 365 * 24 * 60 * 60 );
 
-        $now        = time();
-        $start_year = (int) substr( $year, 0, 4 );
-        $fy_start   = strtotime( $start_year . '-04-01' );
-        $elapsed_seconds = max( 0, $now - $fy_start );
-        $start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
+		$now             = time();
+		$start_year      = (int) substr( $year, 0, 4 );
+		$fy_start        = strtotime( $start_year . '-04-01' );
+		$elapsed_seconds = max( 0, $now - $fy_start );
+		$start_value     = $total + ( $growth_per_second * $elapsed_seconds * -1 );
 
 			wp_enqueue_style( 'bootstrap-5' );
 			wp_enqueue_style( 'cdc-counter' );
@@ -804,29 +810,32 @@ class Shortcode_Renderer {
 								<i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden"><?php esc_html_e( 'View details', 'council-debt-counters' ); ?></span>
 						</button>
 				</div>
-                                <div class="cdc-counter-wrapper text-center mb-3">
-                                                <div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
-                                                                &hellip;
+								<div class="cdc-counter-wrapper text-center mb-3">
+												<div id="cdc-counter-total-debt" class="cdc-counter cdc-counter-debt display-4 fw-bold" role="status" aria-live="polite" data-target="<?php echo esc_attr( $total + ( $growth_per_second * $elapsed_seconds ) ); ?>" data-growth="<?php echo esc_attr( $growth_per_second ); ?>" data-start="<?php echo esc_attr( $start_value ); ?>" data-prefix="£">
+																&hellip;
+												</div>
+												<noscript>
+																<p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
+												</noscript>
+								</div>
+								<p class="text-muted small text-center mb-1"><?php printf( esc_html__( 'As reported in the %s financial year', 'council-debt-counters' ), esc_html( $year ) ); ?></p>
+                                <div class="collapse text-center" id="<?php echo esc_attr( $collapse_id ); ?>">
+                                                <ul class="mt-2 list-unstyled">
+                                                                <li><?php esc_html_e( 'Total Debt:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $total, 2 ) ); ?></li>
+                                                                <li><?php esc_html_e( 'Total Current Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $current_total, 2 ) ); ?></li>
+                                                                <li><?php esc_html_e( 'Total Long Term Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $long_term_total, 2 ) ); ?></li>
+                                                                <li><?php esc_html_e( 'Total PFI/Finance Lease Liabilities:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $lease_pfi_total, 2 ) ); ?></li>
+                                                                <li><?php esc_html_e( 'Growth rate per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
+                                                </ul>
+                                                <div class="text-muted">
+                                                        <?php
+                                                                printf(
+                                                                        /* translators: %s: number of councils */
+                                                                        esc_html__( 'Based on %s', 'council-debt-counters' ),
+                                                                        esc_html( sprintf( _n( '%d council', '%d councils', $count, 'council-debt-counters' ), $count ) )
+                                                                );
+                                                        ?>
                                                 </div>
-                                                <noscript>
-                                                                <p class="cdc-no-js alert alert-warning mb-0"><?php esc_html_e( 'You must enable JavaScript to see the counters', 'council-debt-counters' ); ?></p>
-                                                </noscript>
-                                </div>
-                                <p class="text-muted small text-center mb-1"><?php printf( esc_html__( 'As reported in the %s financial year', 'council-debt-counters' ), esc_html( $year ) ); ?></p>
-                                <div class="collapse" id="<?php echo esc_attr( $collapse_id ); ?>">
-						<ul class="mt-2 list-unstyled">
-								<li><?php esc_html_e( 'Interest Paid (annual):', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $interest, 2 ) ); ?></li>
-								<li><?php esc_html_e( 'Net growth/reduction per second:', 'council-debt-counters' ); ?> £<?php echo esc_html( number_format_i18n( $growth_per_second, 6 ) ); ?></li>
-						</ul>
-						<div class="text-muted">
-							<?php
-								printf(
-									/* translators: %s: number of councils */
-									esc_html__( 'Based on %s', 'council-debt-counters' ),
-									esc_html( sprintf( _n( '%d council', '%d councils', $count, 'council-debt-counters' ), $count ) )
-								);
-							?>
-						</div>
 				</div>
 				<?php
 				return ob_get_clean();
