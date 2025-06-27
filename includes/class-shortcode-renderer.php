@@ -221,7 +221,7 @@ class Shortcode_Renderer {
 				return ob_get_clean();
 	}
 
-	public static function init() {
+        public static function init() {
 			add_shortcode( 'council_counter', array( __CLASS__, 'render_debt_counter' ) );
 			add_shortcode( 'council_counters', array( __CLASS__, 'render_council_counters' ) );
 			add_shortcode( 'spending_counter', array( __CLASS__, 'render_spending_counter' ) );
@@ -249,9 +249,11 @@ class Shortcode_Renderer {
 			add_action( 'wp_ajax_nopriv_cdc_render_counters', array( __CLASS__, 'ajax_render_counters' ) );
 			add_action( 'wp_ajax_cdc_render_leaderboard', array( __CLASS__, 'ajax_render_leaderboard' ) );
 			add_action( 'wp_ajax_nopriv_cdc_render_leaderboard', array( __CLASS__, 'ajax_render_leaderboard' ) );
-			add_action( 'wp_ajax_cdc_get_counter_value', array( __CLASS__, 'ajax_get_counter_value' ) );
-			add_action( 'wp_ajax_nopriv_cdc_get_counter_value', array( __CLASS__, 'ajax_get_counter_value' ) );
-	}
+                        add_action( 'wp_ajax_cdc_get_counter_value', array( __CLASS__, 'ajax_get_counter_value' ) );
+                        add_action( 'wp_ajax_nopriv_cdc_get_counter_value', array( __CLASS__, 'ajax_get_counter_value' ) );
+                        add_action( 'wp_ajax_cdc_get_leaderboard_value', array( __CLASS__, 'ajax_get_leaderboard_value' ) );
+                        add_action( 'wp_ajax_nopriv_cdc_get_leaderboard_value', array( __CLASS__, 'ajax_get_leaderboard_value' ) );
+        }
 
 	public static function register_assets() {
 			$plugin_file = dirname( __DIR__ ) . '/council-debt-counters.php';
@@ -285,8 +287,11 @@ class Shortcode_Renderer {
 			wp_localize_script( 'cdc-council-counters', 'cdcCounters', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ) ) );
 			wp_localize_script( 'cdc-counter-animations', 'cdcCounters', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ) ) );
 			wp_register_script( 'cdc-fig-modal', plugins_url( 'public/js/figure-form-modal.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
-			wp_register_script( 'cdc-leaderboard', plugins_url( 'public/js/leaderboard.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
-			wp_localize_script( 'cdc-leaderboard', 'cdcLeaderboard', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ) ) );
+                        wp_register_script( 'cdc-leaderboard', plugins_url( 'public/js/leaderboard.js', $plugin_file ), array( 'bootstrap-5' ), '0.1.0', true );
+                        wp_localize_script( 'cdc-leaderboard', 'cdcLeaderboard', array(
+                                'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+                                'duration' => (int) get_option( 'cdc_counter_duration', 15 ),
+                        ) );
 			wp_localize_script(
 				'cdc-counter-animations',
 				'CDC_LOGGER',
@@ -828,58 +833,55 @@ class Shortcode_Renderer {
 				return ob_get_clean();
 	}
 
-	private static function leaderboard_html( string $type, int $limit, string $format, bool $with_link, string $year ) {
-			$posts = get_posts(
-				array(
-					'post_type'   => 'council',
-					'numberposts' => -1,
-					'fields'      => 'ids',
-				)
-			);
+        private static function get_leaderboard_value( int $id, string $type, string $year ) {
+                $debt       = (float) Custom_Fields::get_value( $id, 'total_debt', $year );
+                $population = (float) Custom_Fields::get_value( $id, 'population', $year );
+                $reserves   = (float) Custom_Fields::get_value( $id, 'usable_reserves', $year );
+                $spending   = (float) Custom_Fields::get_value( $id, 'annual_spending', $year );
+                $income     = (float) Custom_Fields::get_value( $id, 'total_income', $year );
+                $deficit    = (float) Custom_Fields::get_value( $id, 'annual_deficit', $year );
+                $interest   = (float) Custom_Fields::get_value( $id, 'interest_paid', $year );
 
-			$rows = array();
-		foreach ( $posts as $id ) {
-			if ( get_post_meta( $id, 'cdc_parent_council', true ) ) {
-					continue;
-			}
+                switch ( $type ) {
+                        case 'highest_debt':
+                                return $debt;
+                        case 'debt_per_resident':
+                                return ( $population > 0 ) ? $debt / $population : null;
+                        case 'reserves_to_debt_ratio':
+                                return ( $debt > 0 ) ? $reserves / $debt : null;
+                        case 'biggest_deficit':
+                                return $deficit !== 0 ? $deficit : ( $spending - $income );
+                        case 'lowest_reserves':
+                                return $reserves;
+                        case 'highest_spending_per_resident':
+                                return ( $population > 0 ) ? $spending / $population : null;
+                        case 'highest_interest_paid':
+                                return $interest;
+                        default:
+                                return null;
+                }
+        }
 
-				$debt       = (float) Custom_Fields::get_value( $id, 'total_debt', $year );
-				$population = (float) Custom_Fields::get_value( $id, 'population', $year );
-				$reserves   = (float) Custom_Fields::get_value( $id, 'usable_reserves', $year );
-				$spending   = (float) Custom_Fields::get_value( $id, 'annual_spending', $year );
-				$income     = (float) Custom_Fields::get_value( $id, 'total_income', $year );
-				$deficit    = (float) Custom_Fields::get_value( $id, 'annual_deficit', $year );
-				$interest   = (float) Custom_Fields::get_value( $id, 'interest_paid', $year );
+        private static function leaderboard_html( string $type, int $limit, string $format, string $year, string $nonce ) {
+                $posts = get_posts(
+                                array(
+                                        'post_type'   => 'council',
+                                        'numberposts' => -1,
+                                        'fields'      => 'ids',
+                                )
+                        );
 
-			switch ( $type ) {
-				case 'highest_debt':
-					$value = $debt;
-					break;
-				case 'debt_per_resident':
-							$value = ( $population > 0 ) ? $debt / $population : null;
-					break;
-				case 'reserves_to_debt_ratio':
-						$value = ( $debt > 0 ) ? $reserves / $debt : null;
-					break;
-				case 'biggest_deficit':
-							$value = $deficit !== 0 ? $deficit : ( $spending - $income );
-					break;
-				case 'lowest_reserves':
-						$value = $reserves;
-					break;
-				case 'highest_spending_per_resident':
-						$value = ( $population > 0 ) ? $spending / $population : null;
-					break;
-				case 'highest_interest_paid':
-						$value = $interest;
-					break;
-				default:
-						$value = null;
-			}
+                        $rows = array();
+                foreach ( $posts as $id ) {
+                        if ( get_post_meta( $id, 'cdc_parent_council', true ) ) {
+                                        continue;
+                        }
 
-			if ( null === $value ) {
-						continue;
-			}
+                        $value = self::get_leaderboard_value( $id, $type, $year );
+
+                        if ( null === $value ) {
+                                                continue;
+                        }
 
 					$rows[] = array(
 						'id'    => $id,
@@ -906,36 +908,34 @@ class Shortcode_Renderer {
 			$rows = array_slice( $rows, 0, $limit );
 
 			ob_start();
-		if ( 'list' === $format ) {
-				echo '<ul class="list-group">';
-			foreach ( $rows as $row ) {
-					$label = in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
-					echo '<li class="list-group-item d-flex justify-content-between align-items-center">';
-					echo esc_html( $row['name'] );
-					echo '<span class="badge bg-secondary">' . esc_html( $label ) . '</span>';
-				if ( $with_link ) {
-						echo ' <a class="ms-2" href="' . esc_url( get_permalink( $row['id'] ) ) . '">' . esc_html__( 'View details', 'council-debt-counters' ) . '</a>';
-				}
-					echo '</li>';
-			}
-				echo '</ul>';
-		} else {
-				echo '<table class="table table-striped">';
-				echo '<thead><tr><th>' . esc_html__( 'Council', 'council-debt-counters' ) . '</th><th>' . esc_html__( 'Value', 'council-debt-counters' ) . '</th>';
-			if ( $with_link ) {
-					echo '<th></th>';
-			}
-				echo '</tr></thead><tbody>';
-			foreach ( $rows as $row ) {
-						$label = in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ? number_format_i18n( $row['value'], 2 ) . '%' : '£' . number_format_i18n( $row['value'], 2 );
-						echo '<tr><td>' . esc_html( $row['name'] ) . '</td><td>' . esc_html( $label ) . '</td>';
-				if ( $with_link ) {
-					echo '<td><a href="' . esc_url( get_permalink( $row['id'] ) ) . '">' . esc_html__( 'View details', 'council-debt-counters' ) . '</a></td>';
-				}
-						echo '</tr>';
-			}
-				echo '</tbody></table>';
-		}
+                if ( 'list' === $format ) {
+                echo '<ul class="list-group">';
+                        foreach ( $rows as $row ) {
+                                        $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) );
+                                        $prefix   = in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ? '' : '£';
+                                        $label    = '<span class="cdc-counter" data-target="' . esc_attr( $row['value'] ) . '" data-growth="0" data-start="0" data-duration="' . esc_attr( $duration ) . '" data-prefix="' . esc_attr( $prefix ) . '" data-cid="' . esc_attr( $row['id'] ) . '" data-lb-type="' . esc_attr( $type ) . '" data-year="' . esc_attr( $year ) . '" data-nonce="' . esc_attr( $nonce ) . '"></span>' . ( 'reserves_to_debt_ratio' === $type ? '%' : '' );
+                                        echo '<li class="list-group-item d-flex justify-content-between align-items-center">';
+                                        echo '<i class="fa-regular fa-star me-2 cdc-fav-toggle" data-id="' . esc_attr( $row['id'] ) . '" role="button"></i>'; // TODO: toggle favourite councils
+                                        echo esc_html( $row['name'] );
+                                        echo '<span class="badge bg-secondary">' . $label . '</span>';
+                                // Comparison feature removed for now.
+                                        echo '</li>';
+                        }
+                                echo '</ul>';
+                } else {
+                        echo '<table class="table table-striped">';
+                        echo '<thead><tr><th>' . esc_html__( 'Council', 'council-debt-counters' ) . '</th><th>' . esc_html__( 'Value', 'council-debt-counters' ) . '</th></tr></thead><tbody>';
+                        foreach ( $rows as $row ) {
+                                                $duration = max( 1, (int) get_option( 'cdc_counter_duration', 15 ) );
+                                                $prefix   = in_array( $type, array( 'reserves_to_debt_ratio' ), true ) ? '' : '£';
+                                                $label    = '<span class="cdc-counter" data-target="' . esc_attr( $row['value'] ) . '" data-growth="0" data-start="0" data-duration="' . esc_attr( $duration ) . '" data-prefix="' . esc_attr( $prefix ) . '" data-cid="' . esc_attr( $row['id'] ) . '" data-lb-type="' . esc_attr( $type ) . '" data-year="' . esc_attr( $year ) . '" data-nonce="' . esc_attr( $nonce ) . '"></span>' . ( 'reserves_to_debt_ratio' === $type ? '%' : '' );
+                                                echo '<tr class="align-middle"><td class="align-middle"><i class="fa-regular fa-star me-2 cdc-fav-toggle" data-id="' . esc_attr( $row['id'] ) . '" role="button"></i>' . esc_html( $row['name'] ) . '</td>';
+                                                echo '<td class="align-middle">' . $label . '</td>';
+                                // Placeholder for future compare link column.
+                                                echo '</tr>';
+                        }
+                                echo '</tbody></table>';
+                }
 			return ob_get_clean();
 	}
 
@@ -944,26 +944,28 @@ class Shortcode_Renderer {
 				array(
 					'type'   => 'highest_debt',
 					'limit'  => 10,
-					'format' => 'table',
-					'link'   => '0',
-					'year'   => '',
+                                        'format' => 'table',
+                                        'year'   => '',
 				),
 				$atts
 			);
 
 			$type      = sanitize_key( $atts['type'] );
 			$limit     = max( 1, intval( $atts['limit'] ) );
-			$format    = in_array( $atts['format'], array( 'table', 'list' ), true ) ? $atts['format'] : 'table';
-			$with_link = (bool) intval( $atts['link'] );
+                        $format    = in_array( $atts['format'], array( 'table', 'list' ), true ) ? $atts['format'] : 'table';
 			$year      = sanitize_text_field( $atts['year'] );
 		if ( '' === $year || ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
 				$year = CDC_Utils::current_financial_year();
 		}
 
-			wp_enqueue_style( 'bootstrap-5' );
-			wp_enqueue_style( 'cdc-year-overlay' );
-			wp_enqueue_script( 'bootstrap-5' );
-			wp_enqueue_script( 'cdc-leaderboard' );
+                        wp_enqueue_style( 'bootstrap-5' );
+                        wp_enqueue_style( 'cdc-year-overlay' );
+                        wp_enqueue_style( 'cdc-counter' );
+                        wp_enqueue_style( 'cdc-counter-font' );
+                        wp_enqueue_script( 'bootstrap-5' );
+                        wp_enqueue_script( 'cdc-counter-animations' );
+                        wp_enqueue_script( 'font-awesome-kit' );
+                        wp_enqueue_script( 'cdc-leaderboard' );
 
 			$nonce   = wp_create_nonce( Year_Selector::NONCE );
 			$id_attr = 'cdc-leaderboard-' . md5( uniqid( '', true ) );
@@ -979,8 +981,8 @@ class Shortcode_Renderer {
 										<?php endforeach; ?>
 								</select>
 						</div>
-						<div class="cdc-leaderboard-container cdc-show">
-							<?php echo self::leaderboard_html( $type, $limit, $format, $with_link, $year ); ?>
+                                                <div class="cdc-leaderboard-container cdc-show">
+                                                        <?php echo self::leaderboard_html( $type, $limit, $format, $year, $nonce ); ?>
 						</div>
 				</div>
 				<?php
@@ -1099,20 +1101,39 @@ class Shortcode_Renderer {
 			wp_die();
 	}
 
-	public static function ajax_get_counter_value() {
-			$id    = intval( $_POST['id'] ?? 0 );
-			$field = sanitize_key( $_POST['field'] ?? '' );
-			$year  = sanitize_text_field( $_POST['year'] ?? '' );
-		if ( ! $id || '' === $field || '' === $year ) {
-				wp_send_json_error( array( 'message' => __( 'Invalid request.', 'council-debt-counters' ) ), 400 );
-		}
-			$post = get_post( $id );
-		if ( ! $post || 'council' !== $post->post_type ) {
-				wp_send_json_error( array( 'message' => __( 'Not found.', 'council-debt-counters' ) ), 404 );
-		}
-			$value = Custom_Fields::get_value( $id, $field, $year );
-			wp_send_json_success( array( 'value' => $value ) );
-	}
+        public static function ajax_get_counter_value() {
+                        $id    = intval( $_POST['id'] ?? 0 );
+                        $field = sanitize_key( $_POST['field'] ?? '' );
+                        $year  = sanitize_text_field( $_POST['year'] ?? '' );
+                if ( ! $id || '' === $field || '' === $year ) {
+                                wp_send_json_error( array( 'message' => __( 'Invalid request.', 'council-debt-counters' ) ), 400 );
+                }
+                        $post = get_post( $id );
+                if ( ! $post || 'council' !== $post->post_type ) {
+                                wp_send_json_error( array( 'message' => __( 'Not found.', 'council-debt-counters' ) ), 404 );
+                }
+                        $value = Custom_Fields::get_value( $id, $field, $year );
+                        wp_send_json_success( array( 'value' => $value ) );
+        }
+
+        public static function ajax_get_leaderboard_value() {
+                        check_ajax_referer( Year_Selector::NONCE, 'nonce' );
+                        $id   = intval( $_POST['id'] ?? 0 );
+                        $type = sanitize_key( $_POST['lb_type'] ?? '' );
+                        $year = sanitize_text_field( $_POST['year'] ?? '' );
+                if ( ! $id || '' === $type || '' === $year ) {
+                                wp_send_json_error( array( 'message' => __( 'Invalid request.', 'council-debt-counters' ) ), 400 );
+                }
+                        $post = get_post( $id );
+                if ( ! $post || 'council' !== $post->post_type ) {
+                                wp_send_json_error( array( 'message' => __( 'Not found.', 'council-debt-counters' ) ), 404 );
+                }
+                        $value = self::get_leaderboard_value( $id, $type, $year );
+                        if ( null === $value ) {
+                                wp_send_json_error( array( 'message' => __( 'No value.', 'council-debt-counters' ) ), 404 );
+                        }
+                        wp_send_json_success( array( 'value' => $value ) );
+        }
 
 	public static function ajax_render_leaderboard() {
 			check_ajax_referer( Year_Selector::NONCE, 'nonce' );
@@ -1123,7 +1144,8 @@ class Shortcode_Renderer {
 		if ( '' === $year || ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
 				wp_send_json_error( array( 'message' => __( 'Invalid year.', 'council-debt-counters' ) ), 400 );
 		}
-			$html = self::leaderboard_html( $type, $limit, $format, true, $year );
+                        $nonce = sanitize_text_field( wp_unslash( $_POST['nonce'] ?? '' ) );
+                        $html  = self::leaderboard_html( $type, $limit, $format, $year, $nonce );
 			wp_send_json_success( array( 'html' => $html ) );
 	}
 

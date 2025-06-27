@@ -47,10 +47,11 @@ class Docs_Manager {
         if ( $default ) {
             return $default;
         }
-        $year  = (int) date( 'Y' );
-        $start = ( date( 'n' ) < 4 ) ? $year - 1 : $year;
-        $end   = $start + 1;
-        return sprintf( '%d/%02d', $start, $end % 100 );
+
+        // Default to 2023/24 if no option is stored. This prevents the
+        // front-end year selectors from jumping ahead before figures are
+        // available for newer years.
+        return '2023/24';
     }
 
     public static function init() {
