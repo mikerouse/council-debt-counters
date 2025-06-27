@@ -15,7 +15,19 @@ $query = new WP_Query([
     'orderby'        => 'title',
     'order'          => 'asc',
 ]);
-$fields = [ 'population', 'current_liabilities', 'long_term_liabilities', 'interest_paid' ];
+// Fields to display/edit in the Power Editor. We include the core debt
+// figures plus PFI, spending, deficit and income so power users can
+// rapidly work through the most common data points.
+$fields = [
+'population',
+'current_liabilities',
+'long_term_liabilities',
+'finance_lease_pfi_liabilities',
+'annual_spending',
+'annual_deficit',
+'total_income',
+'interest_paid',
+];
 ?>
 <div class="wrap">
     <h1><?php esc_html_e( 'Power Editor', 'council-debt-counters' ); ?></h1>
@@ -35,6 +47,10 @@ $fields = [ 'population', 'current_liabilities', 'long_term_liabilities', 'inter
                 <th><?php esc_html_e( 'Population', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Current Liabilities', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Long-Term Liabilities', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'PFI Liabilities', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Spending', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Deficit', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Income', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Interest Paid', 'council-debt-counters' ); ?></th>
             </tr>
         </thead>

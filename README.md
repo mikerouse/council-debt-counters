@@ -60,6 +60,8 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
 3. **Power Editor**
    - Go to **Debt Counters → Power Editor**.
    - Quickly edit figures for councils marked “Under Review.”
+   - Inline-edit population, liabilities (including PFI/leases), spending,
+     deficit, income and interest in a spreadsheet-like table.
    - Select a year once to apply it to all edits.
 
 4. **Moderation Review**
