@@ -181,6 +181,9 @@ $readonly = true;
         <div class="invalid-feedback"><?php esc_html_e( 'Required', 'council-debt-counters' ); ?></div>
     <?php endif; ?>
 </div>
+<?php if ( 'annual_deficit' === $field->name ) : ?>
+<p class="description mt-1"><?php esc_html_e( 'Enter surpluses as a negative figure.', 'council-debt-counters' ); ?></p>
+<?php endif; ?>
 <?php else : ?>
 <?php $na_val = $council_id ? get_post_meta( $council_id, 'cdc_na_' . $field->name, true ) : ''; ?>
 <div class="input-group">

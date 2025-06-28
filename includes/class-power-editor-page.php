@@ -88,6 +88,12 @@ class Power_Editor_Page {
         delete_post_meta( $cid, 'cdc_na_' . $field );
         $tab = Custom_Fields::get_field_tab( $field );
         delete_post_meta( $cid, 'cdc_na_tab_' . $tab );
+        if ( 'debt' === $tab ) {
+            delete_post_meta( $cid, 'cdc_na_total_debt' );
+            if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
+                Council_Post_Type::calculate_total_debt( $cid, $year );
+            }
+        }
 
         $years = (array) get_post_meta( $cid, 'cdc_enabled_years', true );
         if ( ! in_array( $year, $years, true ) ) {
@@ -145,6 +151,10 @@ class Power_Editor_Page {
 
         if ( $active ) {
             wp_update_post( [ 'ID' => $cid, 'post_status' => 'publish' ] );
+        }
+        delete_post_meta( $cid, 'cdc_na_total_debt' );
+        if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
+            Council_Post_Type::calculate_total_debt( $cid, $year );
         }
         delete_post_meta( $cid, 'cdc_under_review' );
 

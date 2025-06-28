@@ -65,6 +65,8 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    spreadsheet-like table.
    - Select a year once to apply it to all edits.
    - A spinner in the top-right shows when your changes are saving.
+   - Updating any debt figure automatically recalculates Total Debt and
+     clears its N/A flag.
    - Ticking **Closed** adds a status message that the council no longer exists,
      marks it active and removes the row.
    - Use **Confirm** to mark a council active and hide it from your list once
@@ -96,6 +98,7 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
   - `[total_debt_counter year="YYYY/YY"]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals. Defaults use the year set in **Debt Counters → Settings**. These counters count up from zero to the total figure over fifteen seconds.
   - `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.
   - `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables with a year selector.
+  - Deficit counters switch to **Surplus** when the figure is negative, displaying the value as a positive.
 
 ---
 

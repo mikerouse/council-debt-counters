@@ -170,7 +170,12 @@ class Shortcode_Renderer {
 		}
 
 				// The annual figure represents the total for the selected financial year.
-				$annual = (float) $raw_value;
+                                $annual = (float) $raw_value;
+                                $surplus = false;
+                                if ( 'deficit' === $type && $annual < 0 ) {
+                                        $annual  = abs( $annual );
+                                        $surplus = true;
+                                }
 
 				// Enqueue the necessary styles and scripts
 				wp_enqueue_style( 'bootstrap-5' );
@@ -185,7 +190,10 @@ class Shortcode_Renderer {
 				$counter_class = 'cdc-counter-' . sanitize_html_class( $field );
 				$obj           = Custom_Fields::get_field_by_name( $field );
 				$label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-				$title         = self::counter_title( $type ?: $field );
+                                $title         = self::counter_title( $type ?: $field );
+                                if ( $surplus ) {
+                                        $title = __( 'Surplus', 'council-debt-counters' );
+                                }
 				$collapse_id   = 'cdc-detail-' . $id . '-' . sanitize_html_class( $field );
 				$info_line     = self::counter_info( $id, $type ?: $field, $year );
 				// Prepare the HTML output for the counter
@@ -615,13 +623,17 @@ class Shortcode_Renderer {
 					return sprintf( __( 'Spending per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
 				}
 				break;
-			case 'deficit':
-				$deficit = (float) Custom_Fields::get_value( $id, 'annual_deficit', $year );
-				if ( $population > 0 && $deficit != 0 ) {
-					$per = $deficit / $population;
-					return sprintf( __( 'Deficit per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
-				}
-				break;
+                        case 'deficit':
+                                $deficit = (float) Custom_Fields::get_value( $id, 'annual_deficit', $year );
+                                if ( $population > 0 && $deficit != 0 ) {
+                                        $per = $deficit / $population;
+                                        if ( $deficit < 0 ) {
+                                                $per = abs( $per );
+                                                return sprintf( __( 'Surplus per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                                        }
+                                        return sprintf( __( 'Deficit per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                                }
+                                break;
 			case 'interest':
 				$interest = (float) Custom_Fields::get_value( $id, 'interest_paid', $year );
 				if ( $population > 0 && $interest > 0 ) {
@@ -658,9 +670,14 @@ class Shortcode_Renderer {
 			return '';
 		}
 
-		$year           = self::total_counter_year( $type ?: $field );
-				$annual = Custom_Fields::get_total_value( $field, $year );
-				$rate   = Counter_Manager::per_second_rate( $annual );
+                $year           = self::total_counter_year( $type ?: $field );
+                                $annual = Custom_Fields::get_total_value( $field, $year );
+                                $surplus = false;
+                                if ( 'deficit' === $type && $annual < 0 ) {
+                                        $annual  = abs( $annual );
+                                        $surplus = true;
+                                }
+                                $rate   = Counter_Manager::per_second_rate( $annual );
 
 			wp_enqueue_style( 'bootstrap-5' );
 			wp_enqueue_style( 'cdc-counter' );
@@ -673,7 +690,10 @@ class Shortcode_Renderer {
 			$counter_class = 'cdc-counter-' . sanitize_html_class( $field );
 			$obj           = Custom_Fields::get_field_by_name( $field );
 			$label         = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
-			$title         = self::total_counter_title( $type ?: $field );
+                        $title         = self::total_counter_title( $type ?: $field );
+                        if ( $surplus ) {
+                                $title = __( 'Total Surplus', 'council-debt-counters' );
+                        }
 			$collapse_id   = 'cdc-detail-total-' . sanitize_html_class( $field );
 
 			ob_start();
