@@ -26,18 +26,38 @@ class Docs_Manager {
     }
 
     /**
-     * Return a list of financial years including the current year and
-     * the previous $count years.
+     * Get the list of financial years configured for the plugin.
+     * Falls back to default_years() if none saved.
      */
     public static function financial_years( int $count = 10 ) {
+        $years = get_option( 'cdc_financial_years', [] );
+        if ( empty( $years ) ) {
+            $years = self::default_years();
+            // Persist defaults so they remain available if settings are saved
+            // without a financial year list present.
+            update_option( 'cdc_financial_years', $years );
+        }
+        $years = array_values( $years );
+        return array_slice( $years, 0, $count + 2 );
+    }
+
+    /**
+     * Generate the default list of available financial years.
+     * Includes the last ten years and the future years 2024/25 and 2025/26.
+     */
+    public static function default_years() {
         $current = self::current_financial_year();
-        list( $start, $end ) = explode( '/', $current );
+        list( $start ) = explode( '/', $current );
         $start = (int) $start;
         $years = [];
-        for ( $i = 0; $i <= $count; $i++ ) {
-            $y = $start - $i;
+        for ( $i = 0; $i < 10; $i++ ) {
+            $y       = $start - $i;
             $years[] = sprintf( '%d/%02d', $y, ( $y + 1 ) % 100 );
         }
+        $years[] = '2024/25';
+        $years[] = '2025/26';
+        $years   = array_unique( $years );
+        rsort( $years );
         return $years;
     }
 
