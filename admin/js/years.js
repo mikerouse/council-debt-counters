@@ -6,6 +6,8 @@
     function hide(){ if(overlay) overlay.style.display='none'; }
     var tbody=document.querySelector('#cdc-years-table tbody');
     var addBtn=document.getElementById('cdc-add-year-btn');
+    var saveBtn=document.getElementById('cdc-save-years');
+    var message=document.getElementById('cdc-years-message');
     var newInput=document.getElementById('cdc-new-year');
     function addRow(year){
       var tr=document.createElement('tr');
@@ -26,6 +28,36 @@
         fetch(cdcYears.ajaxUrl,{method:'POST',credentials:'same-origin',body:d})
           .then(r=>r.json())
           .then(res=>{ if(res&&res.success){ addRow(y); newInput.value=''; } })
+          .finally(hide);
+      });
+    }
+    if(saveBtn){
+      saveBtn.addEventListener('click',function(){
+        var rows=tbody.querySelectorAll('tr');
+        var years=[];
+        rows.forEach(function(r){
+          var val=r.querySelector('.cdc-year-input').value.trim();
+          if(/^\d{4}\/\d{2}$/.test(val)) years.push(val);
+        });
+        var def=tbody.querySelector('input[name="cdc_default_year"]:checked');
+        var defVal=def?def.value:'';
+        show();
+        var d=new FormData();
+        d.append('action','cdc_save_years');
+        d.append('nonce',cdcYears.nonce);
+        d.append('years',JSON.stringify(years));
+        d.append('default',defVal);
+        fetch(cdcYears.ajaxUrl,{method:'POST',credentials:'same-origin',body:d})
+          .then(r=>r.json())
+          .then(res=>{
+            if(message){
+              message.textContent=res&&res.success?cdcYears.saved:cdcYears.error;
+              message.classList.toggle('cdc-years-success',!!(res&&res.success));
+              message.classList.toggle('cdc-years-error',!(res&&res.success));
+              message.style.display='inline';
+              setTimeout(function(){message.style.display='none';},3000);
+            }
+          })
           .finally(hide);
       });
     }

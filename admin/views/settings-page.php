@@ -211,5 +211,7 @@ $types = [
     <p class="mt-2">
         <input type="text" id="cdc-new-year" class="regular-text" placeholder="YYYY/YY" />
         <button type="button" id="cdc-add-year-btn" class="button"><?php esc_html_e( 'Add Year', 'council-debt-counters' ); ?></button>
+        <button type="button" id="cdc-save-years" class="button button-primary ms-2"><?php esc_html_e( 'Save Financial Years', 'council-debt-counters' ); ?></button>
+        <span id="cdc-years-message" style="display:none" class="ms-2"></span>
     </p>
 </div>

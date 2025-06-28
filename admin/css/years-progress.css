@@ -10,3 +10,11 @@
     align-items: center;
     justify-content: center;
 }
+
+#cdc-years-message.cdc-years-success {
+    color: #155724;
+}
+
+#cdc-years-message.cdc-years-error {
+    color: #721c24;
+}

@@ -33,6 +33,9 @@ class Docs_Manager {
         $years = get_option( 'cdc_financial_years', [] );
         if ( empty( $years ) ) {
             $years = self::default_years();
+            // Persist defaults so they remain available if settings are saved
+            // without a financial year list present.
+            update_option( 'cdc_financial_years', $years );
         }
         $years = array_values( $years );
         return array_slice( $years, 0, $count + 2 );

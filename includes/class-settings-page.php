@@ -20,6 +20,7 @@ class Settings_Page {
                 add_action( 'wp_ajax_cdc_delete_year', array( __CLASS__, 'ajax_delete_year' ) );
                 add_action( 'wp_ajax_cdc_update_year', array( __CLASS__, 'ajax_update_year' ) );
                 add_action( 'wp_ajax_cdc_set_default_year', array( __CLASS__, 'ajax_set_default_year' ) );
+                add_action( 'wp_ajax_cdc_save_years', array( __CLASS__, 'ajax_save_years' ) );
         }
 
 	public static function add_menu() {
@@ -256,15 +257,17 @@ class Settings_Page {
                                 true
                         );
                         wp_enqueue_style( 'cdc-years-progress', plugins_url( 'admin/css/years-progress.css', $plugin_file ), array(), '0.1.0' );
-                        wp_localize_script(
-                                'cdc-years',
-                                'cdcYears',
-                                array(
-                                        'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-                                        'nonce'         => wp_create_nonce( 'cdc_manage_years' ),
-                                        'deleteConfirm' => __( 'Delete this year?', 'council-debt-counters' ),
-                                )
-                        );
+                                wp_localize_script(
+                                        'cdc-years',
+                                        'cdcYears',
+                                        array(
+                                                'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+                                                'nonce'         => wp_create_nonce( 'cdc_manage_years' ),
+                                                'deleteConfirm' => __( 'Delete this year?', 'council-debt-counters' ),
+                                                'saved'         => __( 'Years saved.', 'council-debt-counters' ),
+                                                'error'         => __( 'Save failed.', 'council-debt-counters' ),
+                                        )
+                                );
                 }
         }
 
@@ -325,7 +328,11 @@ class Settings_Page {
          */
         public static function sanitize_year_list( $value ) {
                 if ( ! is_array( $value ) ) {
-                        return array();
+                        // When the setting is missing from the form submission,
+                        // preserve the currently stored years instead of
+                        // resetting to an empty array.
+                        $current = get_option( 'cdc_financial_years', Docs_Manager::default_years() );
+                        return $current;
                 }
                 $clean = array();
                 foreach ( $value as $v ) {
@@ -422,6 +429,29 @@ class Settings_Page {
                         update_option( 'cdc_financial_years', $years );
                 }
                 update_option( 'cdc_default_financial_year', $year );
+                wp_send_json_success();
+        }
+
+        /**
+         * Save the entire list of financial years.
+         * Expects an array of years and a default year via AJAX.
+         */
+        public static function ajax_save_years() {
+                if ( ! current_user_can( 'manage_options' ) ) {
+                        wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+                }
+                check_ajax_referer( 'cdc_manage_years', 'nonce' );
+                $years   = isset( $_POST['years'] ) ? (array) json_decode( stripslashes( $_POST['years'] ), true ) : [];
+                $default = sanitize_text_field( $_POST['default'] ?? '' );
+                $years   = self::sanitize_year_list( $years );
+                if ( empty( $years ) ) {
+                        $years = Docs_Manager::default_years();
+                }
+                if ( ! in_array( $default, $years, true ) ) {
+                        $default = $years[0];
+                }
+                update_option( 'cdc_financial_years', $years );
+                update_option( 'cdc_default_financial_year', $default );
                 wp_send_json_success();
         }
 
