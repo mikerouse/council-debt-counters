@@ -50,10 +50,13 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-power-editor-page.php
 
 register_activation_hook(
 	__FILE__,
-	function () {
-		\CouncilDebtCounters\Custom_Fields::install();
-		\CouncilDebtCounters\Docs_Manager::install();
-	}
+        function () {
+                \CouncilDebtCounters\Custom_Fields::install();
+                \CouncilDebtCounters\Docs_Manager::install();
+                if ( ! get_option( 'cdc_financial_years', false ) ) {
+                        update_option( 'cdc_financial_years', \CouncilDebtCounters\Docs_Manager::default_years() );
+                }
+        }
 );
 
 // Ensure custom error handling does not persist after deactivation.

@@ -12,11 +12,15 @@ class Settings_Page {
 
 	const FONT_CHOICES = array( 'Oswald', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro' );
 
-	public static function init() {
-		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
-		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
-		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
-	}
+        public static function init() {
+                add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
+                add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
+                add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
+                add_action( 'wp_ajax_cdc_add_year', array( __CLASS__, 'ajax_add_year' ) );
+                add_action( 'wp_ajax_cdc_delete_year', array( __CLASS__, 'ajax_delete_year' ) );
+                add_action( 'wp_ajax_cdc_update_year', array( __CLASS__, 'ajax_update_year' ) );
+                add_action( 'wp_ajax_cdc_set_default_year', array( __CLASS__, 'ajax_set_default_year' ) );
+        }
 
 	public static function add_menu() {
 		add_menu_page(
@@ -79,6 +83,15 @@ class Settings_Page {
 				'default' => 'gpt-3.5-turbo',
 			)
 		);
+                register_setting(
+                        'cdc_settings',
+                        'cdc_financial_years',
+                        array(
+                                'type'              => 'array',
+                                'default'           => \CouncilDebtCounters\Docs_Manager::default_years(),
+                                'sanitize_callback' => array( __CLASS__, 'sanitize_year_list' ),
+                        )
+                );
                 register_setting(
                         'cdc_settings',
                         'cdc_enabled_counters',
@@ -235,6 +248,23 @@ class Settings_Page {
                                         'button' => __( 'Use this image', 'council-debt-counters' ),
                                 )
                         );
+                        wp_enqueue_script(
+                                'cdc-years',
+                                plugins_url( 'admin/js/years.js', $plugin_file ),
+                                array(),
+                                '0.1.0',
+                                true
+                        );
+                        wp_enqueue_style( 'cdc-years-progress', plugins_url( 'admin/css/years-progress.css', $plugin_file ), array(), '0.1.0' );
+                        wp_localize_script(
+                                'cdc-years',
+                                'cdcYears',
+                                array(
+                                        'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+                                        'nonce'         => wp_create_nonce( 'cdc_manage_years' ),
+                                        'deleteConfirm' => __( 'Delete this year?', 'council-debt-counters' ),
+                                )
+                        );
                 }
         }
 
@@ -290,6 +320,25 @@ class Settings_Page {
                 return $clean;
         }
 
+        /**
+         * Sanitize an array of year strings.
+         */
+        public static function sanitize_year_list( $value ) {
+                if ( ! is_array( $value ) ) {
+                        return array();
+                }
+                $clean = array();
+                foreach ( $value as $v ) {
+                        $year = sanitize_text_field( $v );
+                        if ( preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
+                                $clean[] = $year;
+                        }
+                }
+                $clean = array_unique( $clean );
+                rsort( $clean );
+                return array_values( $clean );
+        }
+
         public static function sanitize_blocked_ips( $value ) {
                 $lines = explode( "\n", (string) $value );
                 $clean = array();
@@ -300,6 +349,80 @@ class Settings_Page {
                         }
                 }
                 return implode( "\n", $clean );
+        }
+
+        /* ******** AJAX handlers for managing years ******** */
+        public static function ajax_add_year() {
+                if ( ! current_user_can( 'manage_options' ) ) {
+                        wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+                }
+                check_ajax_referer( 'cdc_manage_years', 'nonce' );
+                $year  = sanitize_text_field( $_POST['year'] ?? '' );
+                if ( ! preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
+                        wp_send_json_error();
+                }
+                $years = (array) get_option( 'cdc_financial_years', [] );
+                if ( ! in_array( $year, $years, true ) ) {
+                        $years[] = $year;
+                        $years   = self::sanitize_year_list( $years );
+                        update_option( 'cdc_financial_years', $years );
+                }
+                wp_send_json_success();
+        }
+
+        public static function ajax_delete_year() {
+                if ( ! current_user_can( 'manage_options' ) ) {
+                        wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+                }
+                check_ajax_referer( 'cdc_manage_years', 'nonce' );
+                $year = sanitize_text_field( $_POST['year'] ?? '' );
+                $years = (array) get_option( 'cdc_financial_years', [] );
+                $years = array_values( array_diff( $years, [ $year ] ) );
+                update_option( 'cdc_financial_years', $years );
+                if ( get_option( 'cdc_default_financial_year', '' ) === $year ) {
+                        update_option( 'cdc_default_financial_year', $years[0] ?? '2023/24' );
+                }
+                wp_send_json_success();
+        }
+
+        public static function ajax_update_year() {
+                if ( ! current_user_can( 'manage_options' ) ) {
+                        wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+                }
+                check_ajax_referer( 'cdc_manage_years', 'nonce' );
+                $old = sanitize_text_field( $_POST['old'] ?? '' );
+                $new = sanitize_text_field( $_POST['new'] ?? '' );
+                if ( ! preg_match( '/^\d{4}\/\d{2}$/', $new ) ) {
+                        wp_send_json_error();
+                }
+                $years = (array) get_option( 'cdc_financial_years', [] );
+                $key   = array_search( $old, $years, true );
+                if ( false === $key ) {
+                        wp_send_json_error();
+                }
+                $years[ $key ] = $new;
+                $years         = self::sanitize_year_list( $years );
+                update_option( 'cdc_financial_years', $years );
+                if ( get_option( 'cdc_default_financial_year', '' ) === $old ) {
+                        update_option( 'cdc_default_financial_year', $new );
+                }
+                wp_send_json_success();
+        }
+
+        public static function ajax_set_default_year() {
+                if ( ! current_user_can( 'manage_options' ) ) {
+                        wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+                }
+                check_ajax_referer( 'cdc_manage_years', 'nonce' );
+                $year = sanitize_text_field( $_POST['year'] ?? '' );
+                $years = (array) get_option( 'cdc_financial_years', [] );
+                if ( ! in_array( $year, $years, true ) ) {
+                        $years[] = $year;
+                        $years   = self::sanitize_year_list( $years );
+                        update_option( 'cdc_financial_years', $years );
+                }
+                update_option( 'cdc_default_financial_year', $year );
+                wp_send_json_success();
         }
 
 	public static function render_page() {

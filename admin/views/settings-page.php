@@ -186,4 +186,30 @@ $types = [
         </table>
         <?php submit_button(); ?>
     </form>
+    <h2 class="mt-4"><?php esc_html_e( 'Available Financial Years', 'council-debt-counters' ); ?></h2>
+    <div id="cdc-years-overlay" style="display:none"><span class="spinner is-active"></span></div>
+    <?php $years = get_option( 'cdc_financial_years', \CouncilDebtCounters\Docs_Manager::default_years() ); ?>
+    <?php $def_year = get_option( 'cdc_default_financial_year', '2023/24' ); ?>
+    <table class="widefat" id="cdc-years-table">
+        <thead>
+            <tr>
+                <th><?php esc_html_e( 'Year', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Default', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Actions', 'council-debt-counters' ); ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ( $years as $y ) : ?>
+                <tr>
+                    <td><input type="text" class="cdc-year-input form-control" data-original="<?php echo esc_attr( $y ); ?>" value="<?php echo esc_attr( $y ); ?>" /></td>
+                    <td><input type="radio" name="cdc_default_year" value="<?php echo esc_attr( $y ); ?>" <?php checked( $def_year, $y ); ?> /></td>
+                    <td><button type="button" class="button cdc-delete-year"><?php esc_html_e( 'Delete', 'council-debt-counters' ); ?></button></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <p class="mt-2">
+        <input type="text" id="cdc-new-year" class="regular-text" placeholder="YYYY/YY" />
+        <button type="button" id="cdc-add-year-btn" class="button"><?php esc_html_e( 'Add Year', 'council-debt-counters' ); ?></button>
+    </p>
 </div>
