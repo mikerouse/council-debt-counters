@@ -316,7 +316,7 @@ class Figure_Submission_Form {
                                                                               <?php
                                                                               $label = $field->label;
                                                                               if ( 'annual_spending' === $field->name ) {
-                                                                                      $label = __( 'Total Annual Expenditure', 'council-debt-counters' );
+      $label = __( 'Annual Expenditure on Services', 'council-debt-counters' );
                                                                               }
                                                                               ?>
                                                                               <label for="fig-<?php echo esc_attr( $field->name ); ?>" class="form-label"><?php echo esc_html( $label ); ?></label>
@@ -333,6 +333,10 @@ class Figure_Submission_Form {
                                        <?php if ( 'annual_spending' === $field->name ) : ?>
                                        <div class="form-text">
                                        <?php esc_html_e( 'This is the gross expenditure figure taken from the comprehensive income and expenditure statement.', 'council-debt-counters' ); ?>
+                                       </div>
+                                       <?php elseif ( 'all_other_income' === $field->name ) : ?>
+                                       <div class="form-text">
+                                       <?php esc_html_e( 'Use this field to add any other income sources from the comprehensive income and expenditure statement', 'council-debt-counters' ); ?>
                                        </div>
                                        <?php endif; ?>
                                                                </div>

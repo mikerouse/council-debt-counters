@@ -93,6 +93,10 @@ class Power_Editor_Page {
             if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
                 Council_Post_Type::calculate_total_debt( $cid, $year );
             }
+        } elseif ( 'income' === $tab ) {
+            if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_income' ) ) {
+                Council_Post_Type::calculate_total_income( $cid, $year );
+            }
         }
 
         $years = (array) get_post_meta( $cid, 'cdc_enabled_years', true );
@@ -155,6 +159,9 @@ class Power_Editor_Page {
         delete_post_meta( $cid, 'cdc_na_total_debt' );
         if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
             Council_Post_Type::calculate_total_debt( $cid, $year );
+        }
+        if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_income' ) ) {
+            Council_Post_Type::calculate_total_income( $cid, $year );
         }
         delete_post_meta( $cid, 'cdc_under_review' );
 

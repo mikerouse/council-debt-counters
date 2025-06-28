@@ -25,7 +25,10 @@ $fields = [
 'finance_lease_pfi_liabilities',
 'annual_spending',
 'annual_deficit',
-'total_income',
+'non_council_tax_income',
+'council_tax_general_grants_income',
+'government_grants_income',
+'all_other_income',
 'interest_paid',
 'council_closed',
 ];
@@ -49,10 +52,13 @@ $fields = [
                 <th><?php esc_html_e( 'Population', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Current Liabilities', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Long-Term Liabilities', 'council-debt-counters' ); ?></th>
-                <th><?php esc_html_e( 'PFI Liabilities', 'council-debt-counters' ); ?></th>
-                <th><?php esc_html_e( 'Spending', 'council-debt-counters' ); ?></th>
-                <th><?php esc_html_e( 'Deficit', 'council-debt-counters' ); ?></th>
-                <th><?php esc_html_e( 'Income', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'PFI & Finance Lease Liabilities', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Expenditure on Services', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Reported Net Deficit (or Surplus)', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Non-Council Tax Income', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Income from Council Tax and General Grants', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Government Grants', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'All Other Income', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Interest Paid', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Closed', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Confirm', 'council-debt-counters' ); ?></th>

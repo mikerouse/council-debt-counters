@@ -14,9 +14,9 @@ class Shortcode_Renderer {
 	private static function default_labels(): array {
 			return array(
 				'debt'        => __( 'Debt', 'council-debt-counters' ),
-				'spending'    => __( 'Spending', 'council-debt-counters' ),
-				'income'      => __( 'Income', 'council-debt-counters' ),
-				'deficit'     => __( 'Deficit', 'council-debt-counters' ),
+                                'spending'    => __( 'Expenditure on Services', 'council-debt-counters' ),
+                                'income'      => __( 'Non-Council Tax Income', 'council-debt-counters' ),
+                                'deficit'     => __( 'Reported Net Deficit (or Surplus)', 'council-debt-counters' ),
 				'interest'    => __( 'Interest', 'council-debt-counters' ),
 				'reserves'    => __( 'Reserves', 'council-debt-counters' ),
 				'consultancy' => __( 'Consultancy', 'council-debt-counters' ),
@@ -33,9 +33,9 @@ class Shortcode_Renderer {
 	private static function total_default_labels(): array {
 			return array(
 				'debt'        => __( 'Total Debt', 'council-debt-counters' ),
-				'spending'    => __( 'Total Spending', 'council-debt-counters' ),
-				'income'      => __( 'Total Income', 'council-debt-counters' ),
-				'deficit'     => __( 'Total Deficit', 'council-debt-counters' ),
+                                'spending'    => __( 'Total Expenditure on Services', 'council-debt-counters' ),
+                                'income'      => __( 'Total Income', 'council-debt-counters' ),
+                                'deficit'     => __( 'Total Reported Net Deficit (or Surplus)', 'council-debt-counters' ),
 				'interest'    => __( 'Total Interest', 'council-debt-counters' ),
 				'reserves'    => __( 'Total Reserves', 'council-debt-counters' ),
 				'consultancy' => __( 'Consultancy Spend', 'council-debt-counters' ),
@@ -106,9 +106,9 @@ class Shortcode_Renderer {
 				$label = $obj && ! empty( $obj->label ) ? $obj->label : ucwords( str_replace( '_', ' ', $field ) );
 				$map   = array(
 					'debt'        => __( 'Debt figures not available', 'council-debt-counters' ),
-					'spending'    => __( 'Expenditure figures not available', 'council-debt-counters' ),
-					'income'      => __( 'Income figures not available', 'council-debt-counters' ),
-					'deficit'     => __( 'Reported deficit figures not available', 'council-debt-counters' ),
+                                        'spending'    => __( 'Expenditure on services figures not available', 'council-debt-counters' ),
+                                        'income'      => __( 'Income figures not available', 'council-debt-counters' ),
+                                        'deficit'     => __( 'Reported deficit or surplus figures not available', 'council-debt-counters' ),
 					'interest'    => __( 'Interest payments not available', 'council-debt-counters' ),
 					'reserves'    => __( 'Reserves figures not available', 'council-debt-counters' ),
 					'consultancy' => __( 'Consultancy spend figures not available', 'council-debt-counters' ),
@@ -620,7 +620,7 @@ class Shortcode_Renderer {
 				$spend = (float) Custom_Fields::get_value( $id, 'annual_spending', $year );
 				if ( $population > 0 && $spend > 0 ) {
 					$per = $spend / $population;
-					return sprintf( __( 'Spending per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                                        return sprintf( __( 'Expenditure per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
 				}
 				break;
                         case 'deficit':
@@ -631,7 +631,7 @@ class Shortcode_Renderer {
                                                 $per = abs( $per );
                                                 return sprintf( __( 'Surplus per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
                                         }
-                                        return sprintf( __( 'Deficit per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
+                                        return sprintf( __( 'Reported deficit per resident: £%s', 'council-debt-counters' ), number_format_i18n( $per, 2 ) );
                                 }
                                 break;
 			case 'interest':

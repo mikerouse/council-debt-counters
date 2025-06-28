@@ -4,9 +4,9 @@ $titles  = (array) get_option( 'cdc_counter_titles', [] );
 $total_titles = (array) get_option( 'cdc_total_counter_titles', [] );
 $types = [
     'debt' => __( 'Debt', 'council-debt-counters' ),
-    'spending' => __( 'Spending', 'council-debt-counters' ),
-    'income' => __( 'Income', 'council-debt-counters' ),
-    'deficit' => __( 'Deficit', 'council-debt-counters' ),
+    'spending' => __( 'Expenditure on Services', 'council-debt-counters' ),
+    'income' => __( 'Non-Council Tax Income', 'council-debt-counters' ),
+    'deficit' => __( 'Reported Net Deficit (or Surplus)', 'council-debt-counters' ),
     'interest' => __( 'Interest', 'council-debt-counters' ),
     'reserves' => __( 'Reserves', 'council-debt-counters' ),
     'consultancy' => __( 'Consultancy', 'council-debt-counters' ),
@@ -46,9 +46,9 @@ $types = [
                     <?php
                     $totals = [
                         'debt'        => [ 'label' => __( 'Total Debt', 'council-debt-counters' ),        'shortcode' => '[total_debt_counter]' ],
-                        'spending'    => [ 'label' => __( 'Total Spending', 'council-debt-counters' ),    'shortcode' => '[total_spending_counter]' ],
+                        'spending'    => [ 'label' => __( 'Total Expenditure on Services', 'council-debt-counters' ),    'shortcode' => '[total_spending_counter]' ],
                         'income'      => [ 'label' => __( 'Total Income', 'council-debt-counters' ),      'shortcode' => '[total_revenue_counter]' ],
-                        'deficit'     => [ 'label' => __( 'Total Deficit', 'council-debt-counters' ),     'shortcode' => '[total_deficit_counter]' ],
+                        'deficit'     => [ 'label' => __( 'Total Reported Net Deficit (or Surplus)', 'council-debt-counters' ),     'shortcode' => '[total_deficit_counter]' ],
                         'interest'    => [ 'label' => __( 'Total Interest', 'council-debt-counters' ),    'shortcode' => '[total_interest_counter]' ],
                         'reserves'    => [ 'label' => __( 'Total Reserves', 'council-debt-counters' ),    'shortcode' => '[total_custom_counter type="reserves"]' ],
                         'consultancy' => [ 'label' => __( 'Consultancy Spend', 'council-debt-counters' ), 'shortcode' => '[total_custom_counter type="consultancy"]' ],
