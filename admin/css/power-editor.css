@@ -1,0 +1,24 @@
+#cdc-pe-header {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    background: #fff;
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+}
+#cdc-pe-spinner {
+    position: absolute;
+    right: 1rem;
+    top: 0.75rem;
+}
+#cdc-power-table thead th {
+    position: sticky;
+    top: 58px;
+    background: #fff;
+    z-index: 1030;
+}

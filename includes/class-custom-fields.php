@@ -39,6 +39,7 @@ class Custom_Fields {
         'interest_paid'                 => 'interest',
         'usable_reserves'               => 'reserves',
         'consultancy_spend'             => 'consultancy',
+        'council_closed'                => 'general',
     ];
 
     const DEFAULT_FIELDS = [
@@ -67,6 +68,7 @@ class Custom_Fields {
         ['name' => 'financial_data_source_url', 'label' => 'Financial Data Source URL', 'type' => 'text', 'required' => 0],
         ['name' => 'status_message', 'label' => 'Status Message', 'type' => 'text', 'required' => 0],
         ['name' => 'status_message_type', 'label' => 'Status Message Type', 'type' => 'text', 'required' => 0],
+        ['name' => 'council_closed', 'label' => 'Council Closed', 'type' => 'text', 'required' => 0],
     ];
 
     /**

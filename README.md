@@ -57,19 +57,35 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    - Use **Ask AI** for individual fields or **Ask AI for All**.  
    - Save your changes; optionally submit for moderation review.
 
-3. **Moderation Review**  
+3. **Power Editor**
+   - Go to **Debt Counters → Power Editor**.
+   - Quickly edit figures for councils marked “Under Review.”
+   - Inline-edit population, liabilities (including PFI/leases), spending,
+   deficit, income, interest and whether the council has closed in a
+   spreadsheet-like table.
+   - Select a year once to apply it to all edits.
+   - A spinner in the top-right shows when your changes are saving.
+   - Updating any debt figure automatically recalculates Total Debt and
+     clears its N/A flag.
+   - Ticking **Closed** adds a status message that the council no longer exists,
+     marks it active and removes the row.
+   - Use **Confirm** to mark a council active and hide it from your list once
+     you are done editing.
+   - The header and column headings stay visible as you scroll.
+
+4. **Moderation Review**
    - Go to **Debt Counters → Submissions**.  
    - Click **Review** on a pending submission.  
    - Compare existing vs submitted values, choose per field, then **Save**.  
    - All actions are logged to `moderation.log` for audit.
 
-4. **Publishing Shortcodes**
+5. **Publishing Shortcodes**
 
    Embed counters anywhere on the live site using: ` [council_counter id="123"] [total_debt_counter] [cdc_leaderboard type="debt_per_resident" limit="5"] `
 
    See the “Shortcodes” section below for full usage.
 
-5. **Troubleshooting & Logs**  
+6. **Troubleshooting & Logs**
 - **Debt Counters → Troubleshooting** to view AI and error logs.  
 - Adjust JavaScript debug levels (Verbose, Standard, Quiet).  
 - Inspect token-usage and progress overlays when AI runs.
@@ -82,6 +98,7 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
   - `[total_debt_counter year="YYYY/YY"]`, `[total_spending_counter]`, `[total_deficit_counter]`, `[total_interest_counter]`, `[total_revenue_counter]` – Site-wide totals. Defaults use the year set in **Debt Counters → Settings**. These counters count up from zero to the total figure over fifteen seconds.
   - `[total_custom_counter type="reserves|income|consultancy"]` – Any custom metric.
   - `[cdc_leaderboard type="highest_debt|debt_per_resident|lowest_reserves" limit="…"]` – Ranked lists or tables with a year selector.
+  - Deficit counters switch to **Surplus** when the figure is negative, displaying the value as a positive.
 
 ---
 

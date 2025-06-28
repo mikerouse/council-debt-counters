@@ -46,6 +46,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-stats-page.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-sharing-meta.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-year-maintenance.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-calculations-page.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-power-editor-page.php';
 
 register_activation_hook(
 	__FILE__,
@@ -92,6 +93,7 @@ add_action(
                 \CouncilDebtCounters\Sharing_Meta::init();
                 \CouncilDebtCounters\Year_Maintenance::init();
                 \CouncilDebtCounters\Calculations_Page::init();
+                \CouncilDebtCounters\Power_Editor_Page::init();
         }
 );
 
