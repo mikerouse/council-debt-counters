@@ -55,6 +55,7 @@ $fields = [
                 <th><?php esc_html_e( 'Income', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Interest Paid', 'council-debt-counters' ); ?></th>
                 <th><?php esc_html_e( 'Closed', 'council-debt-counters' ); ?></th>
+                <th><?php esc_html_e( 'Confirm', 'council-debt-counters' ); ?></th>
             </tr>
         </thead>
         <tbody>
@@ -70,6 +71,7 @@ $fields = [
                             <td><input type="text" class="form-control form-control-sm cdc-pe-input" data-field="<?php echo esc_attr( $f ); ?>" value="<?php echo esc_attr( $val ); ?>" /></td>
                         <?php endif; ?>
                     <?php endforeach; ?>
+                    <td><button type="button" class="btn btn-sm btn-success cdc-pe-confirm"><?php esc_html_e( 'Confirm', 'council-debt-counters' ); ?></button></td>
                 </tr>
             <?php endforeach; wp_reset_postdata(); ?>
         </tbody>

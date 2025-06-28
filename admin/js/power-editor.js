@@ -32,8 +32,12 @@
       .then(function(r){return r.json();})
       .then(function(res){
         if(res && res.success){
-          input.classList.add('bg-success','text-white');
-          setTimeout(function(){input.classList.remove('bg-success','text-white');},1000);
+          if(field==='council_closed' && input.checked){
+            row.remove();
+          } else {
+            input.classList.add('bg-success','text-white');
+            setTimeout(function(){input.classList.remove('bg-success','text-white');},1000);
+          }
         }else{
           input.classList.add('bg-danger','text-white');
         }
@@ -47,6 +51,25 @@
       var name = tr.children[1].textContent.toLowerCase();
       tr.style.display = name.indexOf(term) !== -1 ? '' : 'none';
     });
+  }
+
+  function confirmRow(row){
+    var cid = row.getAttribute('data-cid');
+    var year = document.getElementById('cdc-pe-year').value;
+    var d = new FormData();
+    d.append('action','cdc_power_confirm');
+    d.append('cid',cid);
+    d.append('year',year);
+    d.append('nonce',cdcPower.nonce);
+    showSpinner();
+    fetch(cdcPower.ajaxUrl,{method:'POST',credentials:'same-origin',body:d})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res && res.success){
+          row.remove();
+        }
+      })
+      .finally(hideSpinner);
   }
 
   ready(function(){
@@ -73,6 +96,11 @@
             next.focus();
           }
         }
+      });
+    });
+    document.querySelectorAll('.cdc-pe-confirm').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        confirmRow(btn.closest('tr'));
       });
     });
     var search=document.getElementById('cdc-pe-search');

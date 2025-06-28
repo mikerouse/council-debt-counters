@@ -65,7 +65,10 @@ The backend engine, developed as a WordPress plugin, gives site editors and admi
    spreadsheet-like table.
    - Select a year once to apply it to all edits.
    - A spinner in the top-right shows when your changes are saving.
-   - Ticking **Closed** adds a status message that the council no longer exists.
+   - Ticking **Closed** adds a status message that the council no longer exists,
+     marks it active and removes the row.
+   - Use **Confirm** to mark a council active and hide it from your list once
+     you are done editing.
    - The header and column headings stay visible as you scroll.
 
 4. **Moderation Review**

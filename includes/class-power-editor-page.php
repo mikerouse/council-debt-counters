@@ -12,6 +12,7 @@ class Power_Editor_Page {
         add_action( 'admin_menu', [ __CLASS__, 'add_menu' ] );
         add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
         add_action( 'wp_ajax_cdc_power_save', [ __CLASS__, 'ajax_save' ] );
+        add_action( 'wp_ajax_cdc_power_confirm', [ __CLASS__, 'ajax_confirm' ] );
     }
 
     public static function add_menu() {
@@ -53,7 +54,7 @@ class Power_Editor_Page {
             'cdc-power-editor',
             plugins_url( 'admin/js/power-editor.js', dirname( __DIR__ ) . '/council-debt-counters.php' ),
             [],
-            '0.1.1',
+            '0.1.2',
             true
         );
         wp_localize_script( 'cdc-power-editor', 'cdcPower', [
@@ -81,6 +82,8 @@ class Power_Editor_Page {
         if ( 'council_closed' === $field && $value ) {
             Custom_Fields::update_value( $cid, 'status_message', __( 'This council no longer exists', 'council-debt-counters' ), CDC_Utils::current_financial_year() );
             Custom_Fields::update_value( $cid, 'status_message_type', 'warning', CDC_Utils::current_financial_year() );
+            wp_update_post( [ 'ID' => $cid, 'post_status' => 'publish' ] );
+            delete_post_meta( $cid, 'cdc_under_review' );
         }
         delete_post_meta( $cid, 'cdc_na_' . $field );
         $tab = Custom_Fields::get_field_tab( $field );
@@ -105,6 +108,45 @@ class Power_Editor_Page {
             wp_update_post( [ 'ID' => $cid, 'post_status' => 'publish' ] );
             delete_post_meta( $cid, 'cdc_under_review' );
         }
+
+        wp_send_json_success();
+    }
+
+    /**
+     * Finalise editing of a council and mark it active.
+     */
+    public static function ajax_confirm() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'council-debt-counters' ), 403 );
+        }
+        check_ajax_referer( 'cdc_power_save', 'nonce' );
+
+        $cid  = isset( $_POST['cid'] ) ? intval( $_POST['cid'] ) : 0;
+        $year = isset( $_POST['year'] ) ? sanitize_text_field( $_POST['year'] ) : CDC_Utils::current_financial_year();
+
+        if ( ! $cid ) {
+            wp_send_json_error();
+        }
+
+        $years = (array) get_post_meta( $cid, 'cdc_enabled_years', true );
+        if ( ! in_array( $year, $years, true ) ) {
+            $years[] = $year;
+            update_post_meta( $cid, 'cdc_enabled_years', $years );
+        }
+
+        $enabled_tabs = (array) get_option( 'cdc_enabled_counters', array() );
+        $active       = false;
+        foreach ( $enabled_tabs as $tab_key ) {
+            if ( '1' !== get_post_meta( $cid, 'cdc_na_tab_' . $tab_key, true ) ) {
+                $active = true;
+                break;
+            }
+        }
+
+        if ( $active ) {
+            wp_update_post( [ 'ID' => $cid, 'post_status' => 'publish' ] );
+        }
+        delete_post_meta( $cid, 'cdc_under_review' );
 
         wp_send_json_success();
     }
