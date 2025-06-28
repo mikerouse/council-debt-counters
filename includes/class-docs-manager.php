@@ -361,6 +361,9 @@ class Docs_Manager {
         if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_debt' ) ) {
             Council_Post_Type::calculate_total_debt( $cid, $year );
         }
+        if ( method_exists( '\\CouncilDebtCounters\\Council_Post_Type', 'calculate_total_income' ) ) {
+            Council_Post_Type::calculate_total_income( $cid, $year );
+        }
         $all = get_option( 'cdc_ai_suggestions', [] );
         if ( isset( $all[ $cid ][ $year ] ) ) {
             unset( $all[ $cid ][ $year ] );

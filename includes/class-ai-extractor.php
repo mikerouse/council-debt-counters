@@ -124,7 +124,8 @@ class AI_Extractor {
         $prompt = "You are analysing a UK council's statement of accounts. "
             . "Return ONLY a JSON object with these keys: "
             . "current_liabilities, long_term_liabilities, finance_lease_pfi_liabilities, "
-            . "interest_paid, annual_spending, total_income, "
+            . "interest_paid, annual_spending, non_council_tax_income, "
+            . "council_tax_general_grants_income, government_grants_income, all_other_income, total_income, "
             . "annual_deficit, usable_reserves, consultancy_spend. "
             . "Use 0 if a figure is not mentioned. Numbers should be digits without commas or currency symbols. "
             . "If the document shows figures in thousands of pounds (e.g. £000s), multiply them by 1000 before returning the values." 
@@ -164,6 +165,10 @@ class AI_Extractor {
             'finance_lease_pfi_liabilities',
             'interest_paid',
             'annual_spending',
+            'non_council_tax_income',
+            'council_tax_general_grants_income',
+            'government_grants_income',
+            'all_other_income',
             'total_income',
             'annual_deficit',
             'usable_reserves',

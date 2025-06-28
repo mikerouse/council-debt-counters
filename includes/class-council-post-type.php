@@ -14,6 +14,7 @@ class Council_Post_Type {
     public static function init() {
         add_action( 'init', [ __CLASS__, 'register' ] );
         add_action( 'save_post_council', [ __CLASS__, 'calculate_total_debt' ], 20, 1 );
+        add_action( 'save_post_council', [ __CLASS__, 'calculate_total_income' ], 20, 1 );
     }
 
     /**
@@ -100,5 +101,34 @@ class Council_Post_Type {
 
         $total = $current_liabilities + $long_term + $lease_pfi + $manual + $adjust;
         Custom_Fields::update_value( $post_id, 'total_debt', $total, $year );
+    }
+
+    public static function calculate_total_income( $post_id, string $year = '' ) {
+        if ( get_post_type( $post_id ) !== 'council' ) {
+            return;
+        }
+
+        if ( empty( $year ) ) {
+            $year = CDC_Utils::current_financial_year();
+        }
+
+        $service  = Custom_Fields::get_value( $post_id, 'non_council_tax_income', $year );
+        $tax      = Custom_Fields::get_value( $post_id, 'council_tax_general_grants_income', $year );
+        $grants   = Custom_Fields::get_value( $post_id, 'government_grants_income', $year );
+        $other    = Custom_Fields::get_value( $post_id, 'all_other_income', $year );
+
+        $has_data = false;
+        foreach ( array( $service, $tax, $grants, $other ) as $val ) {
+            if ( '' !== $val && null !== $val ) {
+                $has_data = true;
+                break;
+            }
+        }
+        if ( ! $has_data ) {
+            return;
+        }
+
+        $total = (float) $service + (float) $tax + (float) $grants + (float) $other;
+        Custom_Fields::update_value( $post_id, 'total_income', $total, $year );
     }
 }

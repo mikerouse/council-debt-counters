@@ -170,6 +170,7 @@ class Council_Admin_Page {
         delete_post_meta( $post_id, 'cdc_na_total_debt' );
         $debt_year = isset( $tab_years['debt'] ) ? sanitize_text_field( $tab_years['debt'] ) : CDC_Utils::current_financial_year();
         Council_Post_Type::calculate_total_debt( $post_id, $debt_year );
+        Council_Post_Type::calculate_total_income( $post_id, $debt_year );
 
         $default_year  = get_post_meta( $post_id, 'cdc_default_financial_year', true );
         $current_total = (float) Custom_Fields::get_value( $post_id, 'total_debt', $default_year );

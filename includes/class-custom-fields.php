@@ -34,6 +34,10 @@ class Custom_Fields {
         'minimum_revenue_provision'     => 'debt',
         'total_debt'                    => 'debt',
         'annual_spending'               => 'spending',
+        'non_council_tax_income'        => 'income',
+        'council_tax_general_grants_income' => 'income',
+        'government_grants_income'      => 'income',
+        'all_other_income'              => 'income',
         'total_income'                  => 'income',
         'annual_deficit'                => 'deficit',
         'interest_paid'                 => 'interest',
@@ -52,13 +56,17 @@ class Custom_Fields {
         // the values are not marked as "Not available".
         ['name' => 'current_liabilities', 'label' => 'Current Liabilities', 'type' => 'money', 'required' => 0],
         ['name' => 'long_term_liabilities', 'label' => 'Long-Term Liabilities', 'type' => 'money', 'required' => 0],
-        ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI or Finance Lease Liabilities', 'type' => 'money', 'required' => 0],
+        ['name' => 'finance_lease_pfi_liabilities', 'label' => 'PFI & Finance Lease Liabilities', 'type' => 'money', 'required' => 0],
         ['name' => 'minimum_revenue_provision', 'label' => 'Minimum Revenue Provision', 'type' => 'money', 'required' => 0],
         ['name' => 'total_debt', 'label' => 'Total Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'manual_debt_entry', 'label' => 'Manual Debt Entry', 'type' => 'money', 'required' => 0],
-        ['name' => 'annual_spending', 'label' => 'Annual Spending', 'type' => 'money', 'required' => 0],
+        ['name' => 'annual_spending', 'label' => 'Annual Expenditure on Services', 'type' => 'money', 'required' => 0],
+        ['name' => 'non_council_tax_income', 'label' => 'Non-Council Tax Income', 'type' => 'money', 'required' => 0],
+        ['name' => 'council_tax_general_grants_income', 'label' => 'Income from Council Tax and General Grants', 'type' => 'money', 'required' => 0],
+        ['name' => 'government_grants_income', 'label' => 'Government Grants', 'type' => 'money', 'required' => 0],
+        ['name' => 'all_other_income', 'label' => 'All Other Income', 'type' => 'money', 'required' => 0],
         ['name' => 'total_income', 'label' => 'Total Income', 'type' => 'money', 'required' => 0],
-        ['name' => 'annual_deficit', 'label' => 'Annual Deficit', 'type' => 'money', 'required' => 0],
+        ['name' => 'annual_deficit', 'label' => 'Reported Net Deficit (or Surplus)', 'type' => 'money', 'required' => 0],
         ['name' => 'interest_paid', 'label' => 'Interest Paid on Debt', 'type' => 'money', 'required' => 0],
         ['name' => 'capital_financing_requirement', 'label' => 'Capital Financing Requirement', 'type' => 'money', 'required' => 0],
         ['name' => 'usable_reserves', 'label' => 'Usable Reserves', 'type' => 'money', 'required' => 0],
@@ -87,6 +95,7 @@ class Custom_Fields {
      */
     const READONLY_FIELDS = [
         'total_debt',
+        'total_income',
     ];
 
     public static function init() {
@@ -134,6 +143,7 @@ class Custom_Fields {
         // Ensure legacy interest fields are merged even if the plugin is
         // updated without reactivation.
         self::migrate_interest_paid_field();
+        self::migrate_total_income_field();
         self::backfill_2023_financial_year();
     }
 
@@ -217,6 +227,7 @@ class Custom_Fields {
         self::ensure_default_fields();
         self::ensure_default_tabs();
         self::migrate_interest_paid_field();
+        self::migrate_total_income_field();
         self::backfill_2023_financial_year();
     }
 
@@ -570,6 +581,46 @@ class Custom_Fields {
         $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $old->id ], [ '%d' ] );
         self::set_field_tab( 'interest_paid', 'interest' );
         self::update_field( (int) $new->id, [ 'label' => 'Interest Paid on Debt' ] );
+    }
+
+    /**
+     * Rename legacy `total_income` field to `non_council_tax_income` and copy
+     * existing values if needed.
+     */
+    private static function migrate_total_income_field() {
+        global $wpdb;
+        $old = self::get_field_by_name( 'total_income' );
+        $new = self::get_field_by_name( 'non_council_tax_income' );
+        if ( ! $old ) {
+            return;
+        }
+
+        if ( ! $new ) {
+            self::update_field( (int) $old->id, [ 'name' => 'non_council_tax_income', 'label' => 'Non-Council Tax Income', 'required' => 0 ] );
+            self::set_field_tab( 'non_council_tax_income', 'income' );
+            return;
+        }
+
+        $values_table = $wpdb->prefix . self::TABLE_VALUES;
+        $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT council_id, financial_year, value FROM ' . $values_table . ' WHERE field_id = %d', $old->id ), ARRAY_A );
+        foreach ( $rows as $row ) {
+            $existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . $values_table . ' WHERE council_id = %d AND field_id = %d AND financial_year = %s', $row['council_id'], $new->id, $row['financial_year'] ) );
+            if ( $existing ) {
+                $wpdb->update( $values_table, [ 'value' => $row['value'] ], [ 'id' => $existing ], [ '%s' ], [ '%d' ] );
+            } else {
+                $wpdb->insert( $values_table, [
+                    'council_id'     => $row['council_id'],
+                    'field_id'       => $new->id,
+                    'financial_year' => $row['financial_year'],
+                    'value'          => $row['value'],
+                ], [ '%d', '%d', '%s', '%s' ] );
+            }
+        }
+
+        $wpdb->delete( $values_table, [ 'field_id' => $old->id ], [ '%d' ] );
+        $wpdb->delete( $wpdb->prefix . self::TABLE_FIELDS, [ 'id' => $old->id ], [ '%d' ] );
+        self::set_field_tab( 'non_council_tax_income', 'income' );
+        self::update_field( (int) $new->id, [ 'label' => 'Non-Council Tax Income' ] );
     }
 
     public static function render_page() {
