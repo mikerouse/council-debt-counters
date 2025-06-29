@@ -7,6 +7,15 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Getting Started
+
+To run the Laravel app locally for testing:
+1. Install PHP (8.3 or newer), Composer and a database such as MySQL.
+2. Run `composer install` in this directory.
+3. Copy `.env.example` to `.env` and run `php artisan key:generate`.
+4. Configure your database settings in `.env` then run `php artisan migrate`.
+5. Start the development server with `php artisan serve` and visit `http://localhost:8000`.
+6. Execute `vendor/bin/phpunit` to run the test suite.
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
