@@ -3,24 +3,27 @@
 namespace App\Services;
 
 use App\Models\Council;
+use App\Services\CouncilTotalsService;
 
 /**
- * Helper methods that replicate the totals logic from the WordPress plugin.
+ * Legacy helper methods kept for backwards compatibility.
+ * Internally this class proxies to CouncilTotalsService.
  */
 class FinancialCalculator
 {
+    protected static CouncilTotalsService $service;
+
+    public function __construct(CouncilTotalsService $service)
+    {
+        self::$service = $service;
+    }
+
     /**
      * Calculate and update the total debt for a council for a given year.
      */
     public static function updateTotalDebt(Council $council): void
     {
-        $total = (float) $council->current_liabilities
-            + (float) $council->long_term_liabilities
-            + (float) $council->finance_lease_pfi_liabilities
-            + (float) $council->manual_debt_entry;
-
-        $council->total_debt = $total;
-        $council->save();
+        self::getService()->updateTotals($council);
     }
 
     /**
@@ -28,12 +31,14 @@ class FinancialCalculator
      */
     public static function updateTotalIncome(Council $council): void
     {
-        $total = (float) $council->non_council_tax_income
-            + (float) $council->council_tax_general_grants_income
-            + (float) $council->government_grants_income
-            + (float) $council->all_other_income;
+        self::getService()->updateTotals($council);
+    }
 
-        $council->total_income = $total;
-        $council->save();
+    protected static function getService(): CouncilTotalsService
+    {
+        if (!isset(self::$service)) {
+            self::$service = new CouncilTotalsService();
+        }
+        return self::$service;
     }
 }
