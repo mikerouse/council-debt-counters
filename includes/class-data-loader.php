@@ -243,7 +243,7 @@ class Data_Loader {
 	/**
 	 * Export plugin settings and keys as JSON.
 	 */
-	public static function export_settings() {
+        public static function export_settings() {
                 $options = array(
                         'cdc_openai_api_key'          => get_option( 'cdc_openai_api_key', '' ),
                         'cdc_recaptcha_site_key'      => get_option( 'cdc_recaptcha_site_key', '' ),
@@ -255,8 +255,69 @@ class Data_Loader {
                        'cdc_total_counter_years'     => get_option( 'cdc_total_counter_years', array() ),
                        'cdc_log_level'               => get_option( 'cdc_log_level', 'standard' ),
                );
-		return wp_json_encode( $options );
-	}
+                return wp_json_encode( $options );
+        }
+
+        /**
+         * Export all council data in a structured JSON format for migration.
+         *
+         * This includes field definitions and values for every financial year
+         * so the file can be used to recreate the schema in another system.
+         *
+         * @return string JSON-encoded data
+         */
+        public static function export_migration_dump() {
+                global $wpdb;
+
+                $fields_table = $wpdb->prefix . Custom_Fields::TABLE_FIELDS;
+                $values_table = $wpdb->prefix . Custom_Fields::TABLE_VALUES;
+
+                $fields   = $wpdb->get_results( "SELECT id, name, label, type, required FROM {$fields_table}", ARRAY_A );
+
+                $councils = get_posts(
+                        array(
+                                'post_type'   => 'council',
+                                'numberposts' => -1,
+                                'post_status' => 'any',
+                        )
+                );
+
+                $data = array();
+                foreach ( $councils as $c ) {
+                        $data[ $c->ID ] = array(
+                                'id'     => $c->ID,
+                                'name'   => $c->post_title,
+                                'slug'   => $c->post_name,
+                                'values' => array(),
+                        );
+                }
+
+                $rows = $wpdb->get_results(
+                        "SELECT v.council_id, f.name AS field_name, v.financial_year, v.value
+                         FROM {$values_table} v
+                         JOIN {$fields_table} f ON v.field_id = f.id",
+                        ARRAY_A
+                );
+
+                foreach ( $rows as $row ) {
+                        $cid   = (int) $row['council_id'];
+                        $field = $row['field_name'];
+                        if ( ! isset( $data[ $cid ] ) ) {
+                                continue;
+                        }
+                        if ( ! isset( $data[ $cid ]['values'][ $field ] ) ) {
+                                $data[ $cid ]['values'][ $field ] = array();
+                        }
+                        $data[ $cid ]['values'][ $field ][ $row['financial_year'] ] = maybe_unserialize( $row['value'] );
+                }
+
+                return wp_json_encode(
+                        array(
+                                'fields'   => $fields,
+                                'councils' => array_values( $data ),
+                        )
+                );
+        }
 
 	/**
 	 * Import plugin settings from a JSON file.
@@ -314,24 +375,33 @@ class Data_Loader {
 			);
 			return;
 		}
-		if ( isset( $_POST['cdc_export'] ) ) {
-			check_admin_referer( 'cdc_export', 'cdc_export_nonce' );
-			$format = sanitize_key( $_POST['format'] ?? 'csv' );
-			$data   = self::export_data( $format );
-			Error_Logger::log_info( 'Exported councils as ' . $format );
-			if ( 'json' === $format ) {
-				header( 'Content-Type: application/json' );
-				header( 'Content-Disposition: attachment; filename=councils.json' );
-			} else {
-				header( 'Content-Type: text/csv' );
-				header( 'Content-Disposition: attachment; filename=councils.csv' );
-			}
-			echo $data;
-			exit;
-		}
-		if ( empty( $_FILES['cdc_csv_file']['tmp_name'] ) ) {
-			return;
-		}
+                if ( isset( $_POST['cdc_export'] ) ) {
+                        check_admin_referer( 'cdc_export', 'cdc_export_nonce' );
+                        $format = sanitize_key( $_POST['format'] ?? 'csv' );
+                        $data   = self::export_data( $format );
+                        Error_Logger::log_info( 'Exported councils as ' . $format );
+                        if ( 'json' === $format ) {
+                                header( 'Content-Type: application/json' );
+                                header( 'Content-Disposition: attachment; filename=councils.json' );
+                        } else {
+                                header( 'Content-Type: text/csv' );
+                                header( 'Content-Disposition: attachment; filename=councils.csv' );
+                        }
+                        echo $data;
+                        exit;
+                }
+                if ( isset( $_POST['cdc_export_migration'] ) ) {
+                        check_admin_referer( 'cdc_export_migration', 'cdc_export_migration_nonce' );
+                        $data = self::export_migration_dump();
+                        Error_Logger::log_info( 'Exported migration dump' );
+                        header( 'Content-Type: application/json' );
+                        header( 'Content-Disposition: attachment; filename=councils-migration.json' );
+                        echo $data;
+                        exit;
+                }
+                if ( empty( $_FILES['cdc_csv_file']['tmp_name'] ) ) {
+                        return;
+                }
 		check_admin_referer( 'cdc_load_csv', 'cdc_load_csv_nonce' );
 		$file = $_FILES['cdc_csv_file']['tmp_name'];
 		$ext  = pathinfo( $_FILES['cdc_csv_file']['name'], PATHINFO_EXTENSION );
