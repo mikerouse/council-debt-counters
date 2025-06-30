@@ -38,19 +38,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</tbody>
 	</table>
 	<h2><?php esc_html_e( 'Export Councils', 'council-debt-counters' ); ?></h2>
-	<form method="post">
-		<?php wp_nonce_field( 'cdc_export', 'cdc_export_nonce' ); ?>
-		<select name="format">
-			<option value="csv">CSV</option>
-			<option value="json">JSON</option>
-		</select>
-		<button type="submit" name="cdc_export" class="button button-primary"><?php esc_html_e( 'Download', 'council-debt-counters' ); ?></button>
-	</form>
-	<h2 class="mt-4"><?php esc_html_e( 'Export Settings', 'council-debt-counters' ); ?></h2>
-	<form method="post">
-		<?php wp_nonce_field( 'cdc_export_settings', 'cdc_export_settings_nonce' ); ?>
-		<button type="submit" name="cdc_export_settings" class="button button-primary"><?php esc_html_e( 'Download Settings', 'council-debt-counters' ); ?></button>
-	</form>
+        <form method="post">
+                <?php wp_nonce_field( 'cdc_export', 'cdc_export_nonce' ); ?>
+                <select name="format">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                </select>
+                <button type="submit" name="cdc_export" class="button button-primary"><?php esc_html_e( 'Download', 'council-debt-counters' ); ?></button>
+        </form>
+       <h2 class="mt-4"><?php esc_html_e( 'Export for Migration', 'council-debt-counters' ); ?></h2>
+       <form method="post">
+               <?php wp_nonce_field( 'cdc_export_migration', 'cdc_export_migration_nonce' ); ?>
+               <button type="submit" name="cdc_export_migration" class="button button-primary"><?php esc_html_e( 'Download Migration File', 'council-debt-counters' ); ?></button>
+       </form>
+        <h2 class="mt-4"><?php esc_html_e( 'Export Settings', 'council-debt-counters' ); ?></h2>
+        <form method="post">
+                <?php wp_nonce_field( 'cdc_export_settings', 'cdc_export_settings_nonce' ); ?>
+                <button type="submit" name="cdc_export_settings" class="button button-primary"><?php esc_html_e( 'Download Settings', 'council-debt-counters' ); ?></button>
+        </form>
 
 	<h2 class="mt-4"><?php esc_html_e( 'Import Settings', 'council-debt-counters' ); ?></h2>
 	<form method="post" enctype="multipart/form-data">
