@@ -2,6 +2,23 @@ import './bootstrap';
 import { createApp, ref, onMounted, computed } from 'vue';
 
 const app = createApp({
+    // Inline template to ensure visitors see content immediately
+    template: `
+        <h1 class="mb-4">Council Finance Counters</h1>
+        <div class="mb-5">
+            <h2 class="h4">Total Debt Across All Councils</h2>
+            <div class="display-5 fw-bold">@{{ formattedDebt }}</div>
+        </div>
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Search for a council" v-model="searchQuery" @input="searchCouncils"/>
+            <ul class="list-group mt-2" v-if="councils.length">
+                <li class="list-group-item" v-for="council in councils" :key="council.id">
+                    <a :href="'/council/' + council.slug">@{{ council.name }}</a>
+                </li>
+            </ul>
+        </div>
+        <a href="/admin" class="btn btn-primary mt-4">Admin Login</a>
+    `,
     setup() {
         const totalDebt = ref(0);
         const displayedDebt = ref(0);
